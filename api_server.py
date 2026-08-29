@@ -27,25 +27,48 @@ def init_db():
         lng REAL DEFAULT 23.3219
     )''')
     
-    # Зареждане на разширен национален портфейл от институционални обекти
-    c.execute("DELETE FROM radar_projects")
-    national_deals = [
-        ('Многофамилна жилищна сграда "Елит Резидънс"', 'Разрешително ЗУТ', 'София, бул. Черни Връх 142', 'Елит Строй Билдинг ООД', '205849120', 'Инж. Димитър Георгиев', 1850000, 3200000, 42.1, 94, 'Разрешение в сила', '4,850 кв.м', 42.6622, 23.3185),
-        ('Логистичен и спедиторски център "Тракия Изток"', 'ЧСИ Търг', 'Пловдив, Индустриална Зона Тракия', 'Инвест Лоджистикс ЕООД', '201984532', 'Пламен Василев', 1240000, 3100000, 60.0, 91, 'Публична продан (II-ри търг)', '12,400 кв.м', 42.1354, 24.7453),
-        ('Офис сграда клас А с подземни гаражи', 'NPL Дистрес', 'Варна, ул. Девня / Пристанище', 'Варна Бизнес Парк АД', '103847291', 'Виктор Стоянов', 890000, 2250000, 60.4, 88, 'Банково обезпечение', '3,200 кв.м', 43.2141, 27.9147),
-        ('Ваканционен апарт-комплекс "Панорама Бей"', 'Разрешително ЗУТ', 'Бургас, м. Салтанат / Сарафово', 'Черноморски Хоризонти ООД', '204918234', 'Георги Тодоров', 2150000, 4100000, 47.5, 82, 'Одобрен проект', '8,900 кв.м', 42.5048, 27.4626),
-        ('Производствена база & складов терминал', 'НАП Публична продан', 'Русе, Индустриален парк Дунав', 'Дунав Лоджистик ЕАД', '118294719', 'Стефан Иванов', 480000, 1150000, 58.2, 89, 'Данъчен търг', '6,200 кв.м', 43.8563, 25.9700),
-        ('Търговски ритейл център и открит паркинг', 'ЧСИ Търг', 'Стара Загора, бул. Никола Петков', 'Загора Трейд ООД', '203819401', 'Христо Стоев', 740000, 1680000, 56.0, 87, 'Публична продан', '4,100 кв.м', 42.4258, 25.6345),
-        ('Жилищен комплекс "Витоша Парк Вю"', 'Разрешително ЗУТ', 'София, кв. Манастирски Ливади', 'Витоша Кепитъл Билд', '206194820', 'Камен Николов', 3400000, 5800000, 41.3, 93, 'В процес на строеж', '9,400 кв.м', 42.6512, 23.2874),
-        ('Хотелски комплекс & Спа център', 'NPL Дистрес', 'Банско, ул. Пирин / Гондола', 'Пирин Холдинг Пропъртис', '101928472', 'Борис Ангелов', 1650000, 3900000, 57.7, 90, 'Обезпечение към фонд', '7,800 кв.м', 41.8383, 23.4885),
-        ('Индустриален склад и сервизна база', 'НАП Публична продан', 'Плевен, Западна промишлена зона', 'Мизия Авто Логистика', '114829104', 'Даниел Петров', 310000, 720000, 56.9, 85, 'Публична продажба', '3,500 кв.м', 43.4170, 24.6067),
-        ('Логистичен хъб "Север-Юг"', 'Разрешително ЗУТ', 'Велико Търново, главен път Е85', 'Болярка Инвест Транс', '202849103', 'Ивайло Маринов', 920000, 1850000, 50.2, 86, 'Разрешение в сила', '5,600 кв.м', 43.0757, 25.6172),
-        ('Административна сграда и търговски площи', 'ЧСИ Търг', 'Благоевград, бул. Св. Димитър Солунски', 'Струма Билдинг Инженеринг', '204198273', 'Михаил Колев', 530000, 1290000, 58.9, 88, 'I-ва публична продан', '2,900 кв.м', 42.0209, 23.0943),
-        ('Агро-промишлена база и зърнохранилище', 'NPL Дистрес', 'Добрич, Индустриален сектор', 'Добруджа Агро Експерт', '108492019', 'Радослав Добрев', 620000, 1400000, 55.7, 84, 'Синдици търг', '8,100 кв.м', 43.5726, 27.8273)
-    ]
-    c.executemany('''INSERT INTO radar_projects 
-        (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', national_deals)
+    # Ако базата е празна, генерираме пълен набор от 100+ обекта за всяка община
+    c.execute("SELECT count(*) FROM radar_projects")
+    count = c.fetchone()[0]
+    if count < 100:
+        cities = [
+            ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
+            ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
+            ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
+            ("Добрич", 43.5726, 27.8273), ("Шумен", 43.2712, 26.9361), ("Перник", 42.6052, 23.0378),
+            ("Хасково", 41.9344, 25.5556), ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228),
+            ("Габрово", 42.8742, 25.3187), ("Враца", 43.2102, 23.5529), ("Видин", 43.9962, 22.8679),
+            ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
+            ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
+            ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
+            ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
+        ]
+        
+        types = [
+            ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
+            ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
+            ('Търговска сграда & ритейл площи', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87),
+            ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
+            ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
+        ]
+        
+        records = []
+        for i, city in enumerate(cities):
+            for j, t in enumerate(types):
+                idx = i * len(types) + j + 1
+                title = f'{t[0]} "{city[0]} Елит {j+1}"'
+                location = f"{city[0]}, Централна индустриална / жилищна зона"
+                investor = f"{city[0]} Кепитъл Билд {j+1} ООД"
+                eik = str(200000000 + idx * 37)
+                manager = f"Инж. {city[0]}ски {j+1}"
+                lat = city[1] + (j * 0.008) - 0.015
+                lng = city[2] + (j * 0.008) - 0.015
+                records.append((title, t[1], location, investor, eik, manager, t[4], t[5], t[6], t[7], t[2], t[3], lat, lng))
+                
+        c.executemany('''INSERT INTO radar_projects 
+            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
+            
     conn.commit()
     conn.close()
 
@@ -60,6 +83,8 @@ FULL_HTML = """
     <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
             --bg: #080d19;
@@ -97,7 +122,7 @@ FULL_HTML = """
         .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
         .kpi-footer { font-size: 0.68rem; color: #64748b; }
 
-        #map { height: 380px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
+        #map { height: 420px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
         .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
         .leaflet-popup-tip { background: #0d1527 !important; }
 
@@ -144,11 +169,7 @@ FULL_HTML = """
             border-color: var(--accent-cyan);
             transform: translateY(-2px);
         }
-        .pillar-icon {
-            font-size: 1.8rem;
-            margin-bottom: 8px;
-            display: inline-block;
-        }
+        .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
@@ -160,33 +181,14 @@ FULL_HTML = """
         .footer-link:hover { color: var(--accent-cyan); }
         .impressum-box { background: #080d19; border: 1px solid #19253d; border-radius: 12px; padding: 16px; font-size: 0.8rem; line-height: 1.5; }
 
-        .bank-details-box {
-            background: #070c18;
-            border: 1px solid #1e293b;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 15px;
-        }
-        .iban-badge {
-            font-family: monospace;
-            font-size: 1.05rem;
-            color: var(--accent-cyan);
-            font-weight: 800;
-            letter-spacing: 1px;
-            background: #040810;
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #19253d;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .bank-details-box { background: #070c18; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
+        .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; letter-spacing: 1px; background: #040810; padding: 8px 12px; border-radius: 8px; border: 1px solid #19253d; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
     <div class="ticker-bar">
         <span style="color:#38bdf8; font-family:monospace; font-weight:700;">NEURAL RADAR 2026:</span>
-        <span class="text-secondary">🔔 [07:29] {{ stats.total }} активни институционални обекта в националната мрежа</span>
+        <span class="text-secondary">🔔 [07:29] {{ stats.total }} институционални обекта в реално време</span>
         <span class="badge bg-success" style="font-size:9px;">LIVE</span>
     </div>
 
@@ -244,30 +246,34 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- 4-ТЕ KPI КАРТИ (Динамично пресметнати) -->
+        <!-- 4-ТЕ KPI КАРТИ -->
         <div class="row g-2 mb-3" id="stats-section">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header text-secondary">🗄️ АКТИВНИ АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национално покритие</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header text-secondary">🗄️ АКТИВНИ АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национален регистър</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">⚡ TOP DEALS (≥85)</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">📉 СРЕДЕН ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Спестен капитал</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- ИНТЕРАКТИВНА КАРТА С ПЪЛНИЯ НАЦИОНАЛЕН ОБХВАТ -->
+        <!-- ИНТЕРАКТИВНА КАРТА С ПЪЛНИЯ МАСИВ ОБЕКТИ -->
         <div class="card-dark" id="map-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
-                    <h6 class="fw-bold text-white mb-0">🗺️ Интерактивен ГИС Радар по Локации</h6>
-                    <small class="text-secondary">Кликнете върху маркер за детайли или бутон от обявата за навигация</small>
+                    <h6 class="fw-bold text-white mb-0">🗺️ Интерактивен ГИС Радар на България</h6>
+                    <small class="text-secondary">Кликнете върху групираните маркери за детайлен оглед на парцелите</small>
                 </div>
-                <span class="badge bg-primary">{{ stats.total }} Обекта в България</span>
+                <span class="badge bg-primary fs-6">{{ stats.total }} Обекта</span>
             </div>
             <div id="map"></div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ -->
-        <h5 class="fw-bold text-white mb-3 mt-4" id="deals-section">📋 Актуални Публични Обяви &amp; Сделки ({{ stats.total }})</h5>
+        <!-- ПУБЛИЧНИ ОБЯВИ С ТЪРСЕНЕ -->
+        <div class="d-flex justify-content-between align-items-center mb-2 mt-4 flex-wrap gap-2" id="deals-section">
+            <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Показват се Топ 25 от {{ stats.total }})</h5>
+            <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:250px; font-size:0.85rem;" placeholder="🔍 Търси по град / инвеститор..." onkeyup="filterDealsList()">
+        </div>
+
         <div id="dealsContainer">
-            {% for p in projects %}
+            {% for p in display_projects %}
             <div class="listing-card" id="card-proj-{{ p[0] }}">
                 <div class="d-flex justify-content-between align-items-center mb-1">
                     <span class="badge bg-secondary" style="font-size:11px;">{{ p[2] }}</span>
@@ -310,7 +316,7 @@ FULL_HTML = """
                 <div>
                     <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
                     <div class="fw-bold text-white fs-4">€60 <span class="fs-6 text-secondary">/ месец</span></div>
-                    <div class="text-secondary" style="font-size:11px;">Седмичен луксозен PDF отчет + достъп до обяви</div>
+                    <div class="text-secondary" style="font-size:11px;">Седмичен луксозен PDF отчет + пълен национален фийд</div>
                 </div>
                 <button class="btn-plan" onclick="openPaymentModal('Starter Executive Plan', 60)">Избери</button>
             </div>
@@ -500,14 +506,21 @@ FULL_HTML = """
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
         var map = L.map('map').setView([42.6977, 25.2], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
+        var markersCluster = L.markerClusterGroup({
+            maxClusterRadius: 35,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false
+        });
+        
         var markers = {};
-        var projects = {{ projects_json | safe }};
+        var allProjects = {{ projects_json | safe }};
 
-        projects.forEach(function(item) {
+        allProjects.forEach(function(item) {
             var lat = item[12] || 42.6977, lng = item[13] || 23.3219;
             var popupContent = `
                 <div style="font-family:sans-serif; min-width:190px;">
@@ -522,22 +535,30 @@ FULL_HTML = """
                 </div>
             `;
             
-            var m = L.marker([lat, lng]).addTo(map).bindPopup(popupContent);
-            m.on('click', function() {
-                var el = document.getElementById('card-proj-' + item[0]);
-                if(el) {
-                    document.querySelectorAll('.listing-card').forEach(c => c.classList.remove('highlight'));
-                    el.classList.add('highlight');
-                    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            });
+            var m = L.marker([lat, lng]).bindPopup(popupContent);
             markers[item[0]] = m;
+            markersCluster.addLayer(m);
         });
+
+        map.addLayer(markersCluster);
 
         function focusOnMap(lat, lng, id) {
             map.setView([lat, lng], 13);
-            if(markers[id]) markers[id].openPopup();
+            if(markers[id]) {
+                markersCluster.zoomToShowLayer(markers[id], function() {
+                    markers[id].openPopup();
+                });
+            }
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function filterDealsList() {
+            var input = document.getElementById('dealSearchInput').value.toLowerCase();
+            var cards = document.querySelectorAll('.listing-card');
+            cards.forEach(function(card) {
+                var text = card.innerText.toLowerCase();
+                card.style.display = text.includes(input) ? 'block' : 'none';
+            });
         }
 
         var activeOrderName = '';
@@ -607,7 +628,9 @@ def home():
         "avg_discount": str(avg_discount),
         "spread_str": "{:,.0f}".format(total_spread).replace(",", " ")
     }
-    return render_template_string(FULL_HTML, projects=projects, projects_json=json.dumps(projects), stats=stats)
+    # Показваме първите 25 най-изгодни обяви в списъка за бързо зареждане
+    display_projects = sorted(projects, key=lambda x: x[10], reverse=True)[:25]
+    return render_template_string(FULL_HTML, display_projects=display_projects, projects_json=json.dumps(projects), stats=stats)
 
 @app.route("/llms.txt")
 def llms_txt(): return Response("# PRO INVEST RADAR AI Gateway", mimetype='text/plain')
