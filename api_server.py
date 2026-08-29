@@ -99,7 +99,6 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* Тарифни планове */
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 600; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; }
@@ -114,6 +113,29 @@ FULL_HTML = """
         .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
         .footer-link:hover { color: var(--accent-cyan); }
         .impressum-box { background: #080d19; border: 1px solid #19253d; border-radius: 12px; padding: 16px; font-size: 0.8rem; line-height: 1.5; }
+
+        /* Банкова карта дизайн */
+        .bank-details-box {
+            background: #070c18;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+        .iban-badge {
+            font-family: monospace;
+            font-size: 1.05rem;
+            color: var(--accent-cyan);
+            font-weight: 800;
+            letter-spacing: 1px;
+            background: #040810;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #19253d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
@@ -185,21 +207,6 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен марж</div></div></div>
         </div>
 
-        <!-- ЧСИ КАЛКУЛАТОР -->
-        <div class="card-dark" id="calc-section">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-warning text-dark" style="font-size:11px; font-weight:700;">ДЪРЖАВНИ ТАКСИ 2026</span>
-                <span class="text-info fw-bold fs-5" id="sliderValDisplay">€88 000</span>
-            </div>
-            <label class="small text-secondary mb-1">Начална цена / Оферирана сума (EUR):</label>
-            <input type="range" min="10000" max="500000" step="5000" value="88000" class="form-range mb-3" oninput="updateChsiCalc(this.value)">
-            <div class="row g-2 mb-3">
-                <div class="col-6"><label class="small text-secondary" style="font-size:11px;">МЕСТЕН ДАНЪК (ЗМДТ):</label><div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border); font-size:12px; color:#fff;">3.0% (София / Пловдив)</div></div>
-                <div class="col-6"><label class="small text-secondary" style="font-size:11px;">ТАКСА ЧСИ (Т. 26 ТЗЧСИ):</label><div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border); font-size:12px; color:#fff;">1.5% с ДДС (Закон)</div></div>
-            </div>
-            <button class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius:10px; font-size:13px;" onclick="alert('ЧСИ Анализ: Чиста прогнозна доходност при дисконт 45%: +€39 600.')">🤖 ЧСИ AI Експерт Калкулация</button>
-        </div>
-
         <!-- ИНТЕРАКТИВНА КАРТА -->
         <div class="card-dark" id="map-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
@@ -240,7 +247,7 @@ FULL_HTML = """
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap({{ p[12] }}, {{ p[13] }}, {{ p[0] }})">📍 Покажи на картата</button>
-                    <a href="/export-pdf" target="_blank" class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;">⚡ Меморандум</a>
+                    <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="openPaymentModal('Пълен Инвестиционен Меморандум - {{ p[1] }}', 60)">⚡ Свали Меморандум</button>
                 </div>
             </div>
             {% endfor %}
@@ -251,7 +258,7 @@ FULL_HTML = """
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">ЦЕНА НА ЗАЩИТАТА:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
-                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="openOrderModal('Абонаментен Радар - €60')">АКТИВИРАЙ АБОНАМЕНТЕН РАДАР</button>
+                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="openPaymentModal('Абонаментен Радар - Стартов План', 60)">АКТИВИРАЙ АБОНАМЕНТЕН РАДАР</button>
             </div>
 
             <div class="plan-box">
@@ -260,7 +267,7 @@ FULL_HTML = """
                     <div class="fw-bold text-white fs-4">€60 <span class="fs-6 text-secondary">/ месец</span></div>
                     <div class="text-secondary" style="font-size:11px;">Седмичен луксозен PDF отчет + достъп до обяви</div>
                 </div>
-                <button class="btn-plan" onclick="openOrderModal('Starter Executive - €60')">Избери</button>
+                <button class="btn-plan" onclick="openPaymentModal('Starter Executive Plan', 60)">Избери</button>
             </div>
 
             <div class="plan-box plan-popular">
@@ -272,7 +279,7 @@ FULL_HTML = """
                     <div class="fw-bold text-white fs-4">€150 <span class="fs-6 text-secondary">/ месец</span></div>
                     <div class="text-secondary" style="font-size:11px;">Ежедневен 07:30 ч. радар + неограничен ЕИК одит</div>
                 </div>
-                <button class="btn-plan btn-plan-pro" onclick="openOrderModal('PRO RISK MONITOR - €150')">ВЗЕМИ PRO</button>
+                <button class="btn-plan btn-plan-pro" onclick="openPaymentModal('PRO RISK MONITOR - VIP Достъп', 150)">ВЗЕМИ PRO</button>
             </div>
 
             <div class="plan-box">
@@ -281,7 +288,7 @@ FULL_HTML = """
                     <div class="fw-bold text-white fs-4">€290 <span class="fs-6 text-secondary">/ месец</span></div>
                     <div class="text-secondary" style="font-size:11px;">REST JSON API ключ + llms.txt AI Gateway</div>
                 </div>
-                <button class="btn-plan" onclick="openOrderModal('Enterprise M2M - €290')">API Ключ</button>
+                <button class="btn-plan" onclick="openPaymentModal('Enterprise M2M API Gateway', 290)">API Ключ</button>
             </div>
         </div>
     </div>
@@ -296,7 +303,6 @@ FULL_HTML = """
                         <span class="fw-bold text-white fs-6">PRO INVEST RADAR .BG</span>
                     </div>
                     <p class="text-secondary small mb-3">Автономен корпоративен радар и AI агрегатор на публични търгове, ЧСИ обявления, разрешения за строеж (ЗУТ) и фирмени рискови профили в реално време.</p>
-                    <div class="small text-secondary">Статус на системата: <strong class="text-success">● Всички регистри активни</strong></div>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="footer-heading">Модули</div>
@@ -304,14 +310,12 @@ FULL_HTML = """
                     <a href="#map-section" class="footer-link">ГИС Карта</a>
                     <a href="#deals-section" class="footer-link">ЧСИ Сделки</a>
                     <a href="#pricing-section" class="footer-link">Абонаменти</a>
-                    <a href="/api/deals" target="_blank" class="footer-link">REST JSON API</a>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="footer-heading">Правна база</div>
                     <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('terms')">Общи условия</a>
                     <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('privacy')">GDPR &amp; Поверителност</a>
                     <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('disclaimer')">Отказ от отговорност</a>
-                    <a href="/llms.txt" target="_blank" class="footer-link">llms.txt Спецификация</a>
                 </div>
                 <div class="col-md-4">
                     <div class="footer-heading">Импресум (Impressum)</div>
@@ -319,49 +323,63 @@ FULL_HTML = """
                         <strong>PRO INVEST RADAR AI Ltd.</strong><br>
                         ЕИК / ДДС Номер: BG205849120<br>
                         Адрес: гр. София, р-н Лозенец, бул. Черни Връх<br>
-                        Контакт: <a href="mailto:kovko.firma@gmail.com" style="color:var(--accent-cyan); text-decoration:none;">kovko.firma@gmail.com</a><br>
-                        Надзорен орган: Комисия за защита на личните данни (КЗЛД)
+                        Контакт: <a href="mailto:kovko.firma@gmail.com" style="color:var(--accent-cyan); text-decoration:none;">kovko.firma@gmail.com</a>
                     </div>
                 </div>
             </div>
             <div class="border-top border-secondary pt-3 text-center text-secondary small">
-                © 2026 PRO INVEST RADAR .BG. Платформата използва публични данни от Търговски регистър, РДНСК и ЧСИ. Всички права запазени.
+                © 2026 PRO INVEST RADAR .BG. Всички права запазени.
             </div>
         </div>
     </footer>
 
-    <!-- ПРАВЕН МОДАЛ ЗА ОБЩИ УСЛОВИЯ / GDPR -->
-    <div class="modal fade" id="legalModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:16px;">
-                <div class="modal-header border-bottom border-secondary">
-                    <h5 class="modal-title fw-bold text-info" id="legalModalTitle">Правна информация</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="legalModalBody" style="font-size:0.88rem; color:#cbd5e1; max-height:60vh; overflow-y:auto;">
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- МОДАЛ ЗА АБОНАМЕНТ -->
-    <div class="modal fade" id="orderModal" tabindex="-1">
+    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ С COPY IBAN БУТОН -->
+    <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:16px;">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold text-info" id="orderModalTitle">Активация на абонамент</h5>
+            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
+                <div class="modal-header border-bottom border-secondary pb-3">
+                    <div>
+                        <h5 class="modal-title fw-bold text-info" id="payModalTitle">Банково плащане / Активация</h5>
+                        <small class="text-secondary" id="payModalSubtitle">Фактура и директен банков превод</small>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <p class="text-secondary small">Въведете служебен имейл за изпращане на данъчна фактура и активиране на достъпа:</p>
-                    <input type="email" id="subEmail" class="custom-input mb-3" placeholder="office@company.bg" required>
-                    <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px;" onclick="confirmOrder()">Потвърди активация</button>
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-secondary">Дължима сума:</span>
+                        <strong class="text-warning fs-4" id="payModalAmount">€60.00</strong>
+                    </div>
+
+                    <!-- Банкови данни -->
+                    <div class="bank-details-box">
+                        <div class="small text-secondary mb-1">Получател / Бенефициент:</div>
+                        <div class="fw-bold text-white mb-2">PRO INVEST RADAR AI LTD / TODOROV TEAM</div>
+
+                        <div class="small text-secondary mb-1">Банкова сметка (IBAN - EUR / BGN):</div>
+                        <div class="iban-badge mb-2">
+                            <span id="ibanText">BG80UNCR70001524896321</span>
+                            <button class="btn btn-sm btn-info fw-bold py-1 px-2" style="font-size:11px;" onclick="copyIban()">📋 Copy IBAN</button>
+                        </div>
+
+                        <div class="d-flex justify-content-between small text-secondary mt-2">
+                            <span>BIC / SWIFT: <strong class="text-light">UNCRBGSF</strong></span>
+                            <span>Банка: <strong class="text-light">UniCredit Bulbank</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="small text-secondary mb-1">Въведете имейл за получаване на фактура и достъп:</label>
+                        <input type="email" id="payUserEmail" class="custom-input" placeholder="office@yourcompany.bg" required>
+                    </div>
+
+                    <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px;" onclick="completeBankOrder()">✅ Потвърди банков превод</button>
+                    <div id="copySuccessMsg" class="text-center text-success small mt-2 fw-bold" style="display:none;">✔ IBAN номерът е копиран в клипборда!</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- МОБИЛНО МЕНЮ С АБОНАМЕНТИ -->
+    <!-- МОБИЛНО МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <div>
@@ -376,7 +394,6 @@ FULL_HTML = """
                 <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
                 <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
                 <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
-                <a href="#calc-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🧮</span> ЧСИ Такси &amp; Net ROI</a>
                 <a href="#pricing-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">💳</span> Тарифни планове &amp; Абонаменти</a>
             </div>
             <div class="border-top border-secondary pt-3 mt-4">
@@ -423,13 +440,34 @@ FULL_HTML = """
 
         function focusOnMap(lat, lng, id) {
             map.setView([lat, lng], 13);
-            if(markers[id]) {
-                markers[id].openPopup();
-            }
+            if(markers[id]) markers[id].openPopup();
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function updateChsiCalc(val) { document.getElementById('sliderValDisplay').innerText = '€' + Number(val).toLocaleString('de-DE'); }
+        var activeOrderName = '';
+        function openPaymentModal(title, amount) {
+            activeOrderName = title;
+            document.getElementById('payModalTitle').innerText = title;
+            document.getElementById('payModalAmount').innerText = '€' + amount + '.00';
+            document.getElementById('copySuccessMsg').style.display = 'none';
+            new bootstrap.Modal(document.getElementById('paymentModal')).show();
+        }
+
+        function copyIban() {
+            var iban = document.getElementById('ibanText').innerText;
+            navigator.clipboard.writeText(iban).then(function() {
+                var msg = document.getElementById('copySuccessMsg');
+                msg.style.display = 'block';
+                setTimeout(function() { msg.style.display = 'none'; }, 3000);
+            });
+        }
+
+        function completeBankOrder() {
+            var email = document.getElementById('payUserEmail').value;
+            if(!email || !email.includes('@')) { alert('Моля въведете валиден служебен имейл!'); return; }
+            alert('Заявката за [' + activeOrderName + '] е регистрирана успешно! Изпратени са банкови инструкции към ' + email);
+            location.reload();
+        }
 
         var companyDb = {
             "030431138": { name: "Трейс Груп Холд АД", manager: "инж. Боян Делчев / проф. Николай Михайлов", city: "София, бул. Никола Образписов 12", injunctions: "НЯМА ВПИСАНИ ЗАПОРИ", status: "АКТИВЕН", isSafe: true },
@@ -448,38 +486,6 @@ FULL_HTML = """
             document.getElementById('resCompManager').innerText = comp.manager;
             document.getElementById('resCompInjunctions').innerText = comp.injunctions;
             document.getElementById('resCompBadge').innerText = comp.status;
-        }
-
-        var activePlan = '';
-        function openOrderModal(plan) {
-            activePlan = plan;
-            document.getElementById('orderModalTitle').innerText = plan;
-            new bootstrap.Modal(document.getElementById('orderModal')).show();
-        }
-
-        function confirmOrder() {
-            var email = document.getElementById('subEmail').value;
-            if(!email || !email.includes('@')) { alert('Моля въведете валиден имейл!'); return; }
-            alert('Заявката за план [' + activePlan + '] е приета за ' + email);
-            location.reload();
-        }
-
-        function openLegalModal(type) {
-            var title = "Правна информация";
-            var body = "";
-            if(type === 'terms') {
-                title = "Общи условия за ползване";
-                body = "<p>Платформата PRO INVEST RADAR .BG предоставя аналитични B2B услуги и достъп до структурирана публична информация съгласно действащото законодателство на Република България и ЕС.</p><p>Всички права върху агрегираните и алгоритмично преработени данни са запазени.</p>";
-            } else if(type === 'privacy') {
-                title = "Политика за поверителност (GDPR)";
-                body = "<p>Ние обработваме лични данни в съответствие с Регламент (ЕС) 2016/679. Не съхраняваме незащитена лична информация и не споделяме данни с трети страни за маркетингови цели.</p>";
-            } else if(type === 'disclaimer') {
-                title = "Отказ от отговорност (Disclaimer)";
-                body = "<p>Данните за пазарни оценки, търгове и запори се извличат от официални публични източници (Търговски регистър, Камара на ЧСИ, НАП). Платформата не представлява официален инвестиционен съвет по смисъла на ЗПФИ.</p>";
-            }
-            document.getElementById('legalModalTitle').innerText = title;
-            document.getElementById('legalModalBody').innerHTML = body;
-            new bootstrap.Modal(document.getElementById('legalModal')).show();
         }
     </script>
 </body>
@@ -507,9 +513,6 @@ def llms_txt(): return Response("# PRO INVEST RADAR AI Gateway", mimetype='text/
 
 @app.route("/api/deals")
 def api_deals(): return jsonify({"status": "live", "count": 4})
-
-@app.route("/export-pdf")
-def export_pdf(): return "<script>window.print();</script><h2>PRO INVEST RADAR .BG – ДОКЛАД</h2>"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
