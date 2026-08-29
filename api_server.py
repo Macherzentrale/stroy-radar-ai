@@ -255,7 +255,7 @@ FULL_HTML = """
         <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-5 mb-4">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
-                <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">ЦЕНА НА ЗАЩИТАТА:</div>
+                <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
                 <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="openPaymentModal('Абонаментен Радар - Стартов План', 60)">АКТИВИРАЙ АБОНАМЕНТЕН РАДАР</button>
             </div>
@@ -320,7 +320,8 @@ FULL_HTML = """
                     <div class="footer-heading">Импресум (Impressum)</div>
                     <div class="impressum-box">
                         <strong>СД „Ковко - Василев и Сие“</strong><br>
-                        Управител / Титуляр: Васил Василев<br>
+                        Управител: Васил Василев<br>
+                        Адрес на управление: гр. Драгоман, ул. Христо Ботев № 14<br>
                         IBAN: BG80UNCR70001524896321 (UniCredit Bulbank)<br>
                         Контакт: <a href="mailto:kovko.firma@gmail.com" style="color:var(--accent-cyan); text-decoration:none;">kovko.firma@gmail.com</a>
                     </div>
@@ -332,7 +333,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ С ТОЧНИТЕ ДАННИ -->
+    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -349,11 +350,11 @@ FULL_HTML = """
                         <strong class="text-warning fs-4" id="payModalAmount">€60.00</strong>
                     </div>
 
-                    <!-- Банкови данни -->
                     <div class="bank-details-box">
                         <div class="small text-secondary mb-1">Получател / Фирма:</div>
                         <div class="fw-bold text-white mb-1">СД „Ковко - Василев и Сие“</div>
-                        <div class="small text-secondary mb-2">Титуляр / Управител: <strong class="text-light">Васил Василев</strong></div>
+                        <div class="small text-secondary mb-1">Управител: <strong class="text-light">Васил Василев</strong></div>
+                        <div class="small text-secondary mb-2">Адрес: <span class="text-light">гр. Драгоман, ул. Христо Ботев № 14</span></div>
 
                         <div class="small text-secondary mb-1">Банкова сметка (IBAN):</div>
                         <div class="iban-badge mb-2">
