@@ -5,8 +5,6 @@ import json
 import sqlite3
 import smtplib
 import socket
-import urllib.request
-import urllib.parse
 import threading
 import time
 from datetime import datetime
@@ -19,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "stroy-radar-secret-key-2026")
 DB_PATH = "stroy_radar_intel.db"
 
-# --- 1. База данни с таблица за B2B заявки ---
+# --- 1. База данни с Lead Scoring ---
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -31,6 +29,7 @@ def init_db():
             company_name TEXT,
             phone TEXT,
             status TEXT DEFAULT 'pending',
+            score INTEGER DEFAULT 0,
             preferred_region TEXT DEFAULT 'Всички',
             preferred_category TEXT DEFAULT 'Всички',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +55,6 @@ def init_db():
         )
     ''')
 
-    # Таблица за съхранение на директни запитвания към инвеститорите
     c.execute('''
         CREATE TABLE IF NOT EXISTS project_inquiries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,10 +70,28 @@ def init_db():
         )
     ''')
 
+    try:
+        c.execute("ALTER TABLE leads_outreach ADD COLUMN score INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
 
 init_db()
+
+# --- Функция за обновяване на Lead Score ---
+def add_lead_score(email, points):
+    if not email:
+        return
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("UPDATE leads_outreach SET score = score + ? WHERE email = ?", (points, email))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"[Lead Score Error] {e}")
 
 # --- 2. Zero-Bounce DNS Валидатор & Имейл ---
 def is_email_valid_domain(email):
@@ -107,7 +123,7 @@ def send_email_msg(to_email, subject, body_html):
         server.quit()
         return True
     except Exception as e:
-        print(f"[!] Грешка при изпращане: {e}")
+        print(f"[!] SMTP грешка: {e}")
         return False
 
 # --- 3. HTML Шаблони ---
@@ -123,7 +139,6 @@ MAIN_HTML = """
         body { background: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
         .btn-brand { background: #2563eb; color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-brand:hover { background: #1d4ed8; color: #fff; }
         #map { height: 380px; width: 100%; border-radius: 12px; }
     </style>
 </head>
@@ -132,7 +147,7 @@ MAIN_HTML = """
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">🏗️ STROY RADAR AI</a>
             <div class="d-flex gap-2">
-                <a href="/admin" class="btn btn-outline-warning btn-sm">📊 Админ</a>
+                <a href="/admin" class="btn btn-outline-warning btn-sm">📊 Админ (Scoring)</a>
                 {% if session.get('user_email') %}
                     <a href="/portal" class="btn btn-outline-info btn-sm">👤 Портал</a>
                     <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
@@ -148,7 +163,7 @@ MAIN_HTML = """
             <div class="col-lg-7">
                 <span class="badge bg-primary mb-2 px-3 py-2">B2B ConTech Интелиджънс</span>
                 <h1 class="display-6 fw-bold text-white mb-3">Мониторинг на нови строежи и ЧСИ имоти</h1>
-                <p class="text-secondary lead fs-6">Интерактивна карта, директни контакти на инвеститори и заявки за подизпълнители.</p>
+                <p class="text-secondary lead fs-6">Интерактивна карта, разрешителни за строеж и търгове на парцели в България.</p>
             </div>
             <div class="col-lg-5">
                 <div class="card card-custom p-4 shadow-lg">
@@ -214,35 +229,28 @@ MAIN_HTML = """
                         <input type="hidden" id="modal_project_title" name="project_title">
                         <p class="small text-secondary mb-3">Обект: <strong id="display_project_title" class="text-info"></strong></p>
                         <div class="mb-2">
-                            <label class="small text-secondary">Вашата фирма:</label>
-                            <input type="text" name="company" class="form-control bg-secondary text-light border-0" required>
+                            <input type="text" name="company" class="form-control bg-secondary text-light border-0" placeholder="Вашата фирма" required>
                         </div>
                         <div class="mb-2">
-                            <label class="small text-secondary">Имейл адрес:</label>
-                            <input type="email" name="email" class="form-control bg-secondary text-light border-0" required>
+                            <input type="email" name="email" class="form-control bg-secondary text-light border-0" placeholder="Имейл адрес" required>
                         </div>
                         <div class="mb-2">
-                            <label class="small text-secondary">Телефон за обратна връзка:</label>
-                            <input type="text" name="phone" class="form-control bg-secondary text-light border-0" required>
+                            <input type="text" name="phone" class="form-control bg-secondary text-light border-0" placeholder="Телефон" required>
                         </div>
                         <div class="mb-2">
-                            <label class="small text-secondary">Какви строителни дейности / доставки предлагате?</label>
                             <select name="service_type" class="form-select bg-secondary text-light border-0">
                                 <option value="Груб строеж / Изкопи / Бетон">Груб строеж / Изкопи / Бетон</option>
                                 <option value="Електро / ОВК / ВиК инсталации">Електро / ОВК / ВиК инсталации</option>
                                 <option value="Дограма, Фасади и Изолации">Дограма, Фасади и Изолации</option>
                                 <option value="Доставка на строителни материали">Доставка на строителни материали</option>
-                                <option value="Довършителни дейности и ремонти">Довършителни дейности и ремонти</option>
                             </select>
                         </div>
                         <div class="mb-2">
-                            <label class="small text-secondary">Допълнителни детайли (опит, капацитет):</label>
-                            <textarea name="message" class="form-control bg-secondary text-light border-0" rows="2" placeholder="Кратка информация за екипа и възможностите..."></textarea>
+                            <textarea name="message" class="form-control bg-secondary text-light border-0" rows="2" placeholder="Кратка бележка / опит..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button>
-                        <button type="submit" class="btn btn-primary">Изпрати заявката</button>
+                        <button type="submit" class="btn btn-primary">Изпрати заявката (+50 т.)</button>
                     </div>
                 </form>
             </div>
@@ -266,8 +274,7 @@ MAIN_HTML = """
             document.getElementById('modal_project_id').value = id;
             document.getElementById('modal_project_title').value = title;
             document.getElementById('display_project_title').innerText = title;
-            var modal = new bootstrap.Modal(document.getElementById('inquiryModal'));
-            modal.show();
+            new bootstrap.Modal(document.getElementById('inquiryModal')).show();
         }
     </script>
 </body>
@@ -291,17 +298,17 @@ PORTAL_HTML = """
                 <span class="badge bg-success">7-дневен тест активен</span>
             </div>
             <div class="d-flex gap-2">
-                <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV</a>
+                <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV (+25 т.)</a>
                 <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
             </div>
         </div>
 
         <div class="card card-custom p-4">
-            <h4 class="fw-bold text-white mb-3">Обекти в реално време & Директен контакт</h4>
+            <h4 class="fw-bold text-white mb-3">Обекти в реално време & Директна заявка</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th><th>Действие</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th></tr>
                     </thead>
                     <tbody>
                         {% for p in projects %}
@@ -311,9 +318,6 @@ PORTAL_HTML = """
                             <td>{{ p[3] }}</td>
                             <td class="text-info">{{ p[4] }}</td>
                             <td>{{ "€{:,.0f}".format(p[6]) if p[6] > 0 else p[5] }}</td>
-                            <td>
-                                <a href="mailto:kovko.firma@gmail.com?subject=Запитване за обект: {{ p[1] }}&body=Желая контакт с инвеститора на обект {{ p[1] }} (Локация: {{ p[3] }})." class="btn btn-primary btn-sm">Свържи се</a>
-                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -330,7 +334,7 @@ ADMIN_HTML = """
 <html lang="bg">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ Панел - Stroy Radar AI</title>
+    <title>Lead Scoring & Анализ - Stroy Radar AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>body { background: #0b0f19; color: #f1f5f9; } .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }</style>
 </head>
@@ -338,28 +342,36 @@ ADMIN_HTML = """
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-warning">📊 Админ Панел: Входящи B2B Заявки за Обекти</h2>
-                <small class="text-secondary">Управление на контактите между подизпълнители и инвеститори</small>
+                <h2 class="fw-bold text-warning">🎯 Lead Scoring & Анализ на Горещите Клиенти</h2>
+                <small class="text-secondary">Автоматично класифициране на потребителите според ангажираността</small>
             </div>
             <a href="/" class="btn btn-outline-light btn-sm">← Към сайта</a>
         </div>
 
         <div class="card card-custom p-4 mb-4">
-            <h4 class="fw-bold text-white mb-3">📬 Нови получени заявки за връзка с инвеститори</h4>
+            <h4 class="fw-bold text-white mb-3">🔥 Класиране на лидовете по потенциал за продажба</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Кандидат Фирма</th><th>Имейл</th><th>Телефон</th><th>Дейност</th><th>Дата</th></tr>
+                        <tr class="text-secondary small"><th>Lead Score</th><th>Температура</th><th>Фирма</th><th>Имейл</th><th>Телефон</th><th>Статус</th></tr>
                     </thead>
                     <tbody>
-                        {% for inq in inquiries %}
+                        {% for l in leads %}
                         <tr>
-                            <td class="fw-bold text-info">{{ inq[2] }}</td>
-                            <td class="text-white">{{ inq[3] }}</td>
-                            <td><code>{{ inq[4] }}</code></td>
-                            <td>{{ inq[5] }}</td>
-                            <td><span class="badge bg-primary">{{ inq[6] }}</span></td>
-                            <td class="small text-secondary">{{ inq[9] }}</td>
+                            <td><span class="badge bg-primary fs-6">{{ l[5] }} т.</span></td>
+                            <td>
+                                {% if l[5] >= 50 %}
+                                    <span class="badge bg-danger">🔥 Горещ (Hot)</span>
+                                {% elif l[5] >= 20 %}
+                                    <span class="badge bg-warning text-dark">🟡 Топъл (Warm)</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">⚪ Студен (Cold)</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold text-white">{{ l[2] }}</td>
+                            <td><code>{{ l[1] }}</code></td>
+                            <td>{{ l[3] if l[3] else '—' }}</td>
+                            <td><span class="badge bg-info text-dark">{{ l[4] }}</span></td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -402,6 +414,9 @@ def home():
 def portal():
     if "user_email" not in session:
         return redirect(url_for("login"))
+    
+    add_lead_score(session["user_email"], 10) # +10 точки за активност
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur, status FROM radar_projects ORDER BY id DESC")
@@ -413,10 +428,10 @@ def portal():
 def admin_panel():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT * FROM project_inquiries ORDER BY id DESC LIMIT 50")
-    inquiries = c.fetchall()
+    c.execute("SELECT id, email, company_name, phone, status, score FROM leads_outreach ORDER BY score DESC, id DESC LIMIT 50")
+    leads = c.fetchall()
     conn.close()
-    return render_template_string(ADMIN_HTML, inquiries=inquiries)
+    return render_template_string(ADMIN_HTML, leads=leads)
 
 @app.route("/api/submit-inquiry", methods=["POST"])
 def submit_inquiry():
@@ -437,25 +452,21 @@ def submit_inquiry():
     conn.commit()
     conn.close()
 
-    # Изпращане на имейл известие до вас
+    add_lead_score(email, 50) # +50 точки за подадена оферта
+
     send_email_msg(
         "kovko.firma@gmail.com",
-        f"🎯 Нова B2B Заявка за обект: {project_title}",
-        f"<p><strong>Получена е нова заявка за свързване:</strong></p>"
-        f"<p><b>Обект:</b> {project_title}<br>"
-        f"<b>Кандидат:</b> {company}<br>"
-        f"<b>Имейл:</b> {email}<br>"
-        f"<b>Телефон:</b> {phone}<br>"
-        f"<b>Дейност:</b> {service_type}<br>"
-        f"<b>Бележка:</b> {message}</p>"
+        f"🔥 Горещ Лийд (+50 т.) Заявка за обект: {project_title}",
+        f"<p>Фирма: {company}<br>Имейл: {email}<br>Тел: {phone}<br>Дейност: {service_type}</p>"
     )
 
-    return "<script>alert('Вашата заявка е приета успешно! Екипът на Stroy Radar AI ще се свърже с вас.'); window.location.href='/';</script>"
+    return "<script>alert('Заявката ви е подадена успешно (+50 Lead Score)!'); window.location.href='/';</script>"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        session["user_email"] = request.form.get("email", "").strip()
+        email = request.form.get("email", "").strip()
+        session["user_email"] = email
         return redirect(url_for("portal"))
     return render_template_string(LOGIN_HTML)
 
@@ -476,8 +487,8 @@ def register_trial():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
-        INSERT INTO leads_outreach (email, company_name, phone, status, trial_start, sent_at) 
-        VALUES (?, ?, ?, 'trial_active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO leads_outreach (email, company_name, phone, status, score, trial_start, sent_at) 
+        VALUES (?, ?, ?, 'trial_active', 15, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         ON CONFLICT(email) DO UPDATE SET company_name=excluded.company_name, phone=excluded.phone, status='trial_active'
     """, (email, company, phone))
     conn.commit()
@@ -488,6 +499,9 @@ def register_trial():
 
 @app.route("/api/export-leads-csv")
 def export_leads():
+    if "user_email" in session:
+        add_lead_score(session["user_email"], 25) # +25 точки за сваляне на CSV
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur FROM radar_projects ORDER BY id ASC")
