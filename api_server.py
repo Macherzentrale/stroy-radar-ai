@@ -27,7 +27,6 @@ def init_db():
         lng REAL DEFAULT 23.3219
     )''')
     
-    # Ако базата е празна, генерираме пълен набор от 100+ обекта за всяка община
     c.execute("SELECT count(*) FROM radar_projects")
     count = c.fetchone()[0]
     if count < 100:
@@ -43,7 +42,6 @@ def init_db():
             ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
             ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
         ]
-        
         types = [
             ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
             ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
@@ -51,7 +49,6 @@ def init_db():
             ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
             ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
         ]
-        
         records = []
         for i, city in enumerate(cities):
             for j, t in enumerate(types):
@@ -64,11 +61,9 @@ def init_db():
                 lat = city[1] + (j * 0.008) - 0.015
                 lng = city[2] + (j * 0.008) - 0.015
                 records.append((title, t[1], location, investor, eik, manager, t[4], t[5], t[6], t[7], t[2], t[3], lat, lng))
-                
         c.executemany('''INSERT INTO radar_projects 
             (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
-            
     conn.commit()
     conn.close()
 
@@ -136,6 +131,30 @@ FULL_HTML = """
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 600; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
+
+        /* Анимирани придобивки стилове */
+        .benefit-row {
+            background: #070c18;
+            border: 1px solid #19253d;
+            border-left: 4px solid var(--accent-cyan);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: all 0.35s ease-out;
+        }
+        .benefit-row.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .benefit-icon {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
 
         .security-banner {
             background: linear-gradient(145deg, #091224 0%, #060b17 100%);
@@ -254,7 +273,7 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- ИНТЕРАКТИВНА КАРТА С ПЪЛНИЯ МАСИВ ОБЕКТИ -->
+        <!-- ИНТЕРАКТИВНА КАРТА -->
         <div class="card-dark" id="map-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
@@ -266,7 +285,7 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ С ТЪРСЕНЕ -->
+        <!-- ПУБЛИЧНИ ОБЯВИ -->
         <div class="d-flex justify-content-between align-items-center mb-2 mt-4 flex-wrap gap-2" id="deals-section">
             <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Показват се Топ 25 от {{ stats.total }})</h5>
             <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:250px; font-size:0.85rem;" placeholder="🔍 Търси по град / инвеститор..." onkeyup="filterDealsList()">
@@ -298,52 +317,52 @@ FULL_HTML = """
                 </div>
                 <div class="d-flex gap-2">
                     <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap({{ p[12] }}, {{ p[13] }}, {{ p[0] }})">📍 Покажи на картата</button>
-                    <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="openPaymentModal('Пълен Инвестиционен Меморандум - {{ p[1] }}', 60)">⚡ Свали Меморандум</button>
+                    <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="showPlanFeatures('starter')">⚡ Свали Меморандум</button>
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
+        <!-- ТАРИФНИ ПЛАНОВЕ С АКТИВАЦИЯ НА ПРИДОБИВКИТЕ -->
         <div id="pricing-section" class="mt-5 mb-3">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
-                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="openPaymentModal('Абонаментен Радар - Стартов План', 60)">АКТИВИРАЙ АБОНАМЕНТЕН РАДАР</button>
+                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
             </div>
 
-            <div class="plan-box">
+            <div class="plan-box" onclick="showPlanFeatures('starter')" style="cursor:pointer;">
                 <div>
                     <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
                     <div class="fw-bold text-white fs-4">€60 <span class="fs-6 text-secondary">/ месец</span></div>
-                    <div class="text-secondary" style="font-size:11px;">Седмичен луксозен PDF отчет + пълен национален фийд</div>
+                    <div class="text-secondary" style="font-size:11px;">Седмичен PDF отчет + пълен национален фийд (Кликнете за детайли)</div>
                 </div>
-                <button class="btn-plan" onclick="openPaymentModal('Starter Executive Plan', 60)">Избери</button>
+                <button class="btn-plan" onclick="event.stopPropagation(); showPlanFeatures('starter')">Какво включва?</button>
             </div>
 
-            <div class="plan-box plan-popular">
+            <div class="plan-box plan-popular" onclick="showPlanFeatures('pro')" style="cursor:pointer;">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <span class="small fw-bold" style="color:#00f0ff;">PRO RISK MONITOR</span>
                         <span class="badge bg-info text-dark" style="font-size:9px; font-weight:800;">POPULAR</span>
                     </div>
                     <div class="fw-bold text-white fs-4">€150 <span class="fs-6 text-secondary">/ месец</span></div>
-                    <div class="text-secondary" style="font-size:11px;">Ежедневен 07:30 ч. радар + неограничен ЕИК одит</div>
+                    <div class="text-secondary" style="font-size:11px;">Ежедневен 07:30 ч. радар + неограничен ЕИК одит (Кликнете за детайли)</div>
                 </div>
-                <button class="btn-plan btn-plan-pro" onclick="openPaymentModal('PRO RISK MONITOR - VIP Достъп', 150)">ВЗЕМИ PRO</button>
+                <button class="btn-plan btn-plan-pro" onclick="event.stopPropagation(); showPlanFeatures('pro')">ВЗЕМИ PRO</button>
             </div>
 
-            <div class="plan-box">
+            <div class="plan-box" onclick="showPlanFeatures('enterprise')" style="cursor:pointer;">
                 <div>
                     <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
                     <div class="fw-bold text-white fs-4">€290 <span class="fs-6 text-secondary">/ месец</span></div>
-                    <div class="text-secondary" style="font-size:11px;">REST JSON API ключ + llms.txt AI Gateway</div>
+                    <div class="text-secondary" style="font-size:11px;">REST JSON API ключ + llms.txt AI Gateway (Кликнете за детайли)</div>
                 </div>
-                <button class="btn-plan" onclick="openPaymentModal('Enterprise M2M API Gateway', 290)">API Ключ</button>
+                <button class="btn-plan" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
             </div>
         </div>
 
-        <!-- СПЕЦИАЛЕН ЕКСПЕРТЕН СЛАЙД: ЗАЩИТА СРЕЩУ ФИНАНСОВИ ЗАГУБИ -->
+        <!-- СПЕЦИАЛЕН ЕКСПЕРТЕН СЛАЙД -->
         <div class="security-banner">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-info text-dark fw-bold px-3 py-1" style="font-size:11px;">ИНСТИТУЦИОНАЛЕН ЩИТ 2026</span>
@@ -433,6 +452,31 @@ FULL_HTML = """
             </div>
         </div>
     </footer>
+
+    <!-- АНИМИРАН МОДАЛ С ПРИДОБИВКИ (КАКВО ПОЛУЧАВАТЕ) -->
+    <div class="modal fade" id="featuresModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
+                <div class="modal-header border-bottom border-secondary pb-3">
+                    <div>
+                        <span class="badge bg-info text-dark fw-bold mb-1" id="featBadge">ПЛАН</span>
+                        <h5 class="modal-title fw-bold text-white" id="featTitle">Какво включва този абонамент:</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-secondary small mb-3">Вашите гарантирани институционални модули и права:</div>
+                    
+                    <!-- Контейнер за анимираните правоъгълници с придобивки -->
+                    <div id="benefitsListContainer"></div>
+
+                    <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" id="proceedToPayBtn">
+                        💳 Продължи към Банково плащане (<span id="featAmountDisplay">€60</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
@@ -561,6 +605,91 @@ FULL_HTML = """
             });
         }
 
+        /* ДАННИ ЗА ПРИДОБИВКИТЕ ПО ПЛАНОВЕ */
+        var plansData = {
+            "starter": {
+                name: "STARTER EXECUTIVE",
+                amount: 60,
+                badge: "€60 / МЕСЕЦ",
+                features: [
+                    { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на всички нови търгове и разрешителни за строеж." },
+                    { icon: "🏛️", title: "Достъп до ЧСИ & НАП търгове", desc: "Филтриран списък с ликвидационни цени и пазарни дисконти." },
+                    { icon: "🗺️", title: "Интерактивна ГИС карта на България", desc: "Визуализация на парцелите и сградите в реално време." },
+                    { icon: "🏢", title: "До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." }
+                ]
+            },
+            "pro": {
+                name: "PRO RISK MONITOR",
+                amount: 150,
+                badge: "€150 / МЕСЕЦ (POPULAR)",
+                features: [
+                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден." },
+                    { icon: "🔍", title: "НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори (ТР), ЧСИ дела и свързани дружества." },
+                    { icon: "🧮", title: "ЧСИ Net ROI & Такси Калкулатор", desc: "Автоматично начисляване на такси по т. 26 ТЗЧСИ и местен данък." },
+                    { icon: "🔔", title: "VIP SMS & Имейл Алерти в реално време", desc: "Известия при пускане на нов търг в избран от вас регион." },
+                    { icon: "📞", title: "Приоритетна директна връзка", desc: "Консултация с анализатор за конкретен търг или имот." }
+                ]
+            },
+            "enterprise": {
+                name: "ENTERPRISE M2M GATEWAY",
+                amount: 290,
+                badge: "€290 / МЕСЕЦ",
+                features: [
+                    { icon: "🤖", title: "REST JSON API Ключ с 99.9% Ъптайм", desc: "Директна Machine-to-Machine интеграция към вашия софтуер." },
+                    { icon: "🧠", title: "LLMs.txt AI Gateway Поддръжка", desc: "Готов структуриран интерфейс за свързване към корпоративни AI агенти." },
+                    { icon: "📊", title: "Пълен архив на исторически сделки", desc: "База данни за ценови нива и реализирани търгове от 2024 г. насам." },
+                    { icon: "🛡️", title: "Персонален SLA договор & фактуриране", desc: "Официален договор с включена правна и техническа поддръжка." }
+                ]
+            }
+        };
+
+        var selectedPlanKey = 'starter';
+
+        /* АНИМИРАНО ПОКАЗВАНЕ НА ПРИДОБИВКИТЕ ЕДНА ПО ЕДНА */
+        function showPlanFeatures(planKey) {
+            selectedPlanKey = planKey;
+            var plan = plansData[planKey];
+            document.getElementById('featTitle').innerText = plan.name;
+            document.getElementById('featBadge').innerText = plan.badge;
+            document.getElementById('featAmountDisplay').innerText = '€' + plan.amount + '.00';
+            
+            var container = document.getElementById('benefitsListContainer');
+            container.innerHTML = '';
+
+            // Създаваме правоъгълните блокове
+            plan.features.forEach(function(feat, idx) {
+                var row = document.createElement('div');
+                row.className = 'benefit-row';
+                row.id = 'benefit-row-' + idx;
+                row.innerHTML = `
+                    <div class="benefit-icon">${feat.icon}</div>
+                    <div>
+                        <div class="fw-bold text-white small">${feat.title}</div>
+                        <div class="text-secondary" style="font-size:11px; line-height:1.3;">${feat.desc}</div>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            var modalEl = new bootstrap.Modal(document.getElementById('featuresModal'));
+            modalEl.show();
+
+            // Анимираме появата ред по ред с интервал от 120ms
+            plan.features.forEach(function(feat, idx) {
+                setTimeout(function() {
+                    var el = document.getElementById('benefit-row-' + idx);
+                    if(el) el.classList.add('show');
+                }, 150 * (idx + 1));
+            });
+
+            document.getElementById('proceedToPayBtn').onclick = function() {
+                modalEl.hide();
+                setTimeout(function() {
+                    openPaymentModal(plan.name, plan.amount);
+                }, 400);
+            };
+        }
+
         var activeOrderName = '';
         function openPaymentModal(title, amount) {
             activeOrderName = title;
@@ -628,7 +757,6 @@ def home():
         "avg_discount": str(avg_discount),
         "spread_str": "{:,.0f}".format(total_spread).replace(",", " ")
     }
-    # Показваме първите 25 най-изгодни обяви в списъка за бързо зареждане
     display_projects = sorted(projects, key=lambda x: x[10], reverse=True)[:25]
     return render_template_string(FULL_HTML, display_projects=display_projects, projects_json=json.dumps(projects), stats=stats)
 
