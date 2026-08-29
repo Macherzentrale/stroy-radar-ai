@@ -66,7 +66,6 @@ FULL_HTML = """
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 20px; }
         
-        /* ЯСНИ И ВИДИМИ ФИЛТРИ (КОНТРАСТЕН ФОН ВМЕСТО ЧЕРНО НА ЧЕРНО) */
         .custom-input, .custom-select { background: #152238 !important; border: 2px solid #00f0ff !important; color: #fff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; font-weight: bold; }
         .custom-select option { background: #152238; color: #fff; }
         
@@ -155,7 +154,6 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ С ВИДИМИ И КОНТРАСТНИ ЕЛЕМЕНТИ -->
         <div class="card-dark" style="background:#09101f;">
             <div class="row g-2">
                 <div class="col-md-4"><label class="small text-info fw-bold mb-1">Филтър по град:</label><select id="filterCity" class="custom-select" onchange="applyFilters()"><option value="all">Всички градове</option><option value="София">София</option><option value="Пловдив">Пловдив</option></select></div>
