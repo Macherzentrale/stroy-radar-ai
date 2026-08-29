@@ -104,13 +104,11 @@ FULL_HTML = """
             --accent-blue: #38bdf8;
         }
         body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
-        
-        /* РАЗШИРЕН КОНТЕЙНЕР ЗА ПРЕМАХВАНЕ НА ПРЕКАЛЕНОТО ЧЕРНО ПРОСТРАНСТВО НА ДЕСКТОП */
         .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
 
         @keyframes neonGlow {
-            0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 0 6px rgba(245, 158, 11, 0.2); border-color: #f59e0b; }
-            50% { background-color: #382404; box-shadow: 0 0 24px rgba(245, 158, 11, 0.85), inset 0 0 12px rgba(245, 158, 11, 0.5); border-color: #fbbf24; }
+            0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); border-color: #f59e0b; }
+            50% { background-color: #382404; box-shadow: 0 0 24px rgba(245, 158, 11, 0.85); border-color: #fbbf24; }
         }
         @keyframes bellShake {
             0%, 100% { transform: rotate(0deg) scale(1.1); }
@@ -119,8 +117,8 @@ FULL_HTML = """
             60% { transform: rotate(-15deg) scale(1.35); }
             80% { transform: rotate(15deg) scale(1.35); }
         }
-        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 8px 18px; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
-        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.15rem; margin-right: 6px; }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; }
+        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; margin-right: 6px; }
 
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -128,9 +126,11 @@ FULL_HTML = """
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #070c18; border: 1px solid var(--border); color: #fff; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
-        .custom-input:focus, .custom-select:focus { outline: none; border-color: var(--accent-cyan); }
-        .custom-select option { background: #070c18; color: #fff; }
+        
+        /* КОРЕКЦИЯ НА ФИЛТРИТЕ: СВЕТЪЛ КОНТРАСТЕН ФОН ВМЕСТО ЧЕРНО НА ЧЕРНО */
+        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
+        .custom-select option { background: #131f36; color: #fff; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -190,6 +190,27 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
+        /* ОФИЦИАЛНИ И ВИДИМИ ПЛАВАЩИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ */
+        .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .btn-corporate-contact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
+        .contact-viber { background: #7360f2; }
+        .contact-tg { background: #229ED9; }
+        .contact-phone { background: #10b981; }
+
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 360px; max-width: 90vw; height: 460px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
@@ -211,14 +232,14 @@ FULL_HTML = """
     </style>
 </head>
 <body>
-    <!-- ПУЛСИРАЩ И ЖИВ TICKER ХЕДЪР -->
+    <!-- НАПЪЛНО ЦЕНТРИРАН И МИГАЩ TICKER ХЕДЪР -->
     <div class="ticker-bar">
-        <div>
+        <div class="w-100 text-center">
             <span class="bell-animated">🔔</span>
             <span style="color:#fbbf24; font-weight:800; letter-spacing:0.5px;">07:30 ПРОТОКОЛ • ИНСТИТУЦИОНАЛНИ ОБЕКТИ:</span>
             <span class="text-light ms-1">Национален feed в реално време • Активни {{ stats.total }} обекта</span>
+            <span class="badge bg-warning text-dark fw-bold ms-2" style="font-size:10px;">LIVE</span>
         </div>
-        <span class="badge bg-warning text-dark fw-bold" style="font-size:10px;">LIVE СИГНАЛ</span>
     </div>
 
     <div class="container-custom">
@@ -350,7 +371,7 @@ FULL_HTML = """
         <div class="row g-3" id="dealsContainer"></div>
         <div class="pagination-box" id="paginationControls"></div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ С ДИФЕРЕНЦИРАНИ ПРИДОБИВКИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
@@ -485,6 +506,13 @@ FULL_HTML = """
             </div>
         </div>
     </footer>
+
+    <!-- ПЛАВАЩИ И ЯСНИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ -->
+    <div class="floating-contact-bar">
+        <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
+        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
+        <a href="tel:+359888123456" class="btn-corporate-contact contact-phone">📞 0888 123 456</a>
+    </div>
 
     <!-- ПЛАВАЩ AI ЧАТБОТ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
@@ -762,7 +790,6 @@ FULL_HTML = """
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        /* ДИФЕРЕНЦИРАНИ ПРИДОБИВКИ ЗА ВСЕКИ ПЛАН */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
