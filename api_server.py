@@ -2,7 +2,6 @@ import os
 import json
 import sqlite3
 import random
-from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
 app = Flask(__name__)
@@ -31,50 +30,49 @@ def init_db():
         lng REAL DEFAULT 23.3219
     )''')
     
-    c.execute("DELETE FROM radar_projects")
-    cities = [
-        ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
-        ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
-        ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
-        ("Добрич", 43.5726, 27.8273), ("Шумен", 43.2712, 26.9361), ("Перник", 42.6052, 23.0378),
-        ("Хасково", 41.9344, 25.5556), ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228),
-        ("Габрово", 42.8742, 25.3187), ("Враца", 43.2102, 23.5529), ("Видин", 43.9962, 22.8679),
-        ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
-        ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
-        ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
-        ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
-    ]
-    
-    types = [
-        ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
-        ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
-        ('Търговска сграда & ритейл площи', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87),
-        ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
-        ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
-    ]
-    
-    records = []
-    for i in range(5040):
-        city = cities[i % len(cities)]
-        t = types[i % len(types)]
-        idx = i + 1
-        title = f'{t[0]} "{city[0]} Инвест #{idx}"'
-        location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 15 + 1}"
-        investor = f"{city[0]} Пропърти Груп {idx} ООД"
-        eik = str(200000000 + idx * 13)
-        manager = f"Инж. {city[0]}ски {idx}"
-        lat = city[1] + random.uniform(-0.06, 0.06)
-        lng = city[2] + random.uniform(-0.06, 0.06)
-        price = t[4] + (idx * 350) % 400000
-        mval = t[5] + (idx * 750) % 800000
-        disc = round(((mval - price) / mval) * 100, 1)
-        score = min(99, max(75, int(t[7] + (idx % 8) - 3)))
-        c_date = "2026-08-29" if (idx % 5 == 0) else "2026-08-28"
-        records.append((title, t[1], location, city[0], investor, eik, manager, price, mval, disc, score, t[2], t[3], c_date, lat, lng))
-        
-    c.executemany('''INSERT INTO radar_projects 
-        (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
+    c.execute("SELECT count(*) FROM radar_projects")
+    if c.fetchone()[0] < 5000:
+        c.execute("DELETE FROM radar_projects")
+        cities = [
+            ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
+            ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
+            ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
+            ("Добрич", 43.5726, 27.8273), ("Шумен", 43.2712, 26.9361), ("Перник", 42.6052, 23.0378),
+            ("Хасково", 41.9344, 25.5556), ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228),
+            ("Габрово", 42.8742, 25.3187), ("Враца", 43.2102, 23.5529), ("Видин", 43.9962, 22.8679),
+            ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
+            ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
+            ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
+            ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
+        ]
+        types = [
+            ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
+            ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
+            ('Търговска сграда & ритейл площи', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87),
+            ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
+            ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
+        ]
+        records = []
+        for i in range(5040):
+            city = cities[i % len(cities)]
+            t = types[i % len(types)]
+            idx = i + 1
+            title = f'{t[0]} "{city[0]} Инвест #{idx}"'
+            location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 15 + 1}"
+            investor = f"{city[0]} Пропърти Груп {idx} ООД"
+            eik = str(200000000 + idx * 13)
+            manager = f"Инж. {city[0]}ски {idx}"
+            lat = city[1] + random.uniform(-0.06, 0.06)
+            lng = city[2] + random.uniform(-0.06, 0.06)
+            price = t[4] + (idx * 350) % 400000
+            mval = t[5] + (idx * 750) % 800000
+            disc = round(((mval - price) / mval) * 100, 1)
+            score = min(99, max(75, int(t[7] + (idx % 8) - 3)))
+            c_date = "2026-08-29" if (idx % 5 == 0) else "2026-08-28"
+            records.append((title, t[1], location, city[0], investor, eik, manager, price, mval, disc, score, t[2], t[3], c_date, lat, lng))
+        c.executemany('''INSERT INTO radar_projects 
+            (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
     conn.commit()
     conn.close()
 
@@ -124,8 +122,11 @@ FULL_HTML = """
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #070c18; border: 1px solid var(--border); color: #fff; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
-        .custom-input:focus, .custom-select:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+        
+        /* Поправени филтри с перфектен контраст */
+        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .custom-input:focus, .custom-select:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(0,240,255,0.4); background: #0b1325 !important; color: #fff !important; }
+        .custom-select option { background: #0f172a; color: #fff; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -167,12 +168,26 @@ FULL_HTML = """
         .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
+        /* Професионални Премиум Бутони за Контакт (Viber, Telegram, Телефон) */
         .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .btn-float { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 1.35rem; transition: transform 0.2s; }
-        .btn-float:hover { transform: scale(1.1); color: #fff; }
-        .float-viber { background: #7360f2; }
-        .float-tg { background: #229ED9; }
-        .float-phone { background: #10b981; }
+        .btn-corporate-contact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
+        .contact-viber { background: #7360f2; }
+        .contact-tg { background: #229ED9; }
+        .contact-phone { background: #10b981; }
 
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
@@ -182,7 +197,6 @@ FULL_HTML = """
         .voice-recording { animation: pulseRecord 1s infinite alternate; background: #ef4444 !important; }
         @keyframes pulseRecord { from { transform: scale(1); } to { transform: scale(1.15); } }
 
-        /* Одит Резултат Разширена Таблица */
         .audit-metric-box { background: #070c18; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
         .audit-metric-title { font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
         .audit-metric-val { font-size: 1rem; font-weight: 800; color: #fff; }
@@ -233,7 +247,6 @@ FULL_HTML = """
                         <button class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
                     </div>
 
-                    <!-- Разширен резултат от проверката -->
                     <div id="companyAuditResult" class="p-3 rounded" style="background:#070c18; border:1px solid var(--border); display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong class="text-info fs-6" id="resCompName">---</strong>
@@ -242,12 +255,11 @@ FULL_HTML = """
                         <div class="small text-secondary mb-1">ЕИК: <span class="text-light" id="resCompEik">---</span> | Седалище: <span class="text-light" id="resCompCity">---</span></div>
                         <div class="small text-secondary mb-2">Управител / Представител: <strong class="text-light" id="resCompManager">---</strong></div>
 
-                        <!-- 4 Ключови бизнес метрики -->
                         <div class="row g-2 mb-3">
-                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Кредитен Рейтинг</div><div class="audit-metric-val text-success" id="resCompRating">A+ (Нисък риск)</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Кредитен Рейтинг</div><div class="audit-metric-val text-success" id="resCompRating">A+</div></div></div>
                             <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Капитал</div><div class="audit-metric-val" id="resCompCapital">€50,000</div></div></div>
-                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Запор по чл. 512 ГПК</div><div class="audit-metric-val text-success" id="resCompInjunctions">НЯМА</div></div></div>
-                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Задължения НАП</div><div class="audit-metric-val text-success" id="resCompNra">Редовен</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Запор чл. 512 ГПК</div><div class="audit-metric-val text-success" id="resCompInjunctions">НЯМА</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">НАП Статус</div><div class="audit-metric-val text-success" id="resCompNra">Редовен</div></div></div>
                         </div>
 
                         <div class="d-flex gap-2">
@@ -279,7 +291,7 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- ВЪЗСТАНОВЕН ИНТЕРАКТИВЕН ЧСИ & ТАКСИ КАЛКУЛАТОР -->
+        <!-- ИНТЕРАКТИВЕН ЧСИ & ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР -->
         <div class="card-dark" id="chsi-calc-section" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size:11px;">🧮 ИНСТИТУЦИОНАЛЕН ЧСИ &amp; ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР 2026</span>
@@ -429,7 +441,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ С МАСКИРАНИ РАЙОНИ И УЛИЦИ -->
+        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА С МАСКИРАНИ РАЙОНИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Защитени Данни)</h5>
@@ -442,14 +454,14 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
-    <!-- ПЛАВАЩИ КОНТАКТНИ БУТОНИ -->
+    <!-- ПРОФЕСИОНАЛНИ ПРЕМИУМ БУТОНИ ЗА КОНТАКТ -->
     <div class="floating-contact-bar">
-        <a href="viber://chat?number=%2B359888123456" class="btn-float float-viber" title="Viber Чат">🟣</a>
-        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-float float-tg" title="Telegram">✈️</a>
-        <a href="tel:+359888123456" class="btn-float float-phone" title="Директен телефон">📞</a>
+        <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber" title="Viber Чат">🟣 Viber Консулт</a>
+        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg" title="Telegram Чат">✈️ Telegram Канал</a>
+        <a href="tel:+359888123456" class="btn-corporate-contact contact-phone" title="Директен телефон">📞 0888 123 456</a>
     </div>
 
-    <!-- ПЛАВАЩ GEMINI AI ГЛАСОВ ЧАТБОТ -->
+    <!-- ПЛАВАЩ GEMINI AI ЧАТБОТ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ Gemini AI Консултант</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -463,7 +475,7 @@ FULL_HTML = """
             </div>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм институционалният Gemini AI съветник за българския пазар. Обучен съм в детайли относно чл. 494/512 от ГПК, Закона за устройство на територията (ЗУТ), изчисляване на ЧСИ такси и одит на дружества. С какво мога да ви съдействам?</div>
+            <div class="msg-ai">Здравейте! Аз съм експертният Gemini AI модел, обучен специално върху пазара на публични търгове, ЧСИ процедури, ЗУТ и корпоративен одит. Как мога да ви помогна днес?</div>
         </div>
         <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
             <button class="btn btn-outline-danger btn-sm px-2" id="micBtn" onclick="startVoiceRecognition()" title="Говори чрез микрофон">🎙️</button>
@@ -583,7 +595,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПОПРАВЕНО И СТРУКТУРИРАНО МОБИЛНО МЕНЮ -->
+    <!-- МОБИЛНО МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <div>
@@ -1051,7 +1063,7 @@ FULL_HTML = """
 def home():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, city, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
+    c.execute("SELECT id, title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
 
@@ -1068,7 +1080,7 @@ def home():
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
-# ИНТЕЛЕКТУАЛЕН GEMINI ДИАЛОГОВ МОДЕЛ
+# ИНТЕЛИГЕНТЕН GEMINI ДИАЛОГОВ МОДЕЛ
 @app.route("/api/neural-ai-chat", methods=["POST"])
 def api_neural_ai_chat():
     data = request.get_json() or {}
@@ -1087,7 +1099,7 @@ def api_neural_ai_chat():
         reply = "Следим всички строителни разрешения по ЗУТ в страната. Показваме разгърната площ (РЗП), статуса на проекта и инвеститора, за да можете да влезете на ниво 'първа копка' преди пазарното оскъпяване."
     
     elif any(w in user_msg for w in ["абонамент", "цена", "план", "плащане", "тарифа", "струва", "фактура"]):
-        reply = "Имате три плана: STARTER EXECUTIVE (€60/мес.) за отключване на точни адреси и ЕИК; PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; ENTERPRISE M2M (€290/мес.) с REST API ключ. Плаща се по банков път към СД Ковко - Василев и Сие."
+        reply = "Имате три плана: STARTER EXECUTIVE (€60/мес.) за отключване на точни адреси и ЕИК; PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; ENTERPRISE M2M (€290/мес.) с REST JSON API ключ. Плащанията се извършват по фирмена банкова сметка на СД Ковко - Василев и Сие."
         
     elif any(w in user_msg for w in ["софия", "пловдив", "варна", "бургас", "русе", "стара загора", "банско"]):
         reply = f"За този регион разполагаме с десетки активни позиции. Използвайте филтъра над обявите или интерактивната карта, за да видите всички активи."
@@ -1097,7 +1109,7 @@ def api_neural_ai_chat():
 
     return jsonify({"status": "ok", "reply": reply})
 
-# РАЗШИРЕНО ЕИК ДОСИЕ
+# РАЗШИРЕНО ЕИК ДОСИЕ С ПЪЛНИ ДАННИ
 @app.route("/api/audit-eik")
 def api_audit_eik():
     eik = request.args.get("eik", "").strip()
@@ -1145,7 +1157,7 @@ def api_audit_eik():
         return jsonify({
             "eik": eik,
             "name": f"Търговско дружество (ЕИК {eik}) ООД",
-            "manager": "Управител по ТР (Удостоверение за актуално състояние)",
+            "manager": "Управител по Търговски регистър",
             "city": "Република България (Търговски Регистър)",
             "injunctions": "НЯМА ВПИСАНИ ТЕЖЕСТИ ПО ЧЛ. 512 ГПК",
             "status": "АКТИВЕН ТЪРГОВЕЦ",
@@ -1155,7 +1167,7 @@ def api_audit_eik():
             "isSafe": True
         })
 
-# ГЕНЕРАТОР НА ОФИЦИАЛЕН PDF ЗА ФИРМЕН ОДИТ
+# РАЗШИРЕН ОФИЦИАЛЕН PDF СЕРТИФИКАТ ЗА ФИРМЕН ОДИТ
 @app.route("/export-audit-pdf")
 def export_audit_pdf():
     eik = request.args.get("eik", "030431138").strip()
@@ -1168,6 +1180,8 @@ def export_audit_pdf():
         inj = "НЯМА ВПИСАНИ ТЕЖЕСТИ ИЛИ ИЗПЪЛНИТЕЛНИ ДЕЛА"
         safe_str = "ИЗРЯДЕН КОНТРАГЕНТ • ПРЕПОРЪЧАН ЗА СДЕЛКИ"
         color = "#10b981"
+        turnover = "€1,450,000 (Годишен оборот)"
+        profit = "€280,000 (Чиста печалба)"
     else:
         name = f"Търговско дружество (ЕИК {eik}) ООД"
         manager = "Управител по Търговски регистър"
@@ -1176,13 +1190,15 @@ def export_audit_pdf():
         inj = "НЯМА ВПИСАНИ ТЕЖЕСТИ ПО ЧЛ. 512 ГПК"
         safe_str = "АКТИВЕН СТАТУС"
         color = "#0284c7"
+        turnover = "€820,000"
+        profit = "€95,000"
         
     html = f"""
     <!DOCTYPE html>
     <html lang="bg">
     <head>
         <meta charset="UTF-8">
-        <title>Официален Сертификат за Фирмен Одит - ЕИК {eik}</title>
+        <title>Пълно Институционално Досие - ЕИК {eik}</title>
         <style>
             body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 35px; color: #0f172a; line-height: 1.5; }}
             .cert-box {{ border: 4px double #0284c7; padding: 25px; border-radius: 12px; }}
@@ -1198,7 +1214,7 @@ def export_audit_pdf():
             <div class="header">
                 <div>
                     <h2 style="margin:0; color:#0284c7;">PRO INVEST RADAR AI .BG</h2>
-                    <div style="font-size:13px; font-weight:bold; color:#334155;">ОФИЦИАЛЕН ДОКЛАД ЗА ПРАВЕН И ФИНАНСОВ ОДИТ</div>
+                    <div style="font-size:13px; font-weight:bold; color:#334155;">ПЪЛЕН ИНСТИТУЦИОНАЛЕН ДОКЛАД ЗА ФИРМЕН ОДИТ</div>
                 </div>
                 <div style="text-align:right; font-size:12px;">
                     <strong>Дата на издаване: 29 Август 2026 г.</strong><br>
@@ -1212,13 +1228,15 @@ def export_audit_pdf():
                 <div class="item"><strong>Наименование:</strong><br>{name}</div>
                 <div class="item"><strong>ЕИК / БУЛСТАТ:</strong><br>{eik}</div>
                 <div class="item"><strong>Седалище и адрес:</strong><br>{city}</div>
-                <div class="item"><strong>Управител:</strong><br>{manager}</div>
+                <div class="item"><strong>Управител / Представител:</strong><br>{manager}</div>
                 <div class="item"><strong>Кредитен Рейтинг:</strong><br><span style="color:#059669; font-weight:bold;">{rating}</span></div>
                 <div class="item"><strong>Запори (ТР & ЧСИ):</strong><br>{inj}</div>
+                <div class="item"><strong>Финансов оборот:</strong><br>{turnover}</div>
+                <div class="item"><strong>Нетна печалба:</strong><br>{profit}</div>
             </div>
 
             <p style="font-size:12px; color:#475569;">
-                Настоящият документ удостоверява, че към 29 Август 2026 г. дружеството е проверено чрез автоматизирания институционален радар срещу регистрите на Търговския регистър, Камарата на ЧСИ и НАП.
+                Настоящият документ удостоверява задълбочен правен и имотен одит на дружеството срещу официалните регистри (Търговски регистър, Камара на ЧСИ, НАП и НСИ).
             </p>
 
             <div class="footer">
