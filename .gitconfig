@@ -1,3 +1,5 @@
 [user]
 	name = StroyRadar
 	email = esaidi2013@gmail.com
+[credential]
+	helper = store
