@@ -2,7 +2,6 @@ import os
 import json
 import sqlite3
 import random
-import re
 from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
@@ -84,6 +83,20 @@ def init_db():
 
 init_db()
 
+# Помощни функции за маскиране на данните
+def mask_eik(eik_str):
+    if not eik_str or len(eik_str) < 4:
+        return "*********"
+    return eik_str[:3] + "*****"
+
+def mask_text(text_str):
+    if not text_str:
+        return "*********"
+    words = text_str.split()
+    if len(words) <= 1:
+        return words[0][:2] + "*******" if words else "*******"
+    return words[0] + " " + " ".join(["***" for _ in words[1:]])
+
 FULL_HTML = """
 <!DOCTYPE html>
 <html lang="bg">
@@ -155,6 +168,18 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
+        /* Стилове за маскирани скрити данни */
+        .masked-badge {
+            background: #182235;
+            color: #94a3b8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            border: 1px dashed #334155;
+            display: inline-block;
+        }
+
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
@@ -176,7 +201,6 @@ FULL_HTML = """
         .float-tg { background: #229ED9; }
         .float-phone { background: #10b981; }
 
-        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ (UI) */
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 0.88rem; line-height: 1.45; }
@@ -284,7 +308,7 @@ FULL_HTML = """
                         <div class="w-100 mb-3">
                             <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
                             <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + пълен национален фийд</div>
+                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на всички адреси и ЕИК</div>
                         </div>
                         <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('starter')">Виж придобивките</button>
                     </div>
@@ -297,7 +321,7 @@ FULL_HTML = """
                                 <span class="badge bg-info text-dark" style="font-size:9px; font-weight:800;">POPULAR</span>
                             </div>
                             <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит</div>
+                            <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит и контакти</div>
                         </div>
                         <button class="btn-plan btn-plan-pro w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('pro')">ВЗЕМИ PRO</button>
                     </div>
@@ -307,7 +331,7 @@ FULL_HTML = """
                         <div class="w-100 mb-3">
                             <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
                             <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">REST JSON API ключ + llms.txt Gateway</div>
+                            <div class="text-secondary small mt-1">REST JSON API ключ + пълен достъп без маскиране</div>
                         </div>
                         <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
                     </div>
@@ -320,7 +344,7 @@ FULL_HTML = """
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <h6 class="fw-bold text-white mb-0">🗺️ Интерактивен ГИС Радар на България</h6>
-                    <small class="text-secondary">Кликнете върху групираните маркери за детайлен оглед на парцелите</small>
+                    <small class="text-secondary">Кликнете върху групираните маркери за детайлен оглед на районите</small>
                 </div>
                 <span class="badge bg-primary fs-6">{{ stats.total }} Обекта</span>
             </div>
@@ -379,13 +403,13 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА -->
+        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА С МАСКИРАНИ ДАННИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
-                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
-                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница</small>
+                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Защитени Данни)</h5>
+                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница • Идентифициращите данни са заключени</small>
             </div>
-            <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:260px; font-size:0.85rem;" placeholder="🔍 Търси проект или инвеститор..." onkeyup="applyFilters()">
+            <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:260px; font-size:0.85rem;" placeholder="🔍 Търси град или актив..." onkeyup="applyFilters()">
         </div>
 
         <div class="row g-3" id="dealsContainer"></div>
@@ -399,7 +423,7 @@ FULL_HTML = """
         <a href="tel:+359888123456" class="btn-float float-phone" title="Директен телефон">📞</a>
     </div>
 
-    <!-- ПЛАВАЩ НЕВРОНЕН AI ЧАТБОТ С ГЛАСОВО РАЗПОЗНАВАНЕ -->
+    <!-- ПЛАВАЩ НЕВРОНЕН AI ЧАТБОТ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ AI Гласов Консултант</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -408,7 +432,7 @@ FULL_HTML = """
                 <strong class="text-white small">Radar AI Гласов Съветник</strong>
             </div>
             <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-outline-warning btn-sm py-0 px-2" id="voiceToggleBtn" onclick="toggleVoiceOutput()" title="Включи/изключи говор на бот">🔊 Глас: ВКЛ</button>
+                <button class="btn btn-outline-warning btn-sm py-0 px-2" id="voiceToggleBtn" onclick="toggleVoiceOutput()" title="Включи/изключи говор">🔊 Глас: ВКЛ</button>
                 <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
             </div>
         </div>
@@ -434,7 +458,7 @@ FULL_HTML = """
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="text-secondary small mb-3">Гарантирани придобивки към вашия абонамент:</div>
+                    <div class="text-secondary small mb-3">Гарантирани придобивки и отключване на пълни досиета:</div>
                     <div id="benefitsListContainer"></div>
 
                     <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" id="proceedToPayBtn">
@@ -481,7 +505,7 @@ FULL_HTML = """
                     </div>
 
                     <div class="mb-3">
-                        <label class="small text-secondary mb-1">Въведете имейл за получаване на фактура и достъп:</label>
+                        <label class="small text-secondary mb-1">Въведете имейл за получаване на фактура и ключ за достъп:</label>
                         <input type="email" id="payUserEmail" class="custom-input" placeholder="office@yourcompany.bg" required>
                     </div>
 
@@ -577,7 +601,7 @@ FULL_HTML = """
                 <div style="font-family:sans-serif; min-width:190px;">
                     <span style="font-size:10px; background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-weight:bold;">${item[2]}</span>
                     <h6 style="margin:6px 0 4px 0; font-size:13px; font-weight:bold; color:#fff;">${item[1]}</h6>
-                    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">📍 ${item[3]}</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">📍 ${item[3]} (Точен адрес заключен 🔒)</div>
                     <div style="background:#070c18; padding:6px; border-radius:6px; font-size:11px; border:1px solid #1e293b;">
                         <div>Тържна: <strong style="color:#f59e0b;">€${item[7].toLocaleString()}</strong></div>
                         <div>Пазарна: <strong style="color:#fff;">€${item[8].toLocaleString()}</strong></div>
@@ -592,6 +616,7 @@ FULL_HTML = """
 
         map.addLayer(markersCluster);
 
+        // Функция за рендиране на обяви с маскирани полета (Paywall Protection)
         function renderPaginatedDeals() {
             var container = document.getElementById('dealsContainer');
             container.innerHTML = '';
@@ -608,6 +633,12 @@ FULL_HTML = """
             }
 
             pageItems.forEach(function(p) {
+                // Маскираме ЕИК (напр. 2058*****)
+                var eikMasked = (p[5] && p[5].length >= 4) ? (p[5].substring(0, 3) + "***** 🔒") : "********* 🔒";
+                // Маскираме инвеститора (напр. Елит Строй ******* ООД)
+                var invParts = (p[4] || "").split(' ');
+                var invMasked = invParts[0] + " ******* " + (invParts.length > 2 ? invParts[invParts.length-1] : "🔒");
+                
                 var col = document.createElement('div');
                 col.className = 'col-md-6';
                 col.innerHTML = `
@@ -619,10 +650,10 @@ FULL_HTML = """
                             </div>
                             <div class="listing-title">${p[1]}</div>
                             <div class="listing-meta">
-                                <div>📍 <strong>Локация:</strong><br><span class="text-white">${p[3]}</span></div>
+                                <div>📍 <strong>Район:</strong><br><span class="text-white">${p[3]}</span></div>
                                 <div>🏢 <strong>РЗП / Площ:</strong><br><span class="text-white">${p[12]}</span></div>
-                                <div>💼 <strong>Инвеститор:</strong><br><span class="text-white">${p[4]}</span></div>
-                                <div>📋 <strong>ЕИК:</strong><br><span class="text-white">${p[5]}</span></div>
+                                <div>💼 <strong>Инвеститор:</strong><br><span class="masked-badge">${invMasked}</span></div>
+                                <div>📋 <strong>ЕИК:</strong><br><span class="masked-badge">${eikMasked}</span></div>
                             </div>
                             <div class="listing-price-box">
                                 <div>
@@ -637,7 +668,7 @@ FULL_HTML = """
                         </div>
                         <div class="d-flex gap-2 mt-auto">
                             <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap(${p[14]}, ${p[15]}, ${p[0]})">📍 Карта</button>
-                            <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="showPlanFeatures('starter')">⚡ Меморандум</button>
+                            <button class="btn btn-info w-50 fw-bold text-dark" style="font-size:13px;" onclick="showPlanFeatures('starter')">🔓 Отключи профил</button>
                         </div>
                     </div>
                 `;
@@ -731,9 +762,9 @@ FULL_HTML = """
                 amount: 60,
                 badge: "€60 / МЕСЕЦ",
                 features: [
+                    { icon: "🔓", title: "Отключване на точни ЕИК номера и адреси", desc: "Премахване на всички защитни маски в базата данни." },
                     { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на всички нови търгове и разрешителни за строеж." },
                     { icon: "🏛️", title: "Достъп до всички 5000+ ЧСИ & НАП търгове", desc: "Филтриран списък с ликвидационни цени и пазарни дисконти." },
-                    { icon: "🗺️", title: "Интерактивна ГИС карта на България", desc: "Пълна визуализация на парцелите и сградите в реално време." },
                     { icon: "🏢", title: "До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." }
                 ]
             },
@@ -742,7 +773,7 @@ FULL_HTML = """
                 amount: 150,
                 badge: "€150 / МЕСЕЦ (POPULAR)",
                 features: [
-                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден." },
+                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден с пълни контакти." },
                     { icon: "🔍", title: "НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори (ТР), ЧСИ дела и свързани дружества." },
                     { icon: "🧮", title: "ЧСИ Net ROI & Такси Калкулатор", desc: "Автоматично начисляване на такси по т. 26 ТЗЧСИ и местен данък." },
                     { icon: "🔔", title: "VIP SMS & Имейл Алерти в реално време", desc: "Известия при пускане на нов търг в избран от вас регион." },
@@ -865,7 +896,7 @@ FULL_HTML = """
                 .catch(err => { alert("Грешка при връзка със сървъра."); });
         }
 
-        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ С ДИАЛОГ В РЕАЛНО ВРЕМЕ */
+        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ */
         var isVoiceOutputActive = true;
         var recognition = null;
 
@@ -987,13 +1018,11 @@ def home():
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
-# НЕВРОНЕН AI ДИАЛОГОВ ЕНДПОЙНТ
 @app.route("/api/neural-ai-chat", methods=["POST"])
 def api_neural_ai_chat():
     data = request.get_json() or {}
     user_msg = data.get("message", "").strip().lower()
     
-    # Интелигентен анализ на намерението (NLP Intent Extraction)
     if any(w in user_msg for w in ["здравей", "добър ден", "кой си", "какво правиш", "представи се", "помощ"]):
         reply = "Здравейте! Аз съм институционалният AI експерт на PRO INVEST RADAR .BG. Анализирам в реално време над 5 000 публични търга от Камарата на ЧСИ, НАП, РДНСК и Търговския регистър. Мога да ви консултирам за правен риск, запори по чл. 512 ГПК, дисконти и строителни проекти."
     
@@ -1007,7 +1036,7 @@ def api_neural_ai_chat():
         reply = "Радарът следи строителните разрешения по ЗУТ в 28-те области на страната. За всяка сграда показваме разгърната застроена площ (РЗП), инвеститор и етап на одобрение, за да влезете на ниво 'първа копка' с максимален марж."
     
     elif any(w in user_msg for w in ["абонамент", "цена", "план", "плащане", "тарифа", "струва", "фактура"]):
-        reply = "Предлагаме три институционални плана: 1) STARTER EXECUTIVE (€60/мес.) за седмични доклади; 2) PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; 3) ENTERPRISE M2M (€290/мес.) с REST JSON API ключ. Плащанията се извършват по фирмена банкова сметка на СД Ковко - Василев и Сие с незабавна фактура."
+        reply = "Предлагаме три институционални плана: 1) STARTER EXECUTIVE (€60/мес.) за отключване на ЕИК и точни адреси; 2) PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; 3) ENTERPRISE M2M (€290/мес.) с REST JSON API ключ. Плащанията се извършват по фирмена банкова сметка на СД Ковко - Василев и Сие с незабавна фактура."
     
     elif any(w in user_msg for w in ["софия", "пловдив", "варна", "бургас", "русе", "стара загора", "банско"]):
         reply = f"В момента в регистъра има десетки активни обекти за този регион. Използвайте филтъра над обявите или интерактивната ГИС карта, за да видите точните координати и пазарните оценки."
@@ -1127,7 +1156,7 @@ def export_pdf():
                     <td><strong>{d[0]}</strong></td>
                     <td>{d[1]}</td>
                     <td>{d[2]}</td>
-                    <td>{d[3]} ({d[4]})</td>
+                    <td>{d[3]} ({mask_eik(d[4])})</td>
                     <td style="color:#b45309; font-weight:bold;">€{d[5]:,.0f}</td>
                     <td>€{d[6]:,.0f}</td>
                     <td style="color:#047857; font-weight:bold;">-{d[7]}%</td>
