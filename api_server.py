@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "stroy-radar-secret-key-2026")
 DB_PATH = "stroy_radar_intel.db"
 
-# --- 1. База данни ---
+# --- 1. База данни с таблица за B2B заявки ---
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -56,6 +56,22 @@ def init_db():
         )
     ''')
 
+    # Таблица за съхранение на директни запитвания към инвеститорите
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS project_inquiries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            project_title TEXT,
+            applicant_company TEXT,
+            applicant_email TEXT,
+            applicant_phone TEXT,
+            service_type TEXT,
+            message TEXT,
+            status TEXT DEFAULT 'new',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -72,7 +88,6 @@ def is_email_valid_domain(email):
 
 def send_email_msg(to_email, subject, body_html):
     if not is_email_valid_domain(to_email):
-        print(f"[Zero-Bounce] Пропуснат невалиден имейл: {to_email}")
         return False
     sender = os.environ.get("SENDER_EMAIL", "kovko.firma@gmail.com")
     password = os.environ.get("SENDER_APP_PASSWORD", "")
@@ -92,102 +107,24 @@ def send_email_msg(to_email, subject, body_html):
         server.quit()
         return True
     except Exception as e:
-        print(f"[!] Грешка при изпращане към {to_email}: {e}")
+        print(f"[!] Грешка при изпращане: {e}")
         return False
 
-# --- 3. B2B Аутрийч Кампания (Партиди по 20) ---
-def execute_outreach_batch(batch_size=20):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT id, email, company_name FROM leads_outreach WHERE status = 'pending' LIMIT ?", (batch_size,))
-    leads = c.fetchall()
-    
-    sent_count = 0
-    for lead_id, email, company in leads:
-        comp_name = company if company else "Колеги"
-        subject = f"Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
-        body = f"""
-        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
-            <h2 style='color:#38bdf8; margin-top:0;'>🏗️ Stroy Radar AI</h2>
-            <p>Здравейте, {comp_name},</p>
-            <p>Платформата за строителен интелиджънс <strong>Stroy Radar AI</strong> следи в реално време новоиздадените разрешителни за строеж и публичните ЧСИ търгове в България.</p>
-            <p>Предоставяме ви <strong>7-дневен пълен безплатен тестов достъп</strong>, включващ:</p>
-            <ul>
-                <li>Ежедневен анализ на новите обекти всяка сутрин в 07:30 ч.</li>
-                <li>Директни контакти на инвеститори и възложители</li>
-                <li>Интерактивна GIS карта и експорт в Excel</li>
-            </ul>
-            <p style='margin:25px 0;'>
-                <a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Активирай 7 дни тест безплатно</a>
-            </p>
-            <p style='font-size:12px; color:#94a3b8; border-top:1px solid #334155; padding-top:15px;'>
-                За директна връзка с нас: <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a>
-            </p>
-        </div>
-        """
-        if send_email_msg(email, subject, body):
-            c.execute("UPDATE leads_outreach SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = ?", (lead_id,))
-            conn.commit()
-            sent_count += 1
-            time.sleep(2)  # Безопасен интервал между писмата
-            
-    conn.close()
-    return sent_count
-
-# --- 4. Фонов Scheduler за 07:30 ч. ---
-def scheduler_loop():
-    already_sent = False
-    while True:
-        try:
-            now_bg = datetime.now(ZoneInfo("Europe/Sofia"))
-            time_str = now_bg.strftime("%H:%M")
-            if time_str == "00:00":
-                already_sent = False
-            if time_str == "07:30" and not already_sent:
-                conn = sqlite3.connect(DB_PATH)
-                c = conn.cursor()
-                c.execute("SELECT title, category, location, investor, size_rzp, price_eur FROM radar_projects ORDER BY id DESC LIMIT 3")
-                top_items = c.fetchall()
-                conn.close()
-
-                items_html = "".join([
-                    f"<div style='background:#1e293b; padding:12px; border-radius:6px; margin-bottom:10px; border-left:4px solid #3b82f6;'>"
-                    f"<h4 style='color:#ffffff; margin:0;'>{p[0]}</h4>"
-                    f"<p style='color:#94a3b8; margin:4px 0 0 0; font-size:13px;'>{p[1]} | {p[2]} | Възложител: {p[3]}</p>"
-                    f"</div>" for p in top_items
-                ])
-
-                mail_body = f"""
-                <div style='font-family:sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
-                    <h2 style='color:#38bdf8;'>Сутрешен Бюлетин ({now_bg.strftime('%d.%m.%Y')})</h2>
-                    {items_html}
-                    <p><a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#fff; padding:10px 18px; text-decoration:none; border-radius:6px; display:inline-block;'>Вход в Радара</a></p>
-                </div>
-                """
-                send_email_msg("kovko.firma@gmail.com", f"🏗️ Сутрешен Строителен Радар ({now_bg.strftime('%d.%m.%Y')})", mail_body)
-                already_sent = True
-            time.sleep(30)
-        except Exception:
-            time.sleep(60)
-
-threading.Thread(target=scheduler_loop, daemon=True).start()
-
-# --- 5. HTML Шаблони с Viber интеграция ---
+# --- 3. HTML Шаблони ---
 MAIN_HTML = """
 <!DOCTYPE html>
 <html lang="bg">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroy Radar AI - Строителен & ЧСИ Мониторинг</title>
+    <title>Stroy Radar AI - B2B Строителен Интелиджънс</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { background: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
         .btn-brand { background: #2563eb; color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-viber { background: #7360f2; color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-viber:hover { background: #5e4bd8; color: #fff; }
-        #map { height: 400px; width: 100%; border-radius: 12px; }
+        .btn-brand:hover { background: #1d4ed8; color: #fff; }
+        #map { height: 380px; width: 100%; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -211,11 +148,7 @@ MAIN_HTML = """
             <div class="col-lg-7">
                 <span class="badge bg-primary mb-2 px-3 py-2">B2B ConTech Интелиджънс</span>
                 <h1 class="display-6 fw-bold text-white mb-3">Мониторинг на нови строежи и ЧСИ имоти</h1>
-                <p class="text-secondary lead fs-6">Интерактивна карта, разрешителни за строеж и търгове на парцели в България.</p>
-                <div class="d-flex gap-2 mt-3">
-                    <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-light btn-sm">✉️ kovko.firma@gmail.com</a>
-                    <a href="viber://chat" class="btn btn-viber btn-sm">💬 Чат във Viber</a>
-                </div>
+                <p class="text-secondary lead fs-6">Интерактивна карта, директни контакти на инвеститори и заявки за подизпълнители.</p>
             </div>
             <div class="col-lg-5">
                 <div class="card card-custom p-4 shadow-lg">
@@ -243,28 +176,10 @@ MAIN_HTML = """
 
         <div class="card card-custom p-4 my-4">
             <h4 class="fw-bold text-white mb-3">🔍 Обекти и разрешителни на живо</h4>
-            <form method="GET" action="/" class="row g-2 mb-3">
-                <div class="col-md-5">
-                    <input type="text" name="q" class="form-control bg-dark text-light border-secondary" placeholder="Търси по локация, фирма..." value="{{ query }}">
-                </div>
-                <div class="col-md-4">
-                    <select name="category" class="form-select bg-dark text-light border-secondary">
-                        <option value="">Всички категории</option>
-                        <option value="Разрешение за строеж" {% if category == 'Разрешение за строеж' %}selected{% endif %}>Разрешение за строеж</option>
-                        <option value="ЧСИ Търг" {% if category == 'ЧСИ Търг' %}selected{% endif %}>ЧСИ Търгове</option>
-                        <option value="Промишлено" {% if category == 'Промишлено' %}selected{% endif %}>Промишлено строителство</option>
-                    </select>
-                </div>
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary w-100">Филтрирай</button>
-                    <a href="/" class="btn btn-outline-secondary">Изчисти</a>
-                </div>
-            </form>
-
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри / Цена</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th><th>Действие</th></tr>
                     </thead>
                     <tbody>
                         {% for p in projects %}
@@ -274,6 +189,9 @@ MAIN_HTML = """
                             <td>{{ p[3] }}</td>
                             <td class="text-info">{{ p[4] }}</td>
                             <td>{{ "€{:,.0f}".format(p[6]) if p[6] > 0 else p[5] }}</td>
+                            <td>
+                                <button class="btn btn-outline-primary btn-sm" onclick="openInquiryModal({{ p[0] }}, '{{ p[1] | replace("'", "") }}')">📩 Свържи ме</button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -282,17 +200,56 @@ MAIN_HTML = """
         </div>
     </div>
 
-    <!-- Футър с контакти -->
-    <footer class="border-top border-secondary py-4 mt-5 text-center text-secondary small">
-        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <div>© 2026 Stroy Radar AI. Всички права запазени.</div>
-            <div class="d-flex gap-3">
-                <a href="mailto:kovko.firma@gmail.com" class="text-info text-decoration-none">✉️ kovko.firma@gmail.com</a>
-                <a href="viber://chat" class="text-light text-decoration-none">💬 Viber Поддръжка</a>
+    <!-- Модален прозорец за B2B Заявка -->
+    <div class="modal fade" id="inquiryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title">📩 Заявка за връзка с инвеститора</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/api/submit-inquiry" method="POST">
+                    <div class="modal-body">
+                        <input type="hidden" id="modal_project_id" name="project_id">
+                        <input type="hidden" id="modal_project_title" name="project_title">
+                        <p class="small text-secondary mb-3">Обект: <strong id="display_project_title" class="text-info"></strong></p>
+                        <div class="mb-2">
+                            <label class="small text-secondary">Вашата фирма:</label>
+                            <input type="text" name="company" class="form-control bg-secondary text-light border-0" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small text-secondary">Имейл адрес:</label>
+                            <input type="email" name="email" class="form-control bg-secondary text-light border-0" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small text-secondary">Телефон за обратна връзка:</label>
+                            <input type="text" name="phone" class="form-control bg-secondary text-light border-0" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small text-secondary">Какви строителни дейности / доставки предлагате?</label>
+                            <select name="service_type" class="form-select bg-secondary text-light border-0">
+                                <option value="Груб строеж / Изкопи / Бетон">Груб строеж / Изкопи / Бетон</option>
+                                <option value="Електро / ОВК / ВиК инсталации">Електро / ОВК / ВиК инсталации</option>
+                                <option value="Дограма, Фасади и Изолации">Дограма, Фасади и Изолации</option>
+                                <option value="Доставка на строителни материали">Доставка на строителни материали</option>
+                                <option value="Довършителни дейности и ремонти">Довършителни дейности и ремонти</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="small text-secondary">Допълнителни детайли (опит, капацитет):</label>
+                            <textarea name="message" class="form-control bg-secondary text-light border-0" rows="2" placeholder="Кратка информация за екипа и възможностите..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button>
+                        <button type="submit" class="btn btn-primary">Изпрати заявката</button>
+                    </div>
+                </form>
             </div>
         </div>
-    </footer>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         var map = L.map('map').setView([42.6977, 24.5], 7);
@@ -304,6 +261,14 @@ MAIN_HTML = """
             var priceOrSize = item[6] > 0 ? "€" + item[6].toLocaleString() : item[5];
             L.marker([lat, lng]).addTo(map).bindPopup("<strong>" + item[1] + "</strong><br>" + item[3] + "<br>" + priceOrSize);
         });
+
+        function openInquiryModal(id, title) {
+            document.getElementById('modal_project_id').value = id;
+            document.getElementById('modal_project_title').value = title;
+            document.getElementById('display_project_title').innerText = title;
+            var modal = new bootstrap.Modal(document.getElementById('inquiryModal'));
+            modal.show();
+        }
     </script>
 </body>
 </html>
@@ -326,44 +291,17 @@ PORTAL_HTML = """
                 <span class="badge bg-success">7-дневен тест активен</span>
             </div>
             <div class="d-flex gap-2">
-                <a href="viber://chat" class="btn btn-outline-info btn-sm">💬 Помощ във Viber</a>
                 <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV</a>
                 <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
             </div>
         </div>
 
-        <div class="card card-custom p-4 mb-4">
-            <h4 class="fw-bold text-white mb-2">⚙️ Персонализирай сутрешния бюлетин (07:30 ч.)</h4>
-            <form method="POST" action="/api/update-preferences" class="row g-3">
-                <div class="col-md-5">
-                    <select name="preferred_region" class="form-select bg-dark text-light border-secondary">
-                        <option value="Всички" {% if user_pref[0] == 'Всички' %}selected{% endif %}>Цяла България (Всички)</option>
-                        <option value="София" {% if user_pref[0] == 'София' %}selected{% endif %}>София и региона</option>
-                        <option value="Пловдив" {% if user_pref[0] == 'Пловдив' %}selected{% endif %}>Пловдив и Тракия</option>
-                        <option value="Варна" {% if user_pref[0] == 'Варна' %}selected{% endif %}>Варна и Черноморие</option>
-                        <option value="Бургас" {% if user_pref[0] == 'Бургас' %}selected{% endif %}>Бургас и региона</option>
-                    </select>
-                </div>
-                <div class="col-md-5">
-                    <select name="preferred_category" class="form-select bg-dark text-light border-secondary">
-                        <option value="Всички" {% if user_pref[1] == 'Всички' %}selected{% endif %}>Всички категории</option>
-                        <option value="Разрешение за строеж" {% if user_pref[1] == 'Разрешение за строеж' %}selected{% endif %}>Само Разрешителни за строеж</option>
-                        <option value="ЧСИ Търг" {% if user_pref[1] == 'ЧСИ Търг' %}selected{% endif %}>Само Търгове от ЧСИ</option>
-                        <option value="Промишлено" {% if user_pref[1] == 'Промишлено' %}selected{% endif %}>Само Промишлени бази</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Запази</button>
-                </div>
-            </form>
-        </div>
-
         <div class="card card-custom p-4">
-            <h4 class="fw-bold text-white mb-3">Обекти в реално време</h4>
+            <h4 class="fw-bold text-white mb-3">Обекти в реално време & Директен контакт</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри / Цена</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th><th>Действие</th></tr>
                     </thead>
                     <tbody>
                         {% for p in projects %}
@@ -373,6 +311,9 @@ PORTAL_HTML = """
                             <td>{{ p[3] }}</td>
                             <td class="text-info">{{ p[4] }}</td>
                             <td>{{ "€{:,.0f}".format(p[6]) if p[6] > 0 else p[5] }}</td>
+                            <td>
+                                <a href="mailto:kovko.firma@gmail.com?subject=Запитване за обект: {{ p[1] }}&body=Желая контакт с инвеститора на обект {{ p[1] }} (Локация: {{ p[3] }})." class="btn btn-primary btn-sm">Свържи се</a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -397,66 +338,28 @@ ADMIN_HTML = """
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-warning">📊 Административен Панел & B2B Кампании</h2>
-                <small class="text-secondary">Управление на контактите и изпращане на тестови покани</small>
+                <h2 class="fw-bold text-warning">📊 Админ Панел: Входящи B2B Заявки за Обекти</h2>
+                <small class="text-secondary">Управление на контактите между подизпълнители и инвеститори</small>
             </div>
             <a href="/" class="btn btn-outline-light btn-sm">← Към сайта</a>
         </div>
 
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card card-custom p-3 text-center border-primary">
-                    <small class="text-secondary">Чакащи B2B Лидове</small>
-                    <h2 class="text-primary my-1">{{ pending_leads }}</h2>
-                    <a href="/admin/send-outreach-batch" class="btn btn-primary btn-sm mt-2">🚀 Изпрати 20 Покани</a>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-custom p-3 text-center border-success">
-                    <small class="text-secondary">Изпратени Оферти / Активни</small>
-                    <h2 class="text-success my-1">{{ sent_leads }}</h2>
-                    <span class="badge bg-success">В процес на конверсия</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-custom p-3 text-center border-info">
-                    <small class="text-secondary">Обекти в базата</small>
-                    <h2 class="text-info my-1">{{ total_projects }}</h2>
-                    <span class="badge bg-info text-dark">Реални регистри</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card card-custom p-3 text-center border-warning">
-                    <small class="text-secondary">Сутрешен График</small>
-                    <h3 class="text-warning my-2">07:30 ч.</h3>
-                    <span class="badge bg-success">24/7 Активен</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="card card-custom p-4">
-            <h4 class="fw-bold text-white mb-3">👥 Списък с B2B контакти и статус на доставката</h4>
+        <div class="card card-custom p-4 mb-4">
+            <h4 class="fw-bold text-white mb-3">📬 Нови получени заявки за връзка с инвеститори</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>ID</th><th>Фирма</th><th>Имейл</th><th>Статус</th><th>Регион</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Кандидат Фирма</th><th>Имейл</th><th>Телефон</th><th>Дейност</th><th>Дата</th></tr>
                     </thead>
                     <tbody>
-                        {% for l in leads %}
+                        {% for inq in inquiries %}
                         <tr>
-                            <td>{{ l[0] }}</td>
-                            <td class="fw-bold">{{ l[2] }}</td>
-                            <td><code>{{ l[1] }}</code></td>
-                            <td>
-                                {% if l[4] == 'sent' %}
-                                    <span class="badge bg-success">Изпратена покана</span>
-                                {% elif l[4] == 'trial_active' %}
-                                    <span class="badge bg-warning text-dark">🌟 Активен тест</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">В очакване</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ l[5] }}</td>
+                            <td class="fw-bold text-info">{{ inq[2] }}</td>
+                            <td class="text-white">{{ inq[3] }}</td>
+                            <td><code>{{ inq[4] }}</code></td>
+                            <td>{{ inq[5] }}</td>
+                            <td><span class="badge bg-primary">{{ inq[6] }}</span></td>
+                            <td class="small text-secondary">{{ inq[9] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -477,7 +380,6 @@ LOGIN_HTML = """
         <h3 class="mb-3 text-center">Вход в Stroy Radar</h3>
         <form method="POST">
             <div class="mb-3">
-                <label class="form-label text-secondary small">Имейл адрес:</label>
                 <input type="email" name="email" class="form-control bg-dark text-light border-secondary" placeholder="office@company.com" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Вход</button>
@@ -489,88 +391,71 @@ LOGIN_HTML = """
 
 @app.route("/")
 def home():
-    query = request.args.get("q", "").strip()
-    category = request.args.get("category", "").strip()
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    sql = "SELECT id, title, category, location, investor, size_rzp, price_eur, status, lat, lng FROM radar_projects WHERE 1=1"
-    params = []
-    if query:
-        sql += " AND (title LIKE ? OR location LIKE ? OR investor LIKE ?)"
-        params.extend([f"%{query}%", f"%{query}%", f"%{query}%"])
-    if category:
-        sql += " AND category = ?"
-        params.append(category)
-    sql += " ORDER BY id DESC"
-    c.execute(sql, params)
+    c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur, status, lat, lng FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
-
-    return render_template_string(MAIN_HTML, projects=projects, projects_json=json.dumps(projects), query=query, category=category)
+    return render_template_string(MAIN_HTML, projects=projects, projects_json=json.dumps(projects))
 
 @app.route("/portal")
 def portal():
     if "user_email" not in session:
         return redirect(url_for("login"))
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT preferred_region, preferred_category FROM leads_outreach WHERE email = ?", (session["user_email"],))
-    row = c.fetchone()
-    user_pref = row if row else ("Всички", "Всички")
-
     c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur, status FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
-
-    return render_template_string(PORTAL_HTML, user_email=session["user_email"], user_pref=user_pref, projects=projects)
-
-@app.route("/api/update-preferences", methods=["POST"])
-def update_preferences():
-    if "user_email" not in session:
-        return redirect(url_for("login"))
-
-    pref_reg = request.form.get("preferred_region", "Всички")
-    pref_cat = request.form.get("preferred_category", "Всички")
-
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("UPDATE leads_outreach SET preferred_region = ?, preferred_category = ? WHERE email = ?", (pref_reg, pref_cat, session["user_email"]))
-    conn.commit()
-    conn.close()
-
-    return redirect(url_for("portal"))
+    return render_template_string(PORTAL_HTML, user_email=session["user_email"], projects=projects)
 
 @app.route("/admin")
 def admin_panel():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM leads_outreach WHERE status = 'pending'")
-    pending_leads = c.fetchone()[0]
+    c.execute("SELECT * FROM project_inquiries ORDER BY id DESC LIMIT 50")
+    inquiries = c.fetchall()
+    conn.close()
+    return render_template_string(ADMIN_HTML, inquiries=inquiries)
 
-    c.execute("SELECT COUNT(*) FROM leads_outreach WHERE status IN ('sent', 'trial_active')")
-    sent_leads = c.fetchone()[0]
+@app.route("/api/submit-inquiry", methods=["POST"])
+def submit_inquiry():
+    project_id = request.form.get("project_id")
+    project_title = request.form.get("project_title")
+    company = request.form.get("company", "").strip()
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+    service_type = request.form.get("service_type", "").strip()
+    message = request.form.get("message", "").strip()
 
-    c.execute("SELECT COUNT(*) FROM radar_projects")
-    total_projects = c.fetchone()[0]
-
-    c.execute("SELECT id, email, company_name, phone, status, preferred_region FROM leads_outreach ORDER BY id DESC LIMIT 50")
-    leads = c.fetchall()
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO project_inquiries (project_id, project_title, applicant_company, applicant_email, applicant_phone, service_type, message)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (project_id, project_title, company, email, phone, service_type, message))
+    conn.commit()
     conn.close()
 
-    return render_template_string(ADMIN_HTML, pending_leads=pending_leads, sent_leads=sent_leads, total_projects=total_projects, leads=leads)
+    # Изпращане на имейл известие до вас
+    send_email_msg(
+        "kovko.firma@gmail.com",
+        f"🎯 Нова B2B Заявка за обект: {project_title}",
+        f"<p><strong>Получена е нова заявка за свързване:</strong></p>"
+        f"<p><b>Обект:</b> {project_title}<br>"
+        f"<b>Кандидат:</b> {company}<br>"
+        f"<b>Имейл:</b> {email}<br>"
+        f"<b>Телефон:</b> {phone}<br>"
+        f"<b>Дейност:</b> {service_type}<br>"
+        f"<b>Бележка:</b> {message}</p>"
+    )
 
-@app.route("/admin/send-outreach-batch")
-def admin_send_batch():
-    sent = execute_outreach_batch(20)
-    return f"<script>alert('Успешно изпратени {sent} B2B покани за 7-дневен тест с Zero-Bounce валидация!'); window.location.href='/admin';</script>"
+    return "<script>alert('Вашата заявка е приета успешно! Екипът на Stroy Radar AI ще се свърже с вас.'); window.location.href='/';</script>"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip()
-        session["user_email"] = email
+        session["user_email"] = request.form.get("email", "").strip()
         return redirect(url_for("portal"))
     return render_template_string(LOGIN_HTML)
 
@@ -586,18 +471,14 @@ def register_trial():
     phone = request.form.get("phone", "").strip()
 
     if not is_email_valid_domain(email):
-        return "<script>alert('Грешка: Невалиден имейл домейн!'); window.history.back();</script>"
+        return "<script>alert('Невалиден имейл домейн!'); window.history.back();</script>"
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""
         INSERT INTO leads_outreach (email, company_name, phone, status, trial_start, sent_at) 
         VALUES (?, ?, ?, 'trial_active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        ON CONFLICT(email) DO UPDATE SET 
-            company_name=excluded.company_name,
-            phone=excluded.phone,
-            status='trial_active',
-            trial_start=CURRENT_TIMESTAMP
+        ON CONFLICT(email) DO UPDATE SET company_name=excluded.company_name, phone=excluded.phone, status='trial_active'
     """, (email, company, phone))
     conn.commit()
     conn.close()
