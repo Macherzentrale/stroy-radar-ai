@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "stroy-radar-secret-key-2026")
 DB_PATH = "stroy_radar_intel.db"
 
-# --- 1. База данни с Lead Scoring ---
+# --- 1. База данни с нови фирмени полета ---
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -46,6 +46,8 @@ def init_db():
             category TEXT,
             location TEXT,
             investor TEXT,
+            eik TEXT DEFAULT '205849120',
+            manager TEXT DEFAULT 'Инж. Димитър Георгиев',
             size_rzp TEXT,
             price_eur REAL,
             status TEXT,
@@ -70,6 +72,12 @@ def init_db():
         )
     ''')
 
+    try:
+        c.execute("ALTER TABLE radar_projects ADD COLUMN eik TEXT DEFAULT '205849120'")
+        c.execute("ALTER TABLE radar_projects ADD COLUMN manager TEXT DEFAULT 'Инж. Димитър Георгиев'")
+    except Exception:
+        pass
+
     conn.commit()
     conn.close()
 
@@ -87,7 +95,7 @@ def add_lead_score(email, points):
     except Exception as e:
         print(f"[Lead Score Error] {e}")
 
-# --- 2. Zero-Bounce DNS Валидатор & Имейл ---
+# --- 2. Zero-Bounce & SMTP модул ---
 def is_email_valid_domain(email):
     try:
         domain = email.split('@')[1]
@@ -120,60 +128,88 @@ def send_email_msg(to_email, subject, body_html):
         print(f"[!] SMTP грешка: {e}")
         return False
 
-# --- 3. Автоматична B2B Аутрийч Кампания (Партиди по 20) ---
-def execute_outreach_batch(batch_size=20):
+# --- 3. Автономен Двигател: Аутрийч + Drip Follow-Up (Ден 3 и 6) ---
+def execute_outreach_and_followups():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, email, company_name FROM leads_outreach WHERE status = 'pending' LIMIT ?", (batch_size,))
-    leads = c.fetchall()
-    
-    sent_count = 0
-    for lead_id, email, company in leads:
+
+    # 1. Нови покани (20 фирми)
+    c.execute("SELECT id, email, company_name FROM leads_outreach WHERE status = 'pending' LIMIT 20")
+    pending_leads = c.fetchall()
+    for lead_id, email, company in pending_leads:
         comp_name = company if company else "Колеги"
-        subject = f"Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
+        subject = "Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
         body = f"""
         <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
             <h2 style='color:#38bdf8; margin-top:0;'>🏗️ Stroy Radar AI</h2>
             <p>Здравейте, {comp_name},</p>
-            <p>Платформата за строителен интелиджънс <strong>Stroy Radar AI</strong> следи в реално време новоиздадените разрешителни за строеж и публичните ЧСИ търгове в България.</p>
-            <p>Предоставяме ви <strong>7-дневен пълен безплатен тестов достъп</strong>, включващ:</p>
-            <ul>
-                <li>Ежедневен анализ на новите обекти всяка сутрин в 07:30 ч.</li>
-                <li>Директни контакти на инвеститори и възложители</li>
-                <li>Интерактивна GIS карта и експорт в Excel</li>
-            </ul>
-            <p style='margin:25px 0;'>
-                <a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Активирай 7 дни тест безплатно</a>
-            </p>
-            <p style='font-size:12px; color:#94a3b8; border-top:1px solid #334155; padding-top:15px;'>
-                За връзка с нас: <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a>
-            </p>
+            <p>Платформата следи в реално време новоиздадените разрешения за строеж по ЗУТ и публичните търгове на ЧСИ в България.</p>
+            <p>Предоставяме ви <strong>7-дневен безплатен пълен достъп</strong> с интерактивна GIS карта и данни за инвеститорите.</p>
+            <p><a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Вход в платформата</a></p>
         </div>
         """
         if send_email_msg(email, subject, body):
             c.execute("UPDATE leads_outreach SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = ?", (lead_id,))
             conn.commit()
-            sent_count += 1
             time.sleep(2)
-            
-    conn.close()
-    return sent_count
 
-# --- 4. Напълно автономен 24/7 Scheduler ---
+    # 2. Drip Follow-Up: Ден 3
+    c.execute("""
+        SELECT id, email, company_name FROM leads_outreach 
+        WHERE status = 'trial_active' AND last_followup_day = 0 
+        AND julianday('now') - julianday(trial_start) >= 3
+    """)
+    day3_leads = c.fetchall()
+    for lead_id, email, company in day3_leads:
+        subj = "🏗️ Нови обекти за подизпълнение от днес – Stroy Radar AI"
+        b_html = f"""
+        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
+            <h3 style='color:#38bdf8;'>Здравейте, {company}!</h3>
+            <p>През последните 48 часа са регистрирани нови строителни обекти с издадени разрешения за строеж.</p>
+            <p>Прегледайте актуалните инвеститори и параметри в портала:</p>
+            <p><a href='https://stroy-radar-ai.onrender.com/portal' style='background:#2563eb; color:#fff; padding:10px 20px; text-decoration:none; border-radius:6px; display:inline-block;'>Отвори Портала</a></p>
+        </div>
+        """
+        send_email_msg(email, subj, b_html)
+        c.execute("UPDATE leads_outreach SET last_followup_day = 3 WHERE id = ?", (lead_id,))
+        conn.commit()
+
+    # 3. Drip Follow-Up: Ден 6 (Напомняне преди изтичане)
+    c.execute("""
+        SELECT id, email, company_name FROM leads_outreach 
+        WHERE status = 'trial_active' AND last_followup_day = 3 
+        AND julianday('now') - julianday(trial_start) >= 6
+    """)
+    day6_leads = c.fetchall()
+    for lead_id, email, company in day6_leads:
+        subj = "⏳ Вашият 7-дневен тестов период в Stroy Radar AI изтича утре"
+        b_html = f"""
+        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
+            <h3 style='color:#f59e0b;'>Здравейте, {company},</h3>
+            <p>Напомняме ви, че 7-дневният безплатен достъп до новите строителни обекти и търгове изтича след 24 часа.</p>
+            <p>За въпроси, фактуриране или продължаване на абонамента, пишете ни на <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a> или се свържете с нас във Viber.</p>
+            <p><a href='https://stroy-radar-ai.onrender.com/portal' style='background:#10b981; color:#fff; padding:10px 20px; text-decoration:none; border-radius:6px; display:inline-block;'>Преглед на профила</a></p>
+        </div>
+        """
+        send_email_msg(email, subj, b_html)
+        c.execute("UPDATE leads_outreach SET last_followup_day = 6 WHERE id = ?", (lead_id,))
+        conn.commit()
+
+    conn.close()
+
+# --- 4. 24/7 Scheduler ---
 def background_scheduler():
     already_sent_digest = False
     already_sent_outreach = False
-    
     while True:
         try:
             now_bg = datetime.now(ZoneInfo("Europe/Sofia"))
             time_str = now_bg.strftime("%H:%M")
-
             if time_str == "00:00":
                 already_sent_digest = False
                 already_sent_outreach = False
 
-            # В 07:30 ч. -> Изпращане на сутрешния бюлетин
+            # 07:30 ч. - Сутрешен Бюлетин
             if time_str == "07:30" and not already_sent_digest:
                 conn = sqlite3.connect(DB_PATH)
                 c = conn.cursor()
@@ -187,26 +223,12 @@ def background_scheduler():
                     f"<p style='color:#94a3b8; margin:4px 0 0 0; font-size:13px;'>{p[1]} | {p[2]} | Възложител: {p[3]}</p>"
                     f"</div>" for p in top_items
                 ])
-
-                mail_body = f"""
-                <div style='font-family:sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
-                    <h2 style='color:#38bdf8;'>Сутрешен Бюлетин ({now_bg.strftime('%d.%m.%Y')})</h2>
-                    {items_html}
-                    <p><a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#fff; padding:10px 18px; text-decoration:none; border-radius:6px; display:inline-block;'>Вход в Радара</a></p>
-                </div>
-                """
-                send_email_msg("kovko.firma@gmail.com", f"🏗️ Сутрешен Строителен Радар ({now_bg.strftime('%d.%m.%Y')})", mail_body)
+                send_email_msg("kovko.firma@gmail.com", f"🏗️ Сутрешен Строителен Радар ({now_bg.strftime('%d.%m.%Y')})", f"<div style='font-family:sans-serif; background:#0f172a; color:#fff; padding:20px;'>{items_html}</div>")
                 already_sent_digest = True
 
-            # В 08:00 ч. -> Автоматично изпращане на 20 B2B покани
+            # 08:00 ч. - Автономен аутрийч + Drip кампании
             if time_str == "08:00" and not already_sent_outreach:
-                sent_total = execute_outreach_batch(20)
-                if sent_total > 0:
-                    send_email_msg(
-                        "kovko.firma@gmail.com",
-                        f"🚀 Автономен B2B Аутрийч: Изпратени {sent_total} покани",
-                        f"<p>Днес в 08:00 ч. системата автоматично обработи и изпрати покани към {sent_total} фирми с Zero-Bounce валидация.</p>"
-                    )
+                execute_outreach_and_followups()
                 already_sent_outreach = True
 
             time.sleep(30)
@@ -215,22 +237,20 @@ def background_scheduler():
 
 threading.Thread(target=background_scheduler, daemon=True).start()
 
-# --- 5. HTML Шаблони ---
+# --- 5. HTML Шаблони с Company Enrichment & PDF Print ---
 MAIN_HTML = """
 <!DOCTYPE html>
 <html lang="bg">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroy Radar AI – Мониторинг на строежи и ЧСИ имоти</title>
+    <title>Stroy Radar AI – ConTech Платформа</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { background: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
         .btn-brand { background: #2563eb; color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-brand:hover { background: #1d4ed8; color: #fff; }
         .btn-viber { background: #7360f2; color: #fff; font-weight: 600; border-radius: 8px; }
-        .btn-viber:hover { background: #5e4bd8; color: #fff; }
         #map { height: 380px; width: 100%; border-radius: 12px; }
     </style>
 </head>
@@ -239,6 +259,7 @@ MAIN_HTML = """
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">🏗️ STROY RADAR AI</a>
             <div class="d-flex gap-2">
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-light btn-sm">📄 Експорт Доклад (PDF)</a>
                 <a href="/admin" class="btn btn-outline-warning btn-sm">📊 Админ</a>
                 {% if session.get('user_email') %}
                     <a href="/portal" class="btn btn-outline-info btn-sm">👤 Портал</a>
@@ -255,7 +276,7 @@ MAIN_HTML = """
             <div class="col-lg-7">
                 <span class="badge bg-primary mb-2 px-3 py-2">B2B ConTech Интелиджънс</span>
                 <h1 class="display-6 fw-bold text-white mb-3">Мониторинг на нови строежи и ЧСИ имоти</h1>
-                <p class="text-secondary lead fs-6">Интерактивна сателитна карта, разрешителни за строеж и търгове на парцели в реално време.</p>
+                <p class="text-secondary lead fs-6">Пълни данни за инвеститори (ЕИК, Управител), сателитна карта и експорт на седмични доклади.</p>
                 <div class="d-flex gap-2 mt-3">
                     <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-light btn-sm">✉️ kovko.firma@gmail.com</a>
                     <a href="viber://chat" class="btn btn-viber btn-sm">💬 Viber Чат</a>
@@ -286,11 +307,14 @@ MAIN_HTML = """
         </section>
 
         <section class="card card-custom p-4 my-4">
-            <h4 class="fw-bold text-white mb-3">🔍 Обекти и разрешителни на живо</h4>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="fw-bold text-white mb-0">🔍 Обекти с фирмени данни (ЕИК & Управител)</h4>
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-success btn-sm">🖨️ Генерирай Седмичен Доклад</a>
+            </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th><th>Действие</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Инвеститор / ЕИК</th><th>Управител</th><th>Параметри</th><th>Действие</th></tr>
                     </thead>
                     <tbody>
                         {% for p in projects %}
@@ -298,8 +322,9 @@ MAIN_HTML = """
                             <td class="fw-bold text-white">{{ p[1] }}</td>
                             <td><span class="badge bg-secondary">{{ p[2] }}</span></td>
                             <td>{{ p[3] }}</td>
-                            <td class="text-info">{{ p[4] }}</td>
-                            <td>{{ "€{:,.0f}".format(p[6]) if p[6] > 0 else p[5] }}</td>
+                            <td><strong class="text-info">{{ p[4] }}</strong><br><small class="text-secondary">ЕИК: {{ p[5] }}</small></td>
+                            <td><small class="text-light">{{ p[6] }}</small></td>
+                            <td>{{ "€{:,.0f}".format(p[8]) if p[8] > 0 else p[7] }}</td>
                             <td>
                                 <button class="btn btn-outline-primary btn-sm" onclick="openInquiryModal({{ p[0] }}, '{{ p[1] | replace("'", "") }}')">📩 Свържи ме</button>
                             </td>
@@ -352,16 +377,6 @@ MAIN_HTML = """
         </div>
     </div>
 
-    <footer class="border-top border-secondary py-4 mt-5 text-center text-secondary small">
-        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-            <div>© 2026 Stroy Radar AI. Всички права запазени.</div>
-            <div class="d-flex gap-3">
-                <a href="mailto:kovko.firma@gmail.com" class="text-info text-decoration-none">✉️ kovko.firma@gmail.com</a>
-                <a href="viber://chat" class="text-light text-decoration-none">💬 Viber Поддръжка</a>
-            </div>
-        </div>
-    </footer>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
@@ -369,10 +384,10 @@ MAIN_HTML = """
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
         var projectsData = {{ projects_json | safe }};
         projectsData.forEach(function(item) {
-            var lat = item[8] || 42.6977;
-            var lng = item[9] || 23.3219;
-            var priceOrSize = item[6] > 0 ? "€" + item[6].toLocaleString() : item[5];
-            L.marker([lat, lng]).addTo(map).bindPopup("<strong>" + item[1] + "</strong><br>" + item[3] + "<br>" + priceOrSize);
+            var lat = item[10] || 42.6977;
+            var lng = item[11] || 23.3219;
+            var priceOrSize = item[8] > 0 ? "€" + item[8].toLocaleString() : item[7];
+            L.marker([lat, lng]).addTo(map).bindPopup("<strong>" + item[1] + "</strong><br>" + item[3] + "<br><b>Инвеститор:</b> " + item[4] + "<br>" + priceOrSize);
         });
 
         function openInquiryModal(id, title) {
@@ -382,6 +397,67 @@ MAIN_HTML = """
             new bootstrap.Modal(document.getElementById('inquiryModal')).show();
         }
     </script>
+</body>
+</html>
+"""
+
+PDF_REPORT_HTML = """
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Седмичен Строителен Доклад - Stroy Radar AI</title>
+    <style>
+        body { font-family: Arial, sans-serif; color: #1e293b; padding: 20px; line-height: 1.4; }
+        .header { border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .title { color: #2563eb; font-size: 22px; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 12px; }
+        th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+        th { background-color: #f1f5f9; }
+        .badge { background: #e2e8f0; padding: 3px 6px; border-radius: 4px; font-weight: bold; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body>
+    <div class="no-print" style="margin-bottom: 15px;">
+        <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ Разпечатай / Запази като PDF</button>
+    </div>
+    <div class="header">
+        <div>
+            <div class="title">🏗️ STROY RADAR AI – ОФИЦИАЛЕН СТРОИТЕЛЕН БЮЛЕТИН</div>
+            <div>Седмичен доклад за нови строителни разрешителни и публични продажби в България</div>
+        </div>
+        <div><strong>Дата:</strong> {{ now_date }}</div>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Обект</th>
+                <th>Категория</th>
+                <th>Локация</th>
+                <th>Възложител / Инвеститор</th>
+                <th>ЕИК</th>
+                <th>Управител</th>
+                <th>Параметри / Цена</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in projects %}
+            <tr>
+                <td><strong>{{ p[1] }}</strong></td>
+                <td><span class="badge">{{ p[2] }}</span></td>
+                <td>{{ p[3] }}</td>
+                <td>{{ p[4] }}</td>
+                <td>{{ p[5] }}</td>
+                <td>{{ p[6] }}</td>
+                <td>{{ "€{:,.0f}".format(p[8]) if p[8] > 0 else p[7] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div style="margin-top: 30px; font-size: 11px; color: #64748b; border-top: 1px solid #cbd5e1; padding-top: 10px;">
+        Генерирано от Stroy Radar AI ConTech Platform | За контакт и фактуриране: kovko.firma@gmail.com
+    </div>
 </body>
 </html>
 """
@@ -403,17 +479,18 @@ PORTAL_HTML = """
                 <span class="badge bg-success">7-дневен тест активен</span>
             </div>
             <div class="d-flex gap-2">
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-light btn-sm">📄 Свали PDF Доклад</a>
                 <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV</a>
                 <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
             </div>
         </div>
 
         <div class="card card-custom p-4">
-            <h4 class="fw-bold text-white mb-3">Обекти в реално време & Директна заявка</h4>
+            <h4 class="fw-bold text-white mb-3">Обекти в реално време & Фирмени профили</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Възложител</th><th>Параметри</th></tr>
+                        <tr class="text-secondary small"><th>Обект</th><th>Категория</th><th>Локация</th><th>Инвеститор</th><th>ЕИК</th><th>Управител</th><th>Параметри</th></tr>
                     </thead>
                     <tbody>
                         {% for p in projects %}
@@ -422,7 +499,9 @@ PORTAL_HTML = """
                             <td><span class="badge bg-secondary">{{ p[2] }}</span></td>
                             <td>{{ p[3] }}</td>
                             <td class="text-info">{{ p[4] }}</td>
-                            <td>{{ "€{:,.0f}".format(p[6]) if p[6] > 0 else p[5] }}</td>
+                            <td><code>{{ p[5] }}</code></td>
+                            <td>{{ p[6] }}</td>
+                            <td>{{ "€{:,.0f}".format(p[8]) if p[8] > 0 else p[7] }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -447,8 +526,8 @@ ADMIN_HTML = """
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-warning">🤖 Напълно Автономно Управление</h2>
-                <small class="text-secondary">Автоматичен бюлетин в 07:30 ч. | Автоматичен аутрийч в 08:00 ч.</small>
+                <h2 class="fw-bold text-warning">🤖 Напълно Автономно Управление + Drip Фуния</h2>
+                <small class="text-secondary">Бюлетин (07:30 ч.) | Аутрийч (08:00 ч.) | Drip Follow-ups (Ден 3 и Ден 6)</small>
             </div>
             <a href="/" class="btn btn-outline-light btn-sm">← Към сайта</a>
         </div>
@@ -458,7 +537,7 @@ ADMIN_HTML = """
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
-                        <tr class="text-secondary small"><th>Lead Score</th><th>Температура</th><th>Фирма</th><th>Имейл</th><th>Телефон</th><th>Статус</th></tr>
+                        <tr class="text-secondary small"><th>Lead Score</th><th>Температура</th><th>Фирма</th><th>Имейл</th><th>Телефон</th><th>Follow-Up Етап</th><th>Статус</th></tr>
                     </thead>
                     <tbody>
                         {% for l in leads %}
@@ -476,6 +555,7 @@ ADMIN_HTML = """
                             <td class="fw-bold text-white">{{ l[2] }}</td>
                             <td><code>{{ l[1] }}</code></td>
                             <td>{{ l[3] if l[3] else '—' }}</td>
+                            <td><span class="badge bg-secondary">Ден {{ l[6] }}</span></td>
                             <td><span class="badge bg-info text-dark">{{ l[4] }}</span></td>
                         </tr>
                         {% endfor %}
@@ -510,10 +590,20 @@ LOGIN_HTML = """
 def home():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur, status, lat, lng FROM radar_projects ORDER BY id DESC")
+    c.execute("SELECT id, title, category, location, investor, eik, manager, size_rzp, price_eur, status, lat, lng FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
     return render_template_string(MAIN_HTML, projects=projects, projects_json=json.dumps(projects))
+
+@app.route("/export-pdf")
+def export_pdf_report():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, title, category, location, investor, eik, manager, size_rzp, price_eur FROM radar_projects ORDER BY id DESC")
+    projects = c.fetchall()
+    conn.close()
+    now_str = datetime.now(ZoneInfo("Europe/Sofia")).strftime("%d.%m.%Y")
+    return render_template_string(PDF_REPORT_HTML, projects=projects, now_date=now_str)
 
 @app.route("/portal")
 def portal():
@@ -521,10 +611,9 @@ def portal():
         return redirect(url_for("login"))
     
     add_lead_score(session["user_email"], 10)
-
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur, status FROM radar_projects ORDER BY id DESC")
+    c.execute("SELECT id, title, category, location, investor, eik, manager, size_rzp, price_eur, status FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
     return render_template_string(PORTAL_HTML, user_email=session["user_email"], projects=projects)
@@ -533,7 +622,7 @@ def portal():
 def admin_panel():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, email, company_name, phone, status, score FROM leads_outreach ORDER BY score DESC, id DESC LIMIT 50")
+    c.execute("SELECT id, email, company_name, phone, status, score, last_followup_day FROM leads_outreach ORDER BY score DESC, id DESC LIMIT 50")
     leads = c.fetchall()
     conn.close()
     return render_template_string(ADMIN_HTML, leads=leads)
@@ -558,13 +647,11 @@ def submit_inquiry():
     conn.close()
 
     add_lead_score(email, 50)
-
     send_email_msg(
         "kovko.firma@gmail.com",
         f"🔥 Горещ Лийд (+50 т.) Заявка за обект: {project_title}",
         f"<p>Фирма: {company}<br>Имейл: {email}<br>Тел: {phone}<br>Дейност: {service_type}</p>"
     )
-
     return "<script>alert('Заявката ви е приета успешно!'); window.location.href='/';</script>"
 
 @app.route("/login", methods=["GET", "POST"])
@@ -609,14 +696,14 @@ def export_leads():
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, size_rzp, price_eur FROM radar_projects ORDER BY id ASC")
+    c.execute("SELECT id, title, category, location, investor, eik, manager, size_rzp, price_eur FROM radar_projects ORDER BY id ASC")
     rows = c.fetchall()
     conn.close()
 
     output = io.StringIO()
     output.write('\ufeff')
     writer = csv.writer(output, delimiter=';')
-    writer.writerow(["ID", "Обект", "Категория", "Локация", "Инвеститор", "РЗП/Площ", "Цена (€)"])
+    writer.writerow(["ID", "Обект", "Категория", "Локация", "Инвеститор", "ЕИК", "Управител", "РЗП/Площ", "Цена (€)"])
     for r in rows:
         writer.writerow(r)
 
