@@ -34,7 +34,7 @@ def init_db():
         c.execute("DELETE FROM radar_projects")
         for i in range(20):
             c.execute("INSERT INTO radar_projects (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                      (f'Инвестиционен обект #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', float(150000 + i*3000), float(300000 + i*6000), 50.0, 92, 'Активен', '1,200 кв.м', 42.6977, 23.3219))
+                      (f'Инвестиционен обект #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', 150000.0 + i*3000.0, 300000.0 + i*6000.0, 50.0, 92, 'Активен', '1,200 кв.м', 42.6977, 23.3219))
     conn.commit()
     conn.close()
 
@@ -94,7 +94,7 @@ FULL_HTML = """
         var container = document.getElementById('dealsContainer');
         
         projects.forEach(function(p) {
-            L.marker([p[14], p[15]]).addTo(map).bindPopup("<b>" + p[1] + "</b><br>Цена: €" + Number(p[7]).toLocaleString());
+            L.marker([p[15], p[16]]).addTo(map).bindPopup("<b>" + p[1] + "</b><br>Цена: €" + Number(p[8]).toLocaleString());
             
             var col = document.createElement('div');
             col.className = 'col-md-6';
@@ -102,7 +102,7 @@ FULL_HTML = """
                 <div class="listing-card">
                     <div class="fw-bold text-white">${p[1]}</div>
                     <div class="small text-secondary">Локация: ${p[3]}</div>
-                    <div class="text-warning fw-bold mt-2">€${Number(p[7]).toLocaleString()}</div>
+                    <div class="text-warning fw-bold mt-2">€${Number(p[8]).toLocaleString()}</div>
                 </div>
             `;
             container.appendChild(col);
@@ -128,19 +128,7 @@ def home():
     c.execute("SELECT id, title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
-
-    total = len(projects)
-    top_deals = len([p for p in projects if p[10] >= 85])
-    avg_disc = round(sum([float(p[9]) for p in projects]) / total, 1) if total else 50.0
-    spread = sum([float(p[8]) - float(p[7]) for p in projects])
-
-    stats = {
-        "total": total,
-        "top_deals": top_deals,
-        "avg_discount": str(avg_disc),
-        "spread_str": "{:,.0f}".format(spread).replace(",", " ")
-    }
-    return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
+    return render_template_string(FULL_HTML, projects_json=json.dumps(projects))
 
 @app.route("/api/audit-eik")
 def audit_eik():
