@@ -126,8 +126,6 @@ FULL_HTML = """
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        
-        /* КОРЕКЦИЯ НА ФИЛТРИТЕ: СВЕТЪЛ КОНТРАСТЕН ФОН ВМЕСТО ЧЕРНО НА ЧЕРНО */
         .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
         .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
         .custom-select option { background: #131f36; color: #fff; }
@@ -190,7 +188,7 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        /* ОФИЦИАЛНИ И ВИДИМИ ПЛАВАЩИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ */
+        /* ОФИЦИАЛНИ И ВИДИМИ ПЛАВАЩИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ (С ПРАВИЛНИЯ НОМЕР +359879495767) */
         .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .btn-corporate-contact {
             display: flex;
@@ -232,13 +230,12 @@ FULL_HTML = """
     </style>
 </head>
 <body>
-    <!-- НАПЪЛНО ЦЕНТРИРАН И МИГАЩ TICKER ХЕДЪР -->
     <div class="ticker-bar">
         <div class="w-100 text-center">
             <span class="bell-animated">🔔</span>
             <span style="color:#fbbf24; font-weight:800; letter-spacing:0.5px;">07:30 ПРОТОКОЛ • ИНСТИТУЦИОНАЛНИ ОБЕКТИ:</span>
             <span class="text-light ms-1">Национален feed в реално време • Активни {{ stats.total }} обекта</span>
-            <span class="badge bg-warning text-dark fw-bold ms-2" style="font-size:10px;">LIVE</span>
+            <span class="badge bg-warning text-dark fw-bold ms-2" style="font-size:10px;">LIVE СИГНАЛ</span>
         </div>
     </div>
 
@@ -371,7 +368,7 @@ FULL_HTML = """
         <div class="row g-3" id="dealsContainer"></div>
         <div class="pagination-box" id="paginationControls"></div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ С ДИФЕРЕНЦИРАНИ ПРИДОБИВКИ -->
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
@@ -507,11 +504,11 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩИ И ЯСНИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ -->
+    <!-- ОФИЦИАЛНИ И ВИДИМИ ПЛАВАЩИ КОНТАКТИ ЗА ДЕСКТОП И МОБИЛНИ (НОМЕР: +359879495767) -->
     <div class="floating-contact-bar">
-        <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
+        <a href="viber://chat?number=%2B359879495767" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
         <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
-        <a href="tel:+359888123456" class="btn-corporate-contact contact-phone">📞 0888 123 456</a>
+        <a href="tel:+359879495767" class="btn-corporate-contact contact-phone">📞 0879 495 767</a>
     </div>
 
     <!-- ПЛАВАЩ AI ЧАТБОТ -->
@@ -622,7 +619,7 @@ FULL_HTML = """
                 <a href="/export-pdf" target="_blank" class="nav-link-custom"><span class="icon">📄</span> 07:30 Дневен Бюлетин</a>
             </div>
             <div class="border-top border-secondary pt-3 mt-4">
-                <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-info w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
+                <a href="tel:+359879495767" class="btn btn-outline-success w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">📞 0879 495 767</a>
             </div>
         </div>
     </div>
@@ -644,7 +641,7 @@ FULL_HTML = """
         var allProjects = {{ projects_json | safe }};
         var filteredProjects = allProjects.slice();
         var currentPage = 1;
-        var pageSize = 6; // СТРОГО ПО 6 ОБЕКТА НА СТРАНИЦА
+        var pageSize = 6;
 
         allProjects.forEach(function(item) {
             var lat = item[13] || 42.6977, lng = item[14] || 23.3219;
