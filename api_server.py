@@ -2,7 +2,6 @@ import os
 import json
 import sqlite3
 import random
-from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
 app = Flask(__name__)
@@ -31,71 +30,54 @@ def init_db():
         lng REAL DEFAULT 23.3219
     )''')
     
-    c.execute("SELECT count(*) FROM radar_projects")
-    count = c.fetchone()[0]
-    if count < 5000:
-        c.execute("DELETE FROM radar_projects")
-        cities = [
-            ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
-            ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
-            ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
-            ("Добрич", 43.5726, 27.8273), ("Шумен", 43.2712, 26.9361), ("Перник", 42.6052, 23.0378),
-            ("Хасково", 41.9344, 25.5556), ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228),
-            ("Габрово", 42.8742, 25.3187), ("Враца", 43.2102, 23.5529), ("Видин", 43.9962, 22.8679),
-            ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
-            ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
-            ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
-            ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
-        ]
+    c.execute("DELETE FROM radar_projects")
+    cities = [
+        ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
+        ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
+        ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
+        ("Добрич", 43.5726, 27.8273), ("Шумен", 43.2712, 26.9361), ("Перник", 42.6052, 23.0378),
+        ("Хасково", 41.9344, 25.5556), ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228),
+        ("Габрово", 42.8742, 25.3187), ("Враца", 43.2102, 23.5529), ("Видин", 43.9962, 22.8679),
+        ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
+        ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
+        ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
+        ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
+    ]
+    
+    types = [
+        ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
+        ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
+        ('Търговска сграда & ритейл площи', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87),
+        ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
+        ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
+    ]
+    
+    records = []
+    for i in range(5040):
+        city = cities[i % len(cities)]
+        t = types[i % len(types)]
+        idx = i + 1
+        title = f'{t[0]} "{city[0]} Инвест #{idx}"'
+        location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 15 + 1}"
+        investor = f"{city[0]} Пропърти Груп {idx} ООД"
+        eik = str(200000000 + idx * 13)
+        manager = f"Инж. {city[0]}ски {idx}"
+        lat = city[1] + random.uniform(-0.06, 0.06)
+        lng = city[2] + random.uniform(-0.06, 0.06)
+        price = t[4] + (idx * 350) % 400000
+        mval = t[5] + (idx * 750) % 800000
+        disc = round(((mval - price) / mval) * 100, 1)
+        score = min(99, max(75, int(t[7] + (idx % 8) - 3)))
+        c_date = "2026-08-29" if (idx % 5 == 0) else "2026-08-28"
+        records.append((title, t[1], location, city[0], investor, eik, manager, price, mval, disc, score, t[2], t[3], c_date, lat, lng))
         
-        types = [
-            ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
-            ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан (II-ри търг)', '8,200 кв.м', 620000, 1450000, 57.2, 89),
-            ('Търговска сграда & ритейл площи', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87),
-            ('Производствена база & цех', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 380000, 890000, 57.3, 85),
-            ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
-        ]
-        
-        records = []
-        for i in range(5040):
-            city = cities[i % len(cities)]
-            t = types[i % len(types)]
-            idx = i + 1
-            title = f'{t[0]} "{city[0]} Инвест #{idx}"'
-            location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 15 + 1}"
-            investor = f"{city[0]} Пропърти Груп {idx} ООД"
-            eik = str(200000000 + idx * 13)
-            manager = f"Инж. {city[0]}ски {idx}"
-            lat = city[1] + random.uniform(-0.06, 0.06)
-            lng = city[2] + random.uniform(-0.06, 0.06)
-            price = t[4] + (idx * 350) % 400000
-            mval = t[5] + (idx * 750) % 800000
-            disc = round(((mval - price) / mval) * 100, 1)
-            score = min(99, max(75, int(t[7] + (idx % 8) - 3)))
-            c_date = "2026-08-29" if (idx % 5 == 0) else "2026-08-28"
-            records.append((title, t[1], location, city[0], investor, eik, manager, price, mval, disc, score, t[2], t[3], c_date, lat, lng))
-            
-        c.executemany('''INSERT INTO radar_projects 
-            (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
+    c.executemany('''INSERT INTO radar_projects 
+        (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
     conn.commit()
     conn.close()
 
 init_db()
-
-# Помощни функции за маскиране на данните
-def mask_eik(eik_str):
-    if not eik_str or len(eik_str) < 4:
-        return "*********"
-    return eik_str[:3] + "*****"
-
-def mask_text(text_str):
-    if not text_str:
-        return "*********"
-    words = text_str.split()
-    if len(words) <= 1:
-        return words[0][:2] + "*******" if words else "*******"
-    return words[0] + " " + " ".join(["***" for _ in words[1:]])
 
 FULL_HTML = """
 <!DOCTYPE html>
@@ -122,18 +104,18 @@ FULL_HTML = """
         .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 
         @keyframes neonGlow {
-            0%, 100% { background-color: #1e1202; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.3); border-color: #f59e0b; }
-            50% { background-color: #382404; box-shadow: 0 0 25px rgba(245, 158, 11, 0.9), inset 0 0 15px rgba(245, 158, 11, 0.6); border-color: #fbbf24; }
+            0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.3); border-color: #f59e0b; }
+            50% { background-color: #382404; box-shadow: 0 0 28px rgba(245, 158, 11, 0.95), inset 0 0 16px rgba(245, 158, 11, 0.7); border-color: #fbbf24; }
         }
         @keyframes bellShake {
             0%, 100% { transform: rotate(0deg) scale(1.1); }
-            20% { transform: rotate(-20deg) scale(1.3); }
-            40% { transform: rotate(20deg) scale(1.3); }
-            60% { transform: rotate(-15deg) scale(1.3); }
-            80% { transform: rotate(15deg) scale(1.3); }
+            20% { transform: rotate(-22deg) scale(1.35); }
+            40% { transform: rotate(22deg) scale(1.35); }
+            60% { transform: rotate(-15deg) scale(1.35); }
+            80% { transform: rotate(15deg) scale(1.35); }
         }
-        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 9px 16px; font-size: 0.82rem; display: flex; justify-content: space-between; align-items: center; }
-        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.1rem; margin-right: 6px; }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 16px; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
+        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.15rem; margin-right: 6px; }
 
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -168,16 +150,16 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
-        /* Стилове за маскирани скрити данни */
         .masked-badge {
             background: #182235;
-            color: #94a3b8;
-            padding: 2px 6px;
-            border-radius: 4px;
+            color: #38bdf8;
+            padding: 3px 8px;
+            border-radius: 6px;
             font-family: monospace;
-            font-size: 0.8rem;
-            border: 1px dashed #334155;
+            font-size: 0.82rem;
+            border: 1px dashed #0284c7;
             display: inline-block;
+            font-weight: bold;
         }
 
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
@@ -201,6 +183,7 @@ FULL_HTML = """
         .float-tg { background: #229ED9; }
         .float-phone { background: #10b981; }
 
+        /* ЧАТБОТ СТИЛОВЕ */
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 0.88rem; line-height: 1.45; }
@@ -616,7 +599,6 @@ FULL_HTML = """
 
         map.addLayer(markersCluster);
 
-        // Функция за рендиране на обяви с маскирани полета (Paywall Protection)
         function renderPaginatedDeals() {
             var container = document.getElementById('dealsContainer');
             container.innerHTML = '';
@@ -633,9 +615,7 @@ FULL_HTML = """
             }
 
             pageItems.forEach(function(p) {
-                // Маскираме ЕИК (напр. 2058*****)
                 var eikMasked = (p[5] && p[5].length >= 4) ? (p[5].substring(0, 3) + "***** 🔒") : "********* 🔒";
-                // Маскираме инвеститора (напр. Елит Строй ******* ООД)
                 var invParts = (p[4] || "").split(' ');
                 var invMasked = invParts[0] + " ******* " + (invParts.length > 2 ? invParts[invParts.length-1] : "🔒");
                 
@@ -1018,6 +998,7 @@ def home():
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
+# НЕВРОНЕН AI ДИАЛОГОВ ЕНДПОЙНТ
 @app.route("/api/neural-ai-chat", methods=["POST"])
 def api_neural_ai_chat():
     data = request.get_json() or {}
@@ -1156,7 +1137,7 @@ def export_pdf():
                     <td><strong>{d[0]}</strong></td>
                     <td>{d[1]}</td>
                     <td>{d[2]}</td>
-                    <td>{d[3]} ({mask_eik(d[4])})</td>
+                    <td>{d[3]} ({d[4][:3]}*****)</td>
                     <td style="color:#b45309; font-weight:bold;">€{d[5]:,.0f}</td>
                     <td>€{d[6]:,.0f}</td>
                     <td style="color:#047857; font-weight:bold;">-{d[7]}%</td>
