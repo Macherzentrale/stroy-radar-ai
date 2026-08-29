@@ -30,17 +30,17 @@ def init_db():
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 50:
+    if c.fetchone()[0] < 20:
         c.execute("DELETE FROM radar_projects")
-        for i in range(50):
+        for i in range(20):
             c.execute("INSERT INTO radar_projects (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                      (f'Инвестиционен обект София #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', 185000 + i*1000, 320000 + i*2000, 42.1, 94, 'Активен', '4,850 кв.м', 42.6977, 23.3219))
+                      (f'Инвестиционен обект #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', 150000 + i*5000, 300000 + i*10000, 50.0, 92, 'Активен', '1,200 кв.м', 42.6977, 23.3219))
     conn.commit()
     conn.close()
 
 init_db()
 
-HTML_TEMPLATE = """
+FULL_HTML = """
 <!DOCTYPE html>
 <html lang="bg">
 <head>
@@ -54,6 +54,7 @@ HTML_TEMPLATE = """
         .card-dark { background: #0d1527; border: 1px solid #19253d; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
         .custom-input { background: #0f172a !important; border: 1px solid #334155 !important; color: #fff !important; padding: 10px; border-radius: 8px; width: 100%; }
         #map { height: 350px; width: 100%; border-radius: 12px; }
+        .listing-card { background: #0b1120; border: 1px solid #19253d; border-radius: 12px; padding: 15px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -61,6 +62,7 @@ HTML_TEMPLATE = """
         <h2 style="color: #00f0ff; font-weight: bold;">PRO INVEST RADAR AI .BG</h2>
         <p class="text-secondary">Институционален портал за публични търгове и фирмен одит.</p>
         
+        <!-- ОДИТ СКЕНЕР -->
         <div class="card-dark">
             <h5 class="text-white fw-bold">🔍 ЕИК / БУЛСТАТ Одит</h5>
             <div class="d-flex gap-2 my-2">
@@ -74,9 +76,27 @@ HTML_TEMPLATE = """
             </div>
         </div>
 
+        <!-- КАЛКУЛАТОР -->
+        <div class="card-dark">
+            <h5 class="text-white fw-bold mb-2">🧮 ЧСИ &amp; Държавни такси калкулатор</h5>
+            <div class="d-flex justify-content-between mb-2">
+                <span class="text-secondary">Цена:</span>
+                <span class="text-info fw-bold" id="calcVal">€150,000</span>
+            </div>
+            <input type="range" min="10000" max="500000" step="5000" value="150000" class="form-range mb-3" oninput="updateCalc(this.value)">
+            <div class="text-secondary small">Крайна себестойност с данъци и такси: <strong class="text-warning" id="calcTotal">€156,750</strong></div>
+        </div>
+
+        <!-- КАРТА -->
         <div class="card-dark">
             <h5 class="text-white fw-bold mb-3">🗺️ ГИС Карта на обектите</h5>
             <div id="map"></div>
+        </div>
+
+        <!-- СПИСЪК ОБЯВИ -->
+        <div class="card-dark">
+            <h5 class="text-white fw-bold mb-3">📋 Активни обяви в системата</h5>
+            <div class="row" id="dealsContainer"></div>
         </div>
     </div>
 
@@ -86,8 +106,21 @@ HTML_TEMPLATE = """
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
         var projects = {{ projects_json | safe }};
+        var container = document.getElementById('dealsContainer');
+        
         projects.forEach(function(p) {
             L.marker([p[14], p[15]]).addTo(map).bindPopup("<b>" + p[1] + "</b><br>Цена: €" + p[7].toLocaleString());
+            
+            var col = document.createElement('div');
+            col.className = 'col-md-6';
+            col.innerHTML = `
+                <div class="listing-card">
+                    <div class="fw-bold text-white">${p[1]}</div>
+                    <div class="small text-secondary">Локация: ${p[3]}</div>
+                    <div class="text-warning fw-bold mt-2">€${p[7].toLocaleString()}</div>
+                </div>
+            `;
+            container.appendChild(col);
         });
 
         function performAudit() {
@@ -97,6 +130,13 @@ HTML_TEMPLATE = """
                 document.getElementById('resName').innerText = d.name;
                 document.getElementById('resMgr').innerText = d.manager;
             });
+        }
+
+        function updateCalc(val) {
+            val = Number(val);
+            document.getElementById('calcVal').innerText = '€' + val.toLocaleString('de-DE');
+            var total = Math.round(val * 1.045);
+            document.getElementById('calcTotal').innerText = '€' + total.toLocaleString('de-DE');
         }
     </script>
 </body>
@@ -110,7 +150,7 @@ def home():
     c.execute("SELECT id, title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
-    return render_template_string(HTML_TEMPLATE, projects_json=json.dumps(projects))
+    return render_template_string(FULL_HTML, projects_json=json.dumps(projects))
 
 @app.route("/api/audit-eik")
 def audit_eik():
