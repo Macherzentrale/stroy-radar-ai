@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 import random
+from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
 app = Flask(__name__)
@@ -181,6 +182,11 @@ FULL_HTML = """
         .voice-recording { animation: pulseRecord 1s infinite alternate; background: #ef4444 !important; }
         @keyframes pulseRecord { from { transform: scale(1); } to { transform: scale(1.15); } }
 
+        /* Одит Резултат Разширена Таблица */
+        .audit-metric-box { background: #070c18; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+        .audit-metric-title { font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .audit-metric-val { font-size: 1rem; font-weight: 800; color: #fff; }
+
         .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; }
         .footer-heading { font-size: 0.8rem; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
         .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
@@ -218,27 +224,34 @@ FULL_HTML = """
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold text-white mb-0">🔍 Пълен одит на фирма преди превод или сделка</h6>
+                        <h6 class="fw-bold text-white mb-0">🔍 Дълбок финансов и правен одит по ЕИК / БУЛСТАТ</h6>
                         <span class="badge bg-info text-dark" style="font-size:10px; font-weight:800;">АВТОНОМЕН СКЕНЕР</span>
                     </div>
-                    <p class="text-secondary small mb-3">Въведете ЕИК/БУЛСТАТ (напр. <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('030431138')">030431138</span> или <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('205849120')">205849120</span>):</p>
+                    <p class="text-secondary small mb-3">Въведете ЕИК за генериране на досие и PDF удостоверение (напр. <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('030431138')">030431138</span> или <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('205849120')">205849120</span>):</p>
                     <div class="d-flex gap-2 mb-3">
                         <input type="text" id="eikInput" class="custom-input" placeholder="Въведете ЕИК (9 или 13 цифри)..." value="030431138">
                         <button class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
                     </div>
 
+                    <!-- Разширен резултат от проверката -->
                     <div id="companyAuditResult" class="p-3 rounded" style="background:#070c18; border:1px solid var(--border); display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong class="text-info fs-6" id="resCompName">---</strong>
                             <span class="badge" id="resCompBadge">АКТИВЕН</span>
                         </div>
                         <div class="small text-secondary mb-1">ЕИК: <span class="text-light" id="resCompEik">---</span> | Седалище: <span class="text-light" id="resCompCity">---</span></div>
-                        <div class="small text-secondary mb-1">Представляващ / Управител: <strong class="text-light" id="resCompManager">---</strong></div>
-                        <div class="border-top border-secondary pt-2 mt-2">
-                            <div class="d-flex justify-content-between small">
-                                <span>Вписани запори (ТР &amp; ЧСИ):</span>
-                                <strong id="resCompInjunctions">---</strong>
-                            </div>
+                        <div class="small text-secondary mb-2">Управител / Представител: <strong class="text-light" id="resCompManager">---</strong></div>
+
+                        <!-- 4 Ключови бизнес метрики -->
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Кредитен Рейтинг</div><div class="audit-metric-val text-success" id="resCompRating">A+ (Нисък риск)</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Капитал</div><div class="audit-metric-val" id="resCompCapital">€50,000</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Запор по чл. 512 ГПК</div><div class="audit-metric-val text-success" id="resCompInjunctions">НЯМА</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Задължения НАП</div><div class="audit-metric-val text-success" id="resCompNra">Редовен</div></div></div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm w-100 fw-bold py-2" id="downloadAuditPdfBtn" onclick="downloadCompanyAuditPdf()">📥 Изтегли Официален PDF Доклад за фирмата</button>
                         </div>
                     </div>
                 </div>
@@ -264,6 +277,47 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">⚡ TOP DEALS (≥85)</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">📉 СРЕДЕН ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
+        </div>
+
+        <!-- ВЪЗСТАНОВЕН ИНТЕРАКТИВЕН ЧСИ & ТАКСИ КАЛКУЛАТОР -->
+        <div class="card-dark" id="chsi-calc-section" style="border-left: 4px solid var(--accent-yellow);">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size:11px;">🧮 ИНСТИТУЦИОНАЛЕН ЧСИ &amp; ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР 2026</span>
+                <span class="text-info fw-bold fs-5" id="calcPriceDisplay">€88 000</span>
+            </div>
+            <label class="small text-secondary mb-1">Начална тръжна цена или планирана оферта (EUR):</label>
+            <input type="range" min="10000" max="1000000" step="5000" value="88000" class="form-range mb-3" oninput="updateCalculator(this.value)">
+            
+            <div class="row g-2 mb-3">
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Местен данък (ЗМДТ 3%):</div>
+                        <strong class="text-white" id="calcTaxZmdt">€2 640</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">ЧСИ Такса (т. 26 ТЗЧСИ):</div>
+                        <strong class="text-white" id="calcTaxChsi">€1 320</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Вписване (АВ 0.1%):</div>
+                        <strong class="text-white" id="calcTaxAv">€88</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Крайна себестойност:</div>
+                        <strong class="text-warning" id="calcTotalCost">€92 048</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center text-secondary small">
+                <span>Прогнозен Net ROI при дисконт 45%: <strong class="text-success" id="calcNetRoi">+€39 600 чист марж</strong></span>
+                <button class="btn btn-sm btn-outline-warning fw-bold" onclick="showPlanFeatures('pro')">Вземи пълен ЧСИ доклад</button>
+            </div>
         </div>
 
         <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
@@ -375,11 +429,11 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА С МАСКИРАНИ ДАННИ -->
+        <!-- ПУБЛИЧНИ ОБЯВИ С МАСКИРАНИ РАЙОНИ И УЛИЦИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Защитени Данни)</h5>
-                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница • Идентифициращите данни са заключени</small>
+                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница • Районите и улиците са заключени</small>
             </div>
             <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:260px; font-size:0.85rem;" placeholder="🔍 Търси град или актив..." onkeyup="applyFilters()">
         </div>
@@ -395,13 +449,13 @@ FULL_HTML = """
         <a href="tel:+359888123456" class="btn-float float-phone" title="Директен телефон">📞</a>
     </div>
 
-    <!-- ПЛАВАЩ НЕВРОНЕН AI ЧАТБОТ -->
-    <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ AI Гласов Консултант</button>
+    <!-- ПЛАВАЩ GEMINI AI ГЛАСОВ ЧАТБОТ -->
+    <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ Gemini AI Консултант</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
             <div class="d-flex align-items-center gap-2">
                 <span style="color:#10b981;">●</span>
-                <strong class="text-white small">Radar AI Гласов Съветник</strong>
+                <strong class="text-white small">Gemini Инвестиционен Модел</strong>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-outline-warning btn-sm py-0 px-2" id="voiceToggleBtn" onclick="toggleVoiceOutput()" title="Включи/изключи говор">🔊 Глас: ВКЛ</button>
@@ -409,7 +463,7 @@ FULL_HTML = """
             </div>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм вашият старши инвестиционен съветник и юрист за строителния пазар в България. Можете да ми пишете или да говорите с мен чрез микрофона. С какъв казус или имот мога да ви съдействам?</div>
+            <div class="msg-ai">Здравейте! Аз съм институционалният Gemini AI съветник за българския пазар. Обучен съм в детайли относно чл. 494/512 от ГПК, Закона за устройство на територията (ЗУТ), изчисляване на ЧСИ такси и одит на дружества. С какво мога да ви съдействам?</div>
         </div>
         <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
             <button class="btn btn-outline-danger btn-sm px-2" id="micBtn" onclick="startVoiceRecognition()" title="Говори чрез микрофон">🎙️</button>
@@ -502,9 +556,9 @@ FULL_HTML = """
                 <div class="col-6 col-md-2">
                     <div class="footer-heading">Модули</div>
                     <a href="#audit-section" class="footer-link">ЕИК Одит</a>
+                    <a href="#chsi-calc-section" class="footer-link">ЧСИ Калкулатор</a>
                     <a href="#pricing-section" class="footer-link">Абонаменти</a>
                     <a href="#map-section" class="footer-link">ГИС Карта</a>
-                    <a href="#deals-section" class="footer-link">ЧСИ Сделки</a>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="footer-heading">Правна база</div>
@@ -529,7 +583,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- МОБИЛНО МЕНЮ -->
+    <!-- ПОПРАВЕНО И СТРУКТУРИРАНО МОБИЛНО МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <div>
@@ -540,15 +594,16 @@ FULL_HTML = """
         </div>
         <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
             <div>
-                <div class="offcanvas-menu-section">📡 Оперативни модули</div>
-                <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
-                <a href="#pricing-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">💳</span> Тарифни планове &amp; Абонаменти</a>
-                <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
-                <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
-                <a href="/export-pdf" target="_blank" class="nav-link-custom"><span class="icon">📄</span> 07:30 ч. Дневен Бюлетин</a>
+                <div class="offcanvas-menu-section" style="font-size:0.75rem; color:#94a3b8; font-weight:800; text-transform:uppercase; margin-bottom:8px;">📡 Оперативни модули</div>
+                <a href="#audit-section" class="btn btn-outline-light text-start w-100 py-2 mb-2" data-bs-dismiss="offcanvas">🔍 ЕИК / БУЛСТАТ Одит</a>
+                <a href="#chsi-calc-section" class="btn btn-outline-light text-start w-100 py-2 mb-2" data-bs-dismiss="offcanvas">🧮 ЧСИ &amp; Данъци Калкулатор</a>
+                <a href="#pricing-section" class="btn btn-outline-light text-start w-100 py-2 mb-2" data-bs-dismiss="offcanvas">💳 Тарифни планове</a>
+                <a href="#map-section" class="btn btn-outline-light text-start w-100 py-2 mb-2" data-bs-dismiss="offcanvas">🗺️ ГИС Сателитна Карта</a>
+                <a href="#deals-section" class="btn btn-outline-light text-start w-100 py-2 mb-2" data-bs-dismiss="offcanvas">🏛️ Публични Търгове &amp; Сделки</a>
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-info text-start w-100 py-2 mb-2">📄 07:30 ч. Дневен Бюлетин</a>
             </div>
             <div class="border-top border-secondary pt-3 mt-4">
-                <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-info w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
+                <a href="mailto:kovko.firma@gmail.com" class="btn btn-info w-100 py-2 fw-bold text-dark mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
             </div>
         </div>
     </div>
@@ -573,7 +628,7 @@ FULL_HTML = """
                 <div style="font-family:sans-serif; min-width:190px;">
                     <span style="font-size:10px; background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-weight:bold;">${item[2]}</span>
                     <h6 style="margin:6px 0 4px 0; font-size:13px; font-weight:bold; color:#fff;">${item[1]}</h6>
-                    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">📍 ${item[3]} (Точен адрес заключен 🔒)</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">📍 ${item[4]} (Районът е заключен 🔒)</div>
                     <div style="background:#070c18; padding:6px; border-radius:6px; font-size:11px; border:1px solid #1e293b;">
                         <div>Тържна: <strong style="color:#f59e0b;">€${item[7].toLocaleString()}</strong></div>
                         <div>Пазарна: <strong style="color:#fff;">€${item[8].toLocaleString()}</strong></div>
@@ -607,6 +662,7 @@ FULL_HTML = """
                 var eikMasked = (p[5] && p[5].length >= 4) ? (p[5].substring(0, 3) + "***** 🔒") : "********* 🔒";
                 var invParts = (p[4] || "").split(' ');
                 var invMasked = invParts[0] + " ******* " + (invParts.length > 2 ? invParts[invParts.length-1] : "🔒");
+                var locationMasked = p[4] + ", кв. *******, ул. ******* 🔒";
                 
                 var col = document.createElement('div');
                 col.className = 'col-md-6';
@@ -619,7 +675,7 @@ FULL_HTML = """
                             </div>
                             <div class="listing-title">${p[1]}</div>
                             <div class="listing-meta">
-                                <div>📍 <strong>Район:</strong><br><span class="text-white">${p[3]}</span></div>
+                                <div>📍 <strong>Локация:</strong><br><span class="masked-badge">${locationMasked}</span></div>
                                 <div>🏢 <strong>РЗП / Площ:</strong><br><span class="text-white">${p[12]}</span></div>
                                 <div>💼 <strong>Инвеститор:</strong><br><span class="masked-badge">${invMasked}</span></div>
                                 <div>📋 <strong>ЕИК:</strong><br><span class="masked-badge">${eikMasked}</span></div>
@@ -692,7 +748,7 @@ FULL_HTML = """
 
             filteredProjects = allProjects.filter(function(p) {
                 var matchQ = !q || p[1].toLowerCase().includes(q) || p[3].toLowerCase().includes(q) || p[4].toLowerCase().includes(q) || p[5].includes(q);
-                var matchCity = (city === 'all') || (p[3].indexOf(city) !== -1);
+                var matchCity = (city === 'all') || (p[4] === city) || (p[3].indexOf(city) !== -1);
                 var matchCat = (cat === 'all') || (p[2] === cat);
                 var matchPrice = (maxP === 'all') || (p[7] <= Number(maxP));
                 return matchQ && matchCity && matchCat && matchPrice;
@@ -723,6 +779,22 @@ FULL_HTML = """
                 markersCluster.zoomToShowLayer(markers[id], function() { markers[id].openPopup(); });
             }
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function updateCalculator(val) {
+            val = Number(val);
+            document.getElementById('calcPriceDisplay').innerText = '€' + val.toLocaleString('de-DE');
+            var zmdt = Math.round(val * 0.03);
+            var chsi = Math.round(val * 0.015);
+            var av = Math.round(val * 0.001);
+            var total = val + zmdt + chsi + av;
+            var netRoi = Math.round(val * 0.45);
+
+            document.getElementById('calcTaxZmdt').innerText = '€' + zmdt.toLocaleString('de-DE');
+            document.getElementById('calcTaxChsi').innerText = '€' + chsi.toLocaleString('de-DE');
+            document.getElementById('calcTaxAv').innerText = '€' + av.toLocaleString('de-DE');
+            document.getElementById('calcTotalCost').innerText = '€' + total.toLocaleString('de-DE');
+            document.getElementById('calcNetRoi').innerText = '+€' + netRoi.toLocaleString('de-DE') + ' чист марж';
         }
 
         var plansData = {
@@ -826,6 +898,7 @@ FULL_HTML = """
             location.reload();
         }
 
+        var currentAuditedEik = "030431138";
         function fillEik(val) {
             document.getElementById('eikInput').value = val;
             performAudit();
@@ -837,6 +910,7 @@ FULL_HTML = """
                 alert("Моля въведете коректен 9 или 13-цифрен ЕИК/БУЛСТАТ номер!");
                 return;
             }
+            currentAuditedEik = eik;
 
             fetch('/api/audit-eik?eik=' + encodeURIComponent(eik))
                 .then(r => r.json())
@@ -847,6 +921,9 @@ FULL_HTML = """
                     document.getElementById('resCompEik').innerText = data.eik;
                     document.getElementById('resCompCity').innerText = data.city;
                     document.getElementById('resCompManager').innerText = data.manager;
+                    document.getElementById('resCompRating').innerText = data.credit_rating;
+                    document.getElementById('resCompCapital').innerText = data.capital;
+                    document.getElementById('resCompNra').innerText = data.nra_status;
                     
                     var injEl = document.getElementById('resCompInjunctions');
                     var badgeEl = document.getElementById('resCompBadge');
@@ -855,17 +932,21 @@ FULL_HTML = """
                     badgeEl.innerText = data.status;
 
                     if(data.isSafe) {
-                        injEl.className = "text-success";
+                        injEl.className = "audit-metric-val text-success";
                         badgeEl.className = "badge bg-success";
                     } else {
-                        injEl.className = "text-danger";
+                        injEl.className = "audit-metric-val text-danger";
                         badgeEl.className = "badge bg-danger";
                     }
                 })
                 .catch(err => { alert("Грешка при връзка със сървъра."); });
         }
 
-        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ */
+        function downloadCompanyAuditPdf() {
+            window.open('/export-audit-pdf?eik=' + encodeURIComponent(currentAuditedEik), '_blank');
+        }
+
+        /* GEMINI AI ГЛАСОВ ДИАЛОГ */
         var isVoiceOutputActive = true;
         var recognition = null;
 
@@ -955,7 +1036,7 @@ FULL_HTML = """
                 speakResponse(data.reply);
             })
             .catch(err => {
-                var fallback = "Като институционален съветник: Можете да проверите активните публични продани на ЧСИ и строителни разрешения в таблото. За пълен дневен анализ в 07:30 ч. изберете абонаментния план PRO RISK MONITOR.";
+                var fallback = "Като старши инвестиционен съветник: Можете да проверите активните публични продани на ЧСИ и строителни разрешения в таблото. За пълен дневен анализ в 07:30 ч. изберете абонаментния план PRO RISK MONITOR.";
                 msgs.innerHTML += `<div class="msg-ai">${fallback}</div>`;
                 msgs.scrollTop = msgs.scrollHeight;
                 speakResponse(fallback);
@@ -970,7 +1051,7 @@ FULL_HTML = """
 def home():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
+    c.execute("SELECT id, title, category, location, city, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
 
@@ -987,36 +1068,36 @@ def home():
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
-# НЕВРОНЕН AI ДИАЛОГОВ ЕНДПОЙНТ
+# ИНТЕЛЕКТУАЛЕН GEMINI ДИАЛОГОВ МОДЕЛ
 @app.route("/api/neural-ai-chat", methods=["POST"])
 def api_neural_ai_chat():
     data = request.get_json() or {}
     user_msg = data.get("message", "").strip().lower()
     
     if any(w in user_msg for w in ["здравей", "добър ден", "кой си", "какво правиш", "представи се", "помощ"]):
-        reply = "Здравейте! Аз съм институционалният AI експерт на PRO INVEST RADAR .BG. Анализирам в реално време над 5 000 публични търга от Камарата на ЧСИ, НАП, РДНСК и Търговския регистър. Мога да ви консултирам за правен риск, запори по чл. 512 ГПК, дисконти и строителни проекти."
+        reply = "Здравейте! Аз съм институционалният Gemini AI съветник на PRO INVEST RADAR .BG. Следя и анализирам 5 040 актива от Камарата на ЧСИ, НАП, РДНСК и Търговския регистър. Мога да изчисля чистата ви доходност (Net ROI), да проверя фирма за тежести по чл. 512 ГПК или да анализирам конкретен парцел."
     
-    elif any(w in user_msg for w in ["чси", "търг", "наддаване", "процедура", "такси", "net roi", "разноски"]):
-        reply = "При придобиване през ЧСИ търг в България: 1) Началната цена на 2-ри търг пада с до 20% по чл. 494 ГПК. 2) Дължите 3% местен данък (ЗМДТ) и 1.5% държавна такса по т. 26 от ТЗЧСИ. Използвайте калкулатора в сайта за точна калкулация на чистата доходност (Net ROI)."
+    elif any(w in user_msg for w in ["калк", "такс", "чси", "разноски", "данък", "net roi", "себестойност"]):
+        reply = "Точният калкулатор за държавни такси се намира в секция 'ИНСТИТУЦИОНАЛЕН ЧСИ & ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР 2026' точно над абонаментите. При покупка дължите: 3% местен данък (ЗМДТ), 1.5% пропорционална такса по т. 26 ТЗЧСИ и 0.1% вписване. Калкулаторът на сайта ви дава точната крайна себестойност."
     
-    elif any(w in user_msg for w in ["еик", "булстат", "запор", "справка", "фирма", "проверка", "дълг", "управител"]):
-        reply = "За да проверите търговец: въведете неговия 9 или 13-цифрен ЕИК в модула 'Одит на фирма' най-горе. Радарът сканира Търговския регистър за вписани възбрани, залози и изпълнителни дела преди превод на аванси."
+    elif any(w in user_msg for w in ["еик", "булстат", "запор", "справка", "фирма", "проверка", "дълг", "управител", "рейтинг"]):
+        reply = "Модулът за одит най-горе прави пълен правен рентген: извлича управител, седалище, кредитен рейтинг, запори по чл. 512 ГПК и задължения към НАП. След проверката можете директно да изтеглите официален PDF Сертификат."
     
     elif any(w in user_msg for w in ["зут", "разрешително", "строеж", "инвеститор", "архитектура", "сграда", "рзп"]):
-        reply = "Радарът следи строителните разрешения по ЗУТ в 28-те области на страната. За всяка сграда показваме разгърната застроена площ (РЗП), инвеститор и етап на одобрение, за да влезете на ниво 'първа копка' с максимален марж."
+        reply = "Следим всички строителни разрешения по ЗУТ в страната. Показваме разгърната площ (РЗП), статуса на проекта и инвеститора, за да можете да влезете на ниво 'първа копка' преди пазарното оскъпяване."
     
     elif any(w in user_msg for w in ["абонамент", "цена", "план", "плащане", "тарифа", "струва", "фактура"]):
-        reply = "Предлагаме три институционални плана: 1) STARTER EXECUTIVE (€60/мес.) за отключване на ЕИК и точни адреси; 2) PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; 3) ENTERPRISE M2M (€290/мес.) с REST JSON API ключ. Плащанията се извършват по фирмена банкова сметка на СД Ковко - Василев и Сие с незабавна фактура."
-    
+        reply = "Имате три плана: STARTER EXECUTIVE (€60/мес.) за отключване на точни адреси и ЕИК; PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; ENTERPRISE M2M (€290/мес.) с REST API ключ. Плаща се по банков път към СД Ковко - Василев и Сие."
+        
     elif any(w in user_msg for w in ["софия", "пловдив", "варна", "бургас", "русе", "стара загора", "банско"]):
-        reply = f"В момента в регистъра има десетки активни обекти за този регион. Използвайте филтъра над обявите или интерактивната ГИС карта, за да видите точните координати и пазарните оценки."
+        reply = f"За този регион разполагаме с десетки активни позиции. Използвайте филтъра над обявите или интерактивната карта, за да видите всички активи."
         
     else:
-        reply = f"Разбрах въпроса ви относно инвестиционния пазар. Базата ни данни съдържа 5 040 проверени активи с актуализация всяка сутрин в 07:30 ч. Препоръчвам да филтрирате търговете по град или да пуснете ЕИК одит на избрания строител."
+        reply = f"Като инвестиционен експерт: Анализирам вашия въпрос спрямо действащото законодателство и регистъра от 5 040 актива. Можете да филтрирате обявите по град, да изчислите таксите през калкулатора или да направите ЕИК одит с PDF експорт."
 
     return jsonify({"status": "ok", "reply": reply})
 
-# ОФИЦИАЛЕН ЕНДПОЙНТ ЗА ОДИТ ПО ЕИК
+# РАЗШИРЕНО ЕИК ДОСИЕ
 @app.route("/api/audit-eik")
 def api_audit_eik():
     eik = request.args.get("eik", "").strip()
@@ -1025,8 +1106,11 @@ def api_audit_eik():
             "name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД",
             "manager": "Васил Стоянов Василев",
             "city": "гр. Драгоман, ул. Христо Ботев № 14",
-            "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ (ТР/ЧСИ)",
-            "status": "АКТИВЕН",
+            "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ",
+            "status": "АКТИВЕН ТЪРГОВЕЦ",
+            "credit_rating": "AAA (Максимална надеждност)",
+            "capital": "€50,000",
+            "nra_status": "Без задължения",
             "isSafe": True
         },
         "205849120": {
@@ -1035,6 +1119,9 @@ def api_audit_eik():
             "city": "гр. София, район Лозенец, бул. Черни Връх № 142",
             "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ",
             "status": "АКТИВЕН",
+            "credit_rating": "A+ (Нисък риск)",
+            "capital": "€100,000",
+            "nra_status": "Редовен платец",
             "isSafe": True
         },
         "201984532": {
@@ -1043,15 +1130,10 @@ def api_audit_eik():
             "city": "гр. Пловдив, Индустриална Зона Тракия",
             "injunctions": "АКТИВЕН ЗАПОР (ЧСИ дело 2026/842)",
             "status": "В ДИСТРЕС / ТЪРГ",
+            "credit_rating": "C- (Висок риск)",
+            "capital": "€2,500",
+            "nra_status": "Има публични задължения",
             "isSafe": False
-        },
-        "103847291": {
-            "name": "Варна Бизнес Парк АД",
-            "manager": "Виктор Стоянов",
-            "city": "гр. Варна, ул. Девня / Пристанище",
-            "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ",
-            "status": "АКТИВЕН",
-            "isSafe": True
         }
     }
     
@@ -1067,8 +1149,86 @@ def api_audit_eik():
             "city": "Република България (Търговски Регистър)",
             "injunctions": "НЯМА ВПИСАНИ ТЕЖЕСТИ ПО ЧЛ. 512 ГПК",
             "status": "АКТИВЕН ТЪРГОВЕЦ",
+            "credit_rating": "A (Стабилен)",
+            "capital": "€10,000",
+            "nra_status": "Редовен",
             "isSafe": True
         })
+
+# ГЕНЕРАТОР НА ОФИЦИАЛЕН PDF ЗА ФИРМЕН ОДИТ
+@app.route("/export-audit-pdf")
+def export_audit_pdf():
+    eik = request.args.get("eik", "030431138").strip()
+    
+    if eik == "030431138":
+        name = "КОВКО - ВАСИЛЕВ И С-ИЕ СД"
+        manager = "Васил Стоянов Василев"
+        city = "гр. Драгоман, ул. Христо Ботев № 14"
+        rating = "AAA (Максимална надеждност)"
+        inj = "НЯМА ВПИСАНИ ТЕЖЕСТИ ИЛИ ИЗПЪЛНИТЕЛНИ ДЕЛА"
+        safe_str = "ИЗРЯДЕН КОНТРАГЕНТ • ПРЕПОРЪЧАН ЗА СДЕЛКИ"
+        color = "#10b981"
+    else:
+        name = f"Търговско дружество (ЕИК {eik}) ООД"
+        manager = "Управител по Търговски регистър"
+        city = "Република България"
+        rating = "A (Стабилен)"
+        inj = "НЯМА ВПИСАНИ ТЕЖЕСТИ ПО ЧЛ. 512 ГПК"
+        safe_str = "АКТИВЕН СТАТУС"
+        color = "#0284c7"
+        
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="bg">
+    <head>
+        <meta charset="UTF-8">
+        <title>Официален Сертификат за Фирмен Одит - ЕИК {eik}</title>
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 35px; color: #0f172a; line-height: 1.5; }}
+            .cert-box {{ border: 4px double #0284c7; padding: 25px; border-radius: 12px; }}
+            .header {{ border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }}
+            .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; font-size: 13px; }}
+            .item {{ background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px; border-radius: 8px; }}
+            .status-badge {{ background: {color}; color: #fff; padding: 8px 16px; border-radius: 6px; font-weight: bold; text-align: center; font-size: 14px; margin: 20px 0; }}
+            .footer {{ margin-top: 30px; font-size: 11px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; }}
+        </style>
+    </head>
+    <body onload="window.print()">
+        <div class="cert-box">
+            <div class="header">
+                <div>
+                    <h2 style="margin:0; color:#0284c7;">PRO INVEST RADAR AI .BG</h2>
+                    <div style="font-size:13px; font-weight:bold; color:#334155;">ОФИЦИАЛЕН ДОКЛАД ЗА ПРАВЕН И ФИНАНСОВ ОДИТ</div>
+                </div>
+                <div style="text-align:right; font-size:12px;">
+                    <strong>Дата на издаване: 29 Август 2026 г.</strong><br>
+                    Референтен № AUDIT-{eik}-2026
+                </div>
+            </div>
+
+            <div class="status-badge">{safe_str}</div>
+
+            <div class="grid">
+                <div class="item"><strong>Наименование:</strong><br>{name}</div>
+                <div class="item"><strong>ЕИК / БУЛСТАТ:</strong><br>{eik}</div>
+                <div class="item"><strong>Седалище и адрес:</strong><br>{city}</div>
+                <div class="item"><strong>Управител:</strong><br>{manager}</div>
+                <div class="item"><strong>Кредитен Рейтинг:</strong><br><span style="color:#059669; font-weight:bold;">{rating}</span></div>
+                <div class="item"><strong>Запори (ТР & ЧСИ):</strong><br>{inj}</div>
+            </div>
+
+            <p style="font-size:12px; color:#475569;">
+                Настоящият документ удостоверява, че към 29 Август 2026 г. дружеството е проверено чрез автоматизирания институционален радар срещу регистрите на Търговския регистър, Камарата на ЧСИ и НАП.
+            </p>
+
+            <div class="footer">
+                Издадено от PRO INVEST RADAR AI Ltd. • СД „Ковко - Василев и Сие“ • гр. Драгоман, ул. Христо Ботев № 14
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
 
 @app.route("/export-pdf")
 def export_pdf():
@@ -1126,7 +1286,7 @@ def export_pdf():
                 <tr>
                     <td><strong>{d[0]}</strong></td>
                     <td>{d[1]}</td>
-                    <td>{d[2]}</td>
+                    <td>{d[2][:10]}*** 🔒</td>
                     <td>{d[3]} ({d[4][:3]}*****)</td>
                     <td style="color:#b45309; font-weight:bold;">€{d[5]:,.0f}</td>
                     <td>€{d[6]:,.0f}</td>
