@@ -17,7 +17,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "stroy-radar-secret-key-2026")
 DB_PATH = "stroy_radar_intel.db"
 
-# --- 1. База данни с нови фирмени полета ---
+# --- 1. База данни ---
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -72,12 +72,6 @@ def init_db():
         )
     ''')
 
-    try:
-        c.execute("ALTER TABLE radar_projects ADD COLUMN eik TEXT DEFAULT '205849120'")
-        c.execute("ALTER TABLE radar_projects ADD COLUMN manager TEXT DEFAULT 'Инж. Димитър Георгиев'")
-    except Exception:
-        pass
-
     conn.commit()
     conn.close()
 
@@ -95,7 +89,7 @@ def add_lead_score(email, points):
     except Exception as e:
         print(f"[Lead Score Error] {e}")
 
-# --- 2. Zero-Bounce & SMTP модул ---
+# --- 2. Zero-Bounce & Имейл ---
 def is_email_valid_domain(email):
     try:
         domain = email.split('@')[1]
@@ -128,7 +122,7 @@ def send_email_msg(to_email, subject, body_html):
         print(f"[!] SMTP грешка: {e}")
         return False
 
-# --- 3. Автономен Двигател: Аутрийч + Drip Follow-Up (Ден 3 и 6) ---
+# --- 3. Drip Кампании с оптимизирани шаблони ---
 def execute_outreach_and_followups():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -138,14 +132,20 @@ def execute_outreach_and_followups():
     pending_leads = c.fetchall()
     for lead_id, email, company in pending_leads:
         comp_name = company if company else "Колеги"
-        subject = "Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
+        subject = "🏗️ Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
         body = f"""
         <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
             <h2 style='color:#38bdf8; margin-top:0;'>🏗️ Stroy Radar AI</h2>
-            <p>Здравейте, {comp_name},</p>
-            <p>Платформата следи в реално време новоиздадените разрешения за строеж по ЗУТ и публичните търгове на ЧСИ в България.</p>
-            <p>Предоставяме ви <strong>7-дневен безплатен пълен достъп</strong> с интерактивна GIS карта и данни за инвеститорите.</p>
-            <p><a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Вход в платформата</a></p>
+            <p>Здравейте, <strong>{comp_name}</strong>,</p>
+            <p>Следите ли новоиздадените разрешения за строеж и търговете на парцели във вашия регион?</p>
+            <p>Платформата <strong>Stroy Radar AI</strong> следи регистрите по ЗУТ и ЧСИ в реално време, предоставяйки директни контакти на инвеститори и параметри на сградите.</p>
+            <p>Активирахме за вас <strong>7 дни безплатен тестов достъп</strong>:</p>
+            <p style='margin:25px 0;'>
+                <a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Влезте в платформата</a>
+            </p>
+            <p style='font-size:12px; color:#94a3b8; border-top:1px solid #334155; padding-top:15px;'>
+                За връзка с нас: <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a> | Поддръжка във Viber
+            </p>
         </div>
         """
         if send_email_msg(email, subject, body):
@@ -153,7 +153,7 @@ def execute_outreach_and_followups():
             conn.commit()
             time.sleep(2)
 
-    # 2. Drip Follow-Up: Ден 3
+    # 2. Ден 3: Показване на нови обекти
     c.execute("""
         SELECT id, email, company_name FROM leads_outreach 
         WHERE status = 'trial_active' AND last_followup_day = 0 
@@ -161,20 +161,24 @@ def execute_outreach_and_followups():
     """)
     day3_leads = c.fetchall()
     for lead_id, email, company in day3_leads:
-        subj = "🏗️ Нови обекти за подизпълнение от днес – Stroy Radar AI"
+        comp_name = company if company else "Колеги"
+        subj = f"🎯 Нови обекти с издадени разрешения за строеж – Stroy Radar AI"
         b_html = f"""
-        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
-            <h3 style='color:#38bdf8;'>Здравейте, {company}!</h3>
-            <p>През последните 48 часа са регистрирани нови строителни обекти с издадени разрешения за строеж.</p>
-            <p>Прегледайте актуалните инвеститори и параметри в портала:</p>
-            <p><a href='https://stroy-radar-ai.onrender.com/portal' style='background:#2563eb; color:#fff; padding:10px 20px; text-decoration:none; border-radius:6px; display:inline-block;'>Отвори Портала</a></p>
+        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
+            <h3 style='color:#38bdf8; margin-top:0;'>Здравейте, {comp_name},</h3>
+            <p>През последните 48 часа са регистрирани нови строителни обекти и търгове с пълни данни за инвеститорите (ЕИК и управители).</p>
+            <p>Можете да ги разгледате на интерактивната карта или да свалите пълен списък в Excel директно от вашия профил:</p>
+            <p style='margin:20px 0;'>
+                <a href='https://stroy-radar-ai.onrender.com/portal' style='background:#2563eb; color:#ffffff; padding:10px 20px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Преглед на новите обекти</a>
+            </p>
+            <p style='font-size:12px; color:#94a3b8;'>Ако търсите конкретен регион или квадратура, настройте вашите филтри в портала.</p>
         </div>
         """
         send_email_msg(email, subj, b_html)
         c.execute("UPDATE leads_outreach SET last_followup_day = 3 WHERE id = ?", (lead_id,))
         conn.commit()
 
-    # 3. Drip Follow-Up: Ден 6 (Напомняне преди изтичане)
+    # 3. Ден 6: Финално напомняне преди изтичане
     c.execute("""
         SELECT id, email, company_name FROM leads_outreach 
         WHERE status = 'trial_active' AND last_followup_day = 3 
@@ -182,13 +186,20 @@ def execute_outreach_and_followups():
     """)
     day6_leads = c.fetchall()
     for lead_id, email, company in day6_leads:
-        subj = "⏳ Вашият 7-дневен тестов период в Stroy Radar AI изтича утре"
+        comp_name = company if company else "Колеги"
+        subj = f"⏳ Вашият 7-дневен тестов достъп в Stroy Radar AI изтича след 24 часа"
         b_html = f"""
-        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
-            <h3 style='color:#f59e0b;'>Здравейте, {company},</h3>
-            <p>Напомняме ви, че 7-дневният безплатен достъп до новите строителни обекти и търгове изтича след 24 часа.</p>
-            <p>За въпроси, фактуриране или продължаване на абонамента, пишете ни на <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a> или се свържете с нас във Viber.</p>
-            <p><a href='https://stroy-radar-ai.onrender.com/portal' style='background:#10b981; color:#fff; padding:10px 20px; text-decoration:none; border-radius:6px; display:inline-block;'>Преглед на профила</a></p>
+        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
+            <h3 style='color:#f59e0b; margin-top:0;'>Здравейте, {comp_name},</h3>
+            <p>Напомняме ви, че вашият 7-дневен безплатен пробен период за достъп до новите строителни обекти изтича утре.</p>
+            <p>Ако желаете да запазите ежедневния сутрешен бюлетин в 07:30 ч., достъпа до картата и директните контакти с инвеститорите:</p>
+            <ul>
+                <li>Пишете ни на: <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a></li>
+                <li>Или се свържете директно с наш координатор във <strong>Viber</strong></li>
+            </ul>
+            <p style='margin:20px 0;'>
+                <a href='https://stroy-radar-ai.onrender.com/portal' style='background:#10b981; color:#ffffff; padding:10px 20px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Вход в Личния Профил</a>
+            </p>
         </div>
         """
         send_email_msg(email, subj, b_html)
@@ -197,7 +208,7 @@ def execute_outreach_and_followups():
 
     conn.close()
 
-# --- 4. 24/7 Scheduler ---
+# --- 4. 24/7 График ---
 def background_scheduler():
     already_sent_digest = False
     already_sent_outreach = False
@@ -237,7 +248,7 @@ def background_scheduler():
 
 threading.Thread(target=background_scheduler, daemon=True).start()
 
-# --- 5. HTML Шаблони с Company Enrichment & PDF Print ---
+# --- 5. HTML Шаблони ---
 MAIN_HTML = """
 <!DOCTYPE html>
 <html lang="bg">
