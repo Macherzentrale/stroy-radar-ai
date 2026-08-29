@@ -17,8 +17,8 @@ def init_db():
         location TEXT,
         city TEXT DEFAULT 'София',
         investor TEXT,
-        eik TEXT DEFAULT '205849120',
-        manager TEXT DEFAULT 'Инж. Димитър Георгиев',
+        eik TEXT DEFAULT '030431138',
+        manager TEXT DEFAULT 'Васил Стоянов Василев',
         price_eur REAL DEFAULT 0,
         market_val REAL DEFAULT 0,
         discount_pct REAL DEFAULT 60.8,
@@ -150,17 +150,7 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
-        .masked-badge {
-            background: #182235;
-            color: #38bdf8;
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.82rem;
-            border: 1px dashed #0284c7;
-            display: inline-block;
-            font-weight: bold;
-        }
+        .masked-badge { background: #182235; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
@@ -183,7 +173,6 @@ FULL_HTML = """
         .float-tg { background: #229ED9; }
         .float-phone { background: #10b981; }
 
-        /* ЧАТБОТ СТИЛОВЕ */
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 0.88rem; line-height: 1.45; }
@@ -244,7 +233,7 @@ FULL_HTML = """
                             <span class="badge" id="resCompBadge">АКТИВЕН</span>
                         </div>
                         <div class="small text-secondary mb-1">ЕИК: <span class="text-light" id="resCompEik">---</span> | Седалище: <span class="text-light" id="resCompCity">---</span></div>
-                        <div class="small text-secondary mb-1">Представляващ: <strong class="text-light" id="resCompManager">---</strong></div>
+                        <div class="small text-secondary mb-1">Представляващ / Управител: <strong class="text-light" id="resCompManager">---</strong></div>
                         <div class="border-top border-secondary pt-2 mt-2">
                             <div class="d-flex justify-content-between small">
                                 <span>Вписани запори (ТР &amp; ЧСИ):</span>
@@ -1027,14 +1016,15 @@ def api_neural_ai_chat():
 
     return jsonify({"status": "ok", "reply": reply})
 
+# ОФИЦИАЛЕН ЕНДПОЙНТ ЗА ОДИТ ПО ЕИК
 @app.route("/api/audit-eik")
 def api_audit_eik():
     eik = request.args.get("eik", "").strip()
     official_db = {
         "030431138": {
-            "name": "Трейс Груп Холд АД",
-            "manager": "инж. Боян Делчев / проф. Николай Михайлов",
-            "city": "гр. София, район Триадица, бул. Никола Образписов № 12",
+            "name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД",
+            "manager": "Васил Стоянов Василев",
+            "city": "гр. Драгоман, ул. Христо Ботев № 14",
             "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ (ТР/ЧСИ)",
             "status": "АКТИВЕН",
             "isSafe": True
