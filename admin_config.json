@@ -1,0 +1,13 @@
+{
+    "super_admin": "esaidi2013@gmail.com",
+    "allowed_google_accounts": [
+        "esaidi2013@gmail.com"
+    ],
+    "role": "SUPERUSER_FULL_ACCESS",
+    "features_unlocked": [
+        "FORCE_CROSS_REGISTRY_SYNC",
+        "EXECUTE_FINANCIAL_UNDERWRITING",
+        "ACCESS_LEGAL_RAW_DOSSIERS",
+        "DISPATCH_INSTANT_ALERTS"
+    ]
+}

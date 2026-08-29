@@ -1,0 +1,9 @@
+{
+    "sender_email": "esaidi2013@gmail.com",
+    "sender_app_password": "lasxaorelzxcdnpp",
+    "recipient_email": "kovko.firma@gmail.com",
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "min_score_alert": 80,
+    "enabled": true
+}
