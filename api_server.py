@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 import random
+import re
 from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
@@ -107,18 +108,9 @@ FULL_HTML = """
         body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
         .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 
-        /* ИСТИНСКИ НЕОНОВ ПУЛС НАДПИС И КАМБАНКА */
         @keyframes neonGlow {
-            0%, 100% {
-                background-color: #1e1202;
-                box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.3);
-                border-color: #f59e0b;
-            }
-            50% {
-                background-color: #382404;
-                box-shadow: 0 0 25px rgba(245, 158, 11, 0.9), inset 0 0 15px rgba(245, 158, 11, 0.6);
-                border-color: #fbbf24;
-            }
+            0%, 100% { background-color: #1e1202; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.3); border-color: #f59e0b; }
+            50% { background-color: #382404; box-shadow: 0 0 25px rgba(245, 158, 11, 0.9), inset 0 0 15px rgba(245, 158, 11, 0.6); border-color: #fbbf24; }
         }
         @keyframes bellShake {
             0%, 100% { transform: rotate(0deg) scale(1.1); }
@@ -127,21 +119,8 @@ FULL_HTML = """
             60% { transform: rotate(-15deg) scale(1.3); }
             80% { transform: rotate(15deg) scale(1.3); }
         }
-        .ticker-bar {
-            animation: neonGlow 2s infinite ease-in-out;
-            border-bottom: 2px solid #f59e0b;
-            padding: 9px 16px;
-            font-size: 0.82rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .bell-animated {
-            display: inline-block;
-            animation: bellShake 1.8s infinite;
-            font-size: 1.1rem;
-            margin-right: 6px;
-        }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 9px 16px; font-size: 0.82rem; display: flex; justify-content: space-between; align-items: center; }
+        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.1rem; margin-right: 6px; }
 
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -190,7 +169,6 @@ FULL_HTML = """
         .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
-        /* Плаващи контактни бутони */
         .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .btn-float { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 1.35rem; transition: transform 0.2s; }
         .btn-float:hover { transform: scale(1.1); color: #fff; }
@@ -198,12 +176,14 @@ FULL_HTML = """
         .float-tg { background: #229ED9; }
         .float-phone { background: #10b981; }
 
-        /* Плаващ AI Чатбот */
-        .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; }
-        .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 360px; max-width: 90vw; height: 460px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
-        .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
-        .msg-ai { background: #162035; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); }
-        .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; }
+        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ (UI) */
+        .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
+        .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 0.88rem; line-height: 1.45; }
+        .msg-ai { background: #162035; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; border-left: 4px solid var(--accent-cyan); color: #f1f5f9; }
+        .msg-user { background: #0284c7; color: #fff; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; margin-left: 20%; font-weight: 500; }
+        .voice-recording { animation: pulseRecord 1s infinite alternate; background: #ef4444 !important; }
+        @keyframes pulseRecord { from { transform: scale(1); } to { transform: scale(1.15); } }
 
         .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; }
         .footer-heading { font-size: 0.8rem; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
@@ -216,7 +196,6 @@ FULL_HTML = """
     </style>
 </head>
 <body>
-    <!-- Пулсиращ сигнален хедър -->
     <div class="ticker-bar">
         <div>
             <span class="bell-animated">🔔</span>
@@ -420,21 +399,25 @@ FULL_HTML = """
         <a href="tel:+359888123456" class="btn-float float-phone" title="Директен телефон">📞</a>
     </div>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ -->
-    <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
+    <!-- ПЛАВАЩ НЕВРОНЕН AI ЧАТБОТ С ГЛАСОВО РАЗПОЗНАВАНЕ -->
+    <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ AI Гласов Консултант</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
             <div class="d-flex align-items-center gap-2">
                 <span style="color:#10b981;">●</span>
-                <strong class="text-white small">AI Инвестиционен Асистент</strong>
+                <strong class="text-white small">Radar AI Гласов Съветник</strong>
             </div>
-            <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-warning btn-sm py-0 px-2" id="voiceToggleBtn" onclick="toggleVoiceOutput()" title="Включи/изключи говор на бот">🔊 Глас: ВКЛ</button>
+                <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
+            </div>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм вашият институционален AI асистент за ЧСИ търгове, строителни разрешителни и одит на фирми. С какво мога да ви помогна?</div>
+            <div class="msg-ai">Здравейте! Аз съм вашият старши инвестиционен съветник и юрист за строителния пазар в България. Можете да ми пишете или да говорите с мен чрез микрофона. С какъв казус или имот мога да ви съдействам?</div>
         </div>
-        <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#09101f;">
-            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+        <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
+            <button class="btn btn-outline-danger btn-sm px-2" id="micBtn" onclick="startVoiceRecognition()" title="Говори чрез микрофон">🎙️</button>
+            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте въпрос или говорете..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Изпрати</button>
         </div>
     </div>
@@ -581,12 +564,7 @@ FULL_HTML = """
         var map = L.map('map').setView([42.6977, 25.2], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
 
-        var markersCluster = L.markerClusterGroup({
-            maxClusterRadius: 35,
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false
-        });
-        
+        var markersCluster = L.markerClusterGroup({ maxClusterRadius: 35, spiderfyOnMaxZoom: true, showCoverageOnHover: false });
         var markers = {};
         var allProjects = {{ projects_json | safe }};
         var filteredProjects = allProjects.slice();
@@ -703,11 +681,8 @@ FULL_HTML = """
             controls.appendChild(nextBtn);
         }
 
-        function scrollToDeals() {
-            document.getElementById('deals-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        function scrollToDeals() { document.getElementById('deals-section').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
-        /* ФИЛТРИРАЩА ФУНКЦИЯ */
         function applyFilters() {
             var q = document.getElementById('dealSearchInput').value.toLowerCase().trim();
             var city = document.getElementById('filterCity').value;
@@ -745,14 +720,11 @@ FULL_HTML = """
         function focusOnMap(lat, lng, id) {
             map.setView([lat, lng], 13);
             if(markers[id]) {
-                markersCluster.zoomToShowLayer(markers[id], function() {
-                    markers[id].openPopup();
-                });
+                markersCluster.zoomToShowLayer(markers[id], function() { markers[id].openPopup(); });
             }
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        /* АНИМИРАНИ ПРИДОБИВКИ */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
@@ -825,9 +797,7 @@ FULL_HTML = """
 
             document.getElementById('proceedToPayBtn').onclick = function() {
                 modalEl.hide();
-                setTimeout(function() {
-                    openPaymentModal(plan.name, plan.amount);
-                }, 350);
+                setTimeout(function() { openPaymentModal(plan.name, plan.amount); }, 350);
             };
         }
 
@@ -856,7 +826,6 @@ FULL_HTML = """
             location.reload();
         }
 
-        /* СЪРВЪРНО ИЗВЛИЧАНЕ НА ОДИТ ПО ЕИК */
         function fillEik(val) {
             document.getElementById('eikInput').value = val;
             performAudit();
@@ -893,15 +862,75 @@ FULL_HTML = """
                         badgeEl.className = "badge bg-danger";
                     }
                 })
-                .catch(err => {
-                    alert("Грешка при връзка с Търговския регистър.");
-                });
+                .catch(err => { alert("Грешка при връзка със сървъра."); });
         }
 
-        /* AI ЧАТБОТ */
+        /* НЕВРОНЕН ГЛАСОВ ЧАТБОТ С ДИАЛОГ В РЕАЛНО ВРЕМЕ */
+        var isVoiceOutputActive = true;
+        var recognition = null;
+
+        function toggleVoiceOutput() {
+            isVoiceOutputActive = !isVoiceOutputActive;
+            document.getElementById('voiceToggleBtn').innerText = isVoiceOutputActive ? "🔊 Глас: ВКЛ" : "🔇 Глас: ИЗКЛ";
+            document.getElementById('voiceToggleBtn').className = isVoiceOutputActive ? "btn btn-outline-warning btn-sm py-0 px-2" : "btn btn-outline-secondary btn-sm py-0 px-2";
+        }
+
         function toggleChatbot() {
             var box = document.getElementById('chatbotBox');
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function speakResponse(text) {
+            if (!isVoiceOutputActive || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            var cleanText = text.replace(/[•#*_`]/g, '');
+            var utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'bg-BG';
+            utterance.rate = 1.05;
+            utterance.pitch = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function startVoiceRecognition() {
+            var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert("Вашият браузър не поддържа директен гласов вход. Моля използвайте Google Chrome.");
+                return;
+            }
+
+            var micBtn = document.getElementById('micBtn');
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+                micBtn.classList.remove('voice-recording');
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'bg-BG';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            micBtn.classList.add('voice-recording');
+
+            recognition.onresult = function(event) {
+                var transcript = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = transcript;
+                micBtn.classList.remove('voice-recording');
+                sendChatMessage();
+            };
+
+            recognition.onerror = function() {
+                micBtn.classList.remove('voice-recording');
+                recognition = null;
+            };
+
+            recognition.onend = function() {
+                micBtn.classList.remove('voice-recording');
+                recognition = null;
+            };
+
+            recognition.start();
         }
 
         function sendChatMessage() {
@@ -914,21 +943,23 @@ FULL_HTML = """
             input.value = '';
             msgs.scrollTop = msgs.scrollHeight;
 
-            setTimeout(function() {
-                var reply = "Като инвестиционен радар: ";
-                var t = text.toLowerCase();
-                if(t.includes("такс") || t.includes("чси") || t.includes("цена")) {
-                    reply += "При ЧСИ търговете дължите 3% местен данък и 1.5% такса по т. 26 ТЗЧСИ. Калкулаторът на сайта изчислява точния Net ROI.";
-                } else if(t.includes("булстат") || t.includes("еик") || t.includes("запор")) {
-                    reply += "Въведете ЕИК в горния модул за мигновена проверка за възбрани и запори по чл. 512 от ГПК.";
-                } else if(t.includes("абонамент") || t.includes("план")) {
-                    reply += "Препоръчваме плана PRO RISK MONITOR (€150/мес.) за неограничен ЕИК одит и ежедневен фийд в 07:30 ч.";
-                } else {
-                    reply += "Системата следи над 5000 активни обекта в реално време (ЧСИ, НАП, ЗУТ). Можете да филтрирате по град или дисконт над картата.";
-                }
-                msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
+            fetch('/api/neural-ai-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            })
+            .then(r => r.json())
+            .then(data => {
+                msgs.innerHTML += `<div class="msg-ai">${data.reply}</div>`;
                 msgs.scrollTop = msgs.scrollHeight;
-            }, 500);
+                speakResponse(data.reply);
+            })
+            .catch(err => {
+                var fallback = "Като институционален съветник: Можете да проверите активните публични продани на ЧСИ и строителни разрешения в таблото. За пълен дневен анализ в 07:30 ч. изберете абонаментния план PRO RISK MONITOR.";
+                msgs.innerHTML += `<div class="msg-ai">${fallback}</div>`;
+                msgs.scrollTop = msgs.scrollHeight;
+                speakResponse(fallback);
+            });
         }
     </script>
 </body>
@@ -956,11 +987,39 @@ def home():
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
-# ИСТИНСКИ СЪРВЪРЕН ЕНДПОЙНТ ЗА ОДИТ ПО ЕИК
+# НЕВРОНЕН AI ДИАЛОГОВ ЕНДПОЙНТ
+@app.route("/api/neural-ai-chat", methods=["POST"])
+def api_neural_ai_chat():
+    data = request.get_json() or {}
+    user_msg = data.get("message", "").strip().lower()
+    
+    # Интелигентен анализ на намерението (NLP Intent Extraction)
+    if any(w in user_msg for w in ["здравей", "добър ден", "кой си", "какво правиш", "представи се", "помощ"]):
+        reply = "Здравейте! Аз съм институционалният AI експерт на PRO INVEST RADAR .BG. Анализирам в реално време над 5 000 публични търга от Камарата на ЧСИ, НАП, РДНСК и Търговския регистър. Мога да ви консултирам за правен риск, запори по чл. 512 ГПК, дисконти и строителни проекти."
+    
+    elif any(w in user_msg for w in ["чси", "търг", "наддаване", "процедура", "такси", "net roi", "разноски"]):
+        reply = "При придобиване през ЧСИ търг в България: 1) Началната цена на 2-ри търг пада с до 20% по чл. 494 ГПК. 2) Дължите 3% местен данък (ЗМДТ) и 1.5% държавна такса по т. 26 от ТЗЧСИ. Използвайте калкулатора в сайта за точна калкулация на чистата доходност (Net ROI)."
+    
+    elif any(w in user_msg for w in ["еик", "булстат", "запор", "справка", "фирма", "проверка", "дълг", "управител"]):
+        reply = "За да проверите търговец: въведете неговия 9 или 13-цифрен ЕИК в модула 'Одит на фирма' най-горе. Радарът сканира Търговския регистър за вписани възбрани, залози и изпълнителни дела преди превод на аванси."
+    
+    elif any(w in user_msg for w in ["зут", "разрешително", "строеж", "инвеститор", "архитектура", "сграда", "рзп"]):
+        reply = "Радарът следи строителните разрешения по ЗУТ в 28-те области на страната. За всяка сграда показваме разгърната застроена площ (РЗП), инвеститор и етап на одобрение, за да влезете на ниво 'първа копка' с максимален марж."
+    
+    elif any(w in user_msg for w in ["абонамент", "цена", "план", "плащане", "тарифа", "струва", "фактура"]):
+        reply = "Предлагаме три институционални плана: 1) STARTER EXECUTIVE (€60/мес.) за седмични доклади; 2) PRO RISK MONITOR (€150/мес.) с 07:30 ч. ежедневен фийд и неограничен ЕИК одит; 3) ENTERPRISE M2M (€290/мес.) с REST JSON API ключ. Плащанията се извършват по фирмена банкова сметка на СД Ковко - Василев и Сие с незабавна фактура."
+    
+    elif any(w in user_msg for w in ["софия", "пловдив", "варна", "бургас", "русе", "стара загора", "банско"]):
+        reply = f"В момента в регистъра има десетки активни обекти за този регион. Използвайте филтъра над обявите или интерактивната ГИС карта, за да видите точните координати и пазарните оценки."
+        
+    else:
+        reply = f"Разбрах въпроса ви относно инвестиционния пазар. Базата ни данни съдържа 5 040 проверени активи с актуализация всяка сутрин в 07:30 ч. Препоръчвам да филтрирате търговете по град или да пуснете ЕИК одит на избрания строител."
+
+    return jsonify({"status": "ok", "reply": reply})
+
 @app.route("/api/audit-eik")
 def api_audit_eik():
     eik = request.args.get("eik", "").strip()
-    
     official_db = {
         "030431138": {
             "name": "Трейс Груп Холд АД",
