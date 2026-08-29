@@ -2,6 +2,7 @@ import os
 import json
 import sqlite3
 import random
+from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
 app = Flask(__name__)
@@ -24,13 +25,14 @@ def init_db():
         deal_score INTEGER DEFAULT 88,
         status TEXT DEFAULT 'Активен',
         size_rzp TEXT DEFAULT '4,850 кв.м',
+        created_at TEXT DEFAULT '2026-08-29',
         lat REAL DEFAULT 42.6977,
         lng REAL DEFAULT 23.3219
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
     count = c.fetchone()[0]
-    if count < 1000:
+    if count < 5000:
         c.execute("DELETE FROM radar_projects")
         cities = [
             ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
@@ -54,26 +56,27 @@ def init_db():
         ]
         
         records = []
-        for i in range(1050):
+        for i in range(5040):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
-            title = f'{t[0]} "{city[0]} Елит {idx}"'
-            location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 12 + 1}"
-            investor = f"{city[0]} Инвест Груп {idx} ООД"
-            eik = str(200000000 + idx * 19)
+            title = f'{t[0]} "{city[0]} Инвест #{idx}"'
+            location = f"{city[0]}, Район Индустриален / Жилищен кв. {idx % 15 + 1}"
+            investor = f"{city[0]} Пропърти Груп {idx} ООД"
+            eik = str(200000000 + idx * 13)
             manager = f"Инж. {city[0]}ски {idx}"
-            lat = city[1] + random.uniform(-0.04, 0.04)
-            lng = city[2] + random.uniform(-0.04, 0.04)
-            price = t[4] + (idx * 500) % 300000
-            mval = t[5] + (idx * 900) % 600000
+            lat = city[1] + random.uniform(-0.06, 0.06)
+            lng = city[2] + random.uniform(-0.06, 0.06)
+            price = t[4] + (idx * 350) % 400000
+            mval = t[5] + (idx * 750) % 800000
             disc = round(((mval - price) / mval) * 100, 1)
-            score = min(98, max(75, int(t[7] + (idx % 7) - 3)))
-            records.append((title, t[1], location, investor, eik, manager, price, mval, disc, score, t[2], t[3], lat, lng))
+            score = min(99, max(75, int(t[7] + (idx % 8) - 3)))
+            c_date = "2026-08-29" if (idx % 5 == 0) else "2026-08-28"
+            records.append((title, t[1], location, investor, eik, manager, price, mval, disc, score, t[2], t[3], c_date, lat, lng))
             
         c.executemany('''INSERT INTO radar_projects 
-            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
+            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
     conn.commit()
     conn.close()
 
@@ -131,7 +134,6 @@ FULL_HTML = """
         .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
         .leaflet-popup-tip { background: #0d1527 !important; }
 
-        /* Обяви дизайн с 2 колони на десктоп */
         .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s, transform 0.2s; }
         .listing-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .listing-card.highlight { border-color: #00f0ff !important; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3); }
@@ -139,14 +141,12 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 
-        /* Абонаменти дизайн */
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
 
-        /* Анимирани падащи придобивки */
         .benefit-row {
             background: #070c18;
             border: 1px solid #19253d;
@@ -161,13 +161,9 @@ FULL_HTML = """
             transform: translateY(-15px);
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .benefit-row.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        .benefit-row.show { opacity: 1; transform: translateY(0); }
         .benefit-icon { font-size: 1.4rem; min-width: 28px; }
 
-        /* Пагинация */
         .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 20px 0 35px 0; }
         .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
@@ -195,7 +191,7 @@ FULL_HTML = """
 <body>
     <div class="ticker-bar">
         <span style="color:#38bdf8; font-family:monospace; font-weight:700;">NEURAL RADAR 2026:</span>
-        <span class="text-secondary">🔔 [07:29] {{ stats.total }} институционални обекта активни в националния регистър</span>
+        <span class="text-secondary">🔔 [07:30 PROTOCOL] {{ stats.total }} институционални обекта • Национален фийд в реално време</span>
         <span class="badge bg-success" style="font-size:9px;">LIVE</span>
     </div>
 
@@ -205,7 +201,10 @@ FULL_HTML = """
                 <div class="shield-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
-            <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;">📄 07:30 Дневен Бюлетин</a>
+                <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
+            </div>
         </div>
 
         <!-- ОДИТ СКЕНЕР + 3D САТЕЛИТ -->
@@ -265,7 +264,7 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (ПРЕМЕСТЕНИ ГОРЕ) -->
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (ГОРЕ) -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
@@ -310,7 +309,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ИНТЕРАКТИВНА КАРТА (ПРЕМЕСТЕНА ПОД АБОНАМЕНТИТЕ) -->
+        <!-- ИНТЕРАКТИВНА КАРТА (ПОД АБОНАМЕНТИТЕ) -->
         <div class="card-dark" id="map-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
@@ -322,20 +321,16 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА С ПАГИНАЦИЯ -->
+        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 6 НА СТРАНИЦА -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
-                <small class="text-secondary">Показват се по 6 обекта на страница от общо {{ stats.total }}</small>
+                <small class="text-secondary">Показват се по 6 обекта на страница от общо {{ stats.total }} в цяла България</small>
             </div>
             <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:260px; font-size:0.85rem;" placeholder="🔍 Търси град или инвеститор..." onkeyup="filterDealsList()">
         </div>
 
-        <div class="row g-3" id="dealsContainer">
-            <!-- JavaScript динамично рендира точно 6 карти за текущата страница -->
-        </div>
-
-        <!-- Пагинационни бутони отдолу -->
+        <div class="row g-3" id="dealsContainer"></div>
         <div class="pagination-box" id="paginationControls"></div>
 
         <!-- СПЕЦИАЛЕН ЕКСПЕРТЕН СЛАЙД -->
@@ -515,6 +510,7 @@ FULL_HTML = """
                 <a href="#pricing-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">💳</span> Тарифни планове &amp; Абонаменти</a>
                 <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
                 <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
+                <a href="/export-pdf" target="_blank" class="nav-link-custom"><span class="icon">📄</span> 07:30 ч. Дневен Бюлетин</a>
             </div>
             <div class="border-top border-secondary pt-3 mt-4">
                 <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-info w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
@@ -542,7 +538,7 @@ FULL_HTML = """
         var pageSize = 6;
 
         allProjects.forEach(function(item) {
-            var lat = item[12] || 42.6977, lng = item[13] || 23.3219;
+            var lat = item[13] || 42.6977, lng = item[14] || 23.3219;
             var popupContent = `
                 <div style="font-family:sans-serif; min-width:190px;">
                     <span style="font-size:10px; background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-weight:bold;">${item[2]}</span>
@@ -598,7 +594,7 @@ FULL_HTML = """
                             </div>
                         </div>
                         <div class="d-flex gap-2 mt-auto">
-                            <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap(${p[12]}, ${p[13]}, ${p[0]})">📍 Карта</button>
+                            <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap(${p[13]}, ${p[14]}, ${p[0]})">📍 Карта</button>
                             <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="showPlanFeatures('starter')">⚡ Меморандум</button>
                         </div>
                     </div>
@@ -668,7 +664,6 @@ FULL_HTML = """
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        /* ПРИДОБИВКИ ПО ПЛАНОВЕ С ПАДАЩА АНИМАЦИЯ */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
@@ -676,7 +671,7 @@ FULL_HTML = """
                 badge: "€60 / МЕСЕЦ",
                 features: [
                     { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на всички нови търгове и разрешителни за строеж." },
-                    { icon: "🏛️", title: "Достъп до всички 1000+ ЧСИ & НАП търгове", desc: "Филтриран списък с ликвидационни цени и пазарни дисконти." },
+                    { icon: "🏛️", title: "Достъп до всички 5000+ ЧСИ & НАП търгове", desc: "Филтриран списък с ликвидационни цени и пазарни дисконти." },
                     { icon: "🗺️", title: "Интерактивна ГИС карта на България", desc: "Пълна визуализация на парцелите и сградите в реално време." },
                     { icon: "🏢", title: "До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." }
                 ]
@@ -732,7 +727,6 @@ FULL_HTML = """
             var modalEl = new bootstrap.Modal(document.getElementById('featuresModal'));
             modalEl.show();
 
-            // Падаща каскадна анимация
             plan.features.forEach(function(feat, idx) {
                 setTimeout(function() {
                     var el = document.getElementById('benefit-row-' + idx);
@@ -773,7 +767,6 @@ FULL_HTML = """
             location.reload();
         }
 
-        /* ТОЧНА БАЗА ДАННИ И АВТЕНТИЧНА ПРОВЕРКА ПО ЕИК */
         var officialCompanyRegistry = {
             "030431138": { name: "Трейс Груп Холд АД", manager: "инж. Боян Делчев / проф. Николай Михайлов", city: "гр. София, район Триадица, бул. Никола Образписов № 12", injunctions: "НЯМА ВПИСАНИ ЗАПОРИ (ТР/ЧСИ)", status: "АКТИВЕН", isSafe: true, projects: "3 разрешителни в радара" },
             "205849120": { name: "Елит Строй Билдинг ООД", manager: "инж. Димитър Георгиев", city: "гр. София, район Лозенец, бул. Черни Връх", injunctions: "НЯМА ВПИСАНИ ЗАПОРИ", status: "АКТИВЕН", isSafe: true, projects: "1 активно строително разрешение" },
@@ -797,7 +790,6 @@ FULL_HTML = """
             
             var comp = officialCompanyRegistry[eik];
             if(!comp) {
-                // Динамично генериране на досие за произволен въведен валиден ЕИК
                 comp = {
                     name: "Търговско дружество (ЕИК " + eik + ") ООД",
                     manager: "Управител по ТР (Удостоверение за актуално състояние)",
@@ -837,7 +829,7 @@ FULL_HTML = """
 def home():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, size_rzp, lat, lng FROM radar_projects")
+    c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, size_rzp, created_at, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
 
@@ -853,6 +845,84 @@ def home():
         "spread_str": "{:,.0f}".format(total_spread).replace(",", " ")
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
+
+@app.route("/export-pdf")
+def export_pdf():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT title, category, location, investor, eik, price_eur, market_val, discount_pct, deal_score FROM radar_projects ORDER BY deal_score DESC LIMIT 15")
+    top_deals = c.fetchall()
+    conn.close()
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html lang="bg">
+    <head>
+        <meta charset="UTF-8">
+        <title>07:30 ч. Дневен Инвестиционен Бюлетин</title>
+        <style>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, sans-serif; padding: 25px; color: #0f172a; line-height: 1.4; }}
+            .header {{ border-bottom: 3px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end; }}
+            .table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 11px; }}
+            .table th, .table td {{ border: 1px solid #cbd5e1; padding: 7px 10px; text-align: left; }}
+            .table th {{ background: #0f172a; color: #fff; }}
+            .badge {{ background: #10b981; color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: bold; }}
+            .footer {{ margin-top: 30px; font-size: 10px; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 10px; }}
+        </style>
+    </head>
+    <body onload="window.print()">
+        <div class="header">
+            <div>
+                <h2 style="margin:0; color:#0284c7;">PRO INVEST RADAR AI .BG</h2>
+                <div style="font-size:13px; font-weight:bold; color:#334155;">07:30 ч. ИНСТИТУЦИОНАЛЕН ДНЕВЕН БЮЛЕТИН</div>
+            </div>
+            <div style="text-align:right; font-size:12px;">
+                <strong>Дата: 29 Август 2026 г.</strong><br>
+                Статус: Официален машинен протокол
+            </div>
+        </div>
+        
+        <p style="font-size:12px;">Обобщен преглед на най-подценените институционални търгове (ЧСИ, НАП, ЗУТ) с инвестиционен марж над 40%:</p>
+        
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Обект / Проект</th>
+                    <th>Категория</th>
+                    <th>Локация</th>
+                    <th>Инвеститор / ЕИК</th>
+                    <th>Тържна цена</th>
+                    <th>Пазарна оценка</th>
+                    <th>Спред (%)</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+    """
+    for d in top_deals:
+        html += f"""
+                <tr>
+                    <td><strong>{d[0]}</strong></td>
+                    <td>{d[1]}</td>
+                    <td>{d[2]}</td>
+                    <td>{d[3]} ({d[4]})</td>
+                    <td style="color:#b45309; font-weight:bold;">€{d[5]:,.0f}</td>
+                    <td>€{d[6]:,.0f}</td>
+                    <td style="color:#047857; font-weight:bold;">-{d[7]}%</td>
+                    <td><span class="badge">{d[8]}/100</span></td>
+                </tr>
+        """
+    html += """
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            СД „Ковко - Василев и Сие“ • гр. Драгоман, ул. Христо Ботев № 14 • IBAN: BG80UNCR70001524896321 • UniCredit Bulbank
+        </div>
+    </body>
+    </html>
+    """
+    return html
 
 @app.route("/llms.txt")
 def llms_txt(): return Response("# PRO INVEST RADAR AI Gateway", mimetype='text/plain')
