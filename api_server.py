@@ -104,7 +104,7 @@ FULL_HTML = """
             --accent-blue: #38bdf8;
         }
         body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
-        .container-custom { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
+        .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
 
         @keyframes neonGlow {
             0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); border-color: #f59e0b; }
@@ -120,17 +120,36 @@ FULL_HTML = """
         .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; }
         .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; margin-right: 6px; }
 
-        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
+        /* ВГРАДЕНИ КРАСИВИ БУТОНИ ЗА КОНТАКТ В ХЕДЪРА */
+        .header-contacts-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .btn-header-contact {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 12px;
+            border-radius: 20px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.78rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: transform 0.2s;
+        }
+        .btn-header-contact:hover { transform: scale(1.05); color: #fff; }
+        .contact-viber { background: #7360f2; }
+        .contact-tg { background: #229ED9; }
+        .contact-phone { background: #10b981; }
+
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        
-        /* КОРЕКЦИЯ НА ФИЛТРИ И ПАДАЩИ МЕНЮТА: ЯСЕН ВИДИМ ДИЗАЙН БЕЗ ЧЕРНО НА ЧЕРНО */
-        .custom-input, .custom-select { background: #0f1c33 !important; border: 2px solid #00f0ff !important; color: #ffffff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; font-weight: bold; }
-        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 12px rgba(0,240,255,0.5); background: #0a1426 !important; }
-        .custom-select option { background: #0f1c33; color: #fff; padding: 8px; }
+        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
+        .custom-select option { background: #131f36; color: #fff; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -190,41 +209,6 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        /* ПРЕСТРУКТУРИРАНЕ НА БУТОНИТЕ ЗА КОНТАКТ: ИЗВЪН ЦЕНТРАЛНИЯ БЛОК, БЕЗ ЗАСЪПВАНЕ */
-        .desktop-left-contacts {
-            position: absolute;
-            top: 130px;
-            left: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 50;
-            width: 170px;
-        }
-        @media (max-width: 1400px) {
-            .desktop-left-contacts { position: relative; top: auto; left: auto; flex-direction: row; justify-content: center; margin-bottom: 15px; width: 100%; }
-        }
-        .btn-corporate-contact {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 12px;
-            border-radius: 20px;
-            color: #fff;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.78rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            transition: all 0.2s;
-            border: 1px solid rgba(255,255,255,0.2);
-            text-align: left;
-            white-space: nowrap;
-        }
-        .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
-        .contact-viber { background: #7360f2; }
-        .contact-tg { background: #229ED9; }
-        .contact-phone { background: #10b981; }
-
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.88rem; }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 360px; max-width: 90vw; height: 440px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
@@ -255,20 +239,20 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- КОНТАКТИ В ЛЯВОТО ПРОСТРАНСТВО (БЕЗ ДА ЗАСЪПВАТ ЕЛЕМЕНТИ) -->
-    <div class="desktop-left-contacts">
-        <div style="font-size:0.68rem; color:#38bdf8; font-weight:bold; text-transform:uppercase; margin-bottom:2px;">📞 Контакти</div>
-        <a href="viber://chat?number=%2B359879495767" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
-        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
-        <a href="tel:+359879495767" class="btn-corporate-contact contact-phone">📞 0879 495 767</a>
-    </div>
-
     <div class="container-custom">
         <div class="navbar-custom">
             <a href="/" class="brand-box">
                 <div class="shield-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
+            
+            <!-- ВГРАДЕНИ И ЧИСТИ БУТОНИ ЗА КОНТАКТ В ХЕДЪРА -->
+            <div class="header-contacts-group">
+                <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber</a>
+                <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
+                <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
+            </div>
+
             <div class="d-flex align-items-center gap-2">
                 <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;">📄 07:30 Дневен Бюлетин</a>
                 <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
