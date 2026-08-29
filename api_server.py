@@ -34,7 +34,7 @@ def init_db():
         c.execute("DELETE FROM radar_projects")
         for i in range(20):
             c.execute("INSERT INTO radar_projects (title, category, location, city, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                      (f'Инвестиционен обект #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', 150000 + i*5000, 300000 + i*10000, 50.0, 92, 'Активен', '1,200 кв.м', 42.6977, 23.3219))
+                      (f'Инвестиционен обект #{i+1}', 'ЧСИ Търг', 'София, кв. Лозенец', 'София', 'Инвест Груп ООД', '205849120', 'Димитър Георгиев', 150000 + i*5000, 300000 + i*10000, 50.0, 92, 'Активен', '1,200 кв.м', 42.6977 + (i*0.01), 23.3219 + (i*0.01)))
     conn.commit()
     conn.close()
 
@@ -62,7 +62,6 @@ FULL_HTML = """
         <h2 style="color: #00f0ff; font-weight: bold;">PRO INVEST RADAR AI .BG</h2>
         <p class="text-secondary">Институционален портал за публични търгове и фирмен одит.</p>
         
-        <!-- ОДИТ СКЕНЕР -->
         <div class="card-dark">
             <h5 class="text-white fw-bold">🔍 ЕИК / БУЛСТАТ Одит</h5>
             <div class="d-flex gap-2 my-2">
@@ -71,29 +70,15 @@ FULL_HTML = """
             </div>
             <div id="auditRes" class="mt-3 p-3 rounded" style="background:#070c18; display:none;">
                 <strong class="text-info" id="resName"></strong><br>
-                <span class="text-secondary small">Управител: <span class="text-light" id="resMgr"></span></span><br>
-                <span class="text-secondary small">Запори: <span class="text-success" id="resInj">НЯМА</span></span>
+                <span class="text-secondary small">Управител: <span class="text-light" id="resMgr"></span></span>
             </div>
         </div>
 
-        <!-- КАЛКУЛАТОР -->
-        <div class="card-dark">
-            <h5 class="text-white fw-bold mb-2">🧮 ЧСИ &amp; Държавни такси калкулатор</h5>
-            <div class="d-flex justify-content-between mb-2">
-                <span class="text-secondary">Цена:</span>
-                <span class="text-info fw-bold" id="calcVal">€150,000</span>
-            </div>
-            <input type="range" min="10000" max="500000" step="5000" value="150000" class="form-range mb-3" oninput="updateCalc(this.value)">
-            <div class="text-secondary small">Крайна себестойност с данъци и такси: <strong class="text-warning" id="calcTotal">€156,750</strong></div>
-        </div>
-
-        <!-- КАРТА -->
         <div class="card-dark">
             <h5 class="text-white fw-bold mb-3">🗺️ ГИС Карта на обектите</h5>
             <div id="map"></div>
         </div>
 
-        <!-- СПИСЪК ОБЯВИ -->
         <div class="card-dark">
             <h5 class="text-white fw-bold mb-3">📋 Активни обяви в системата</h5>
             <div class="row" id="dealsContainer"></div>
@@ -102,10 +87,10 @@ FULL_HTML = """
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        var map = L.map('map').setView([42.6977, 23.3219], 12);
+        var map = L.map('map').setView([42.6977, 23.3219], 11);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var projects = {{ projects_json | safe }};
+        var projects = JSON.parse('{{ projects_json | safe }}');
         var container = document.getElementById('dealsContainer');
         
         projects.forEach(function(p) {
@@ -130,13 +115,6 @@ FULL_HTML = """
                 document.getElementById('resName').innerText = d.name;
                 document.getElementById('resMgr').innerText = d.manager;
             });
-        }
-
-        function updateCalc(val) {
-            val = Number(val);
-            document.getElementById('calcVal').innerText = '€' + val.toLocaleString('de-DE');
-            var total = Math.round(val * 1.045);
-            document.getElementById('calcTotal').innerText = '€' + total.toLocaleString('de-DE');
         }
     </script>
 </body>
