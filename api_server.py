@@ -114,7 +114,6 @@ FULL_HTML = """
         .footer-link:hover { color: var(--accent-cyan); }
         .impressum-box { background: #080d19; border: 1px solid #19253d; border-radius: 12px; padding: 16px; font-size: 0.8rem; line-height: 1.5; }
 
-        /* Банкова карта дизайн */
         .bank-details-box {
             background: #070c18;
             border: 1px solid #1e293b;
@@ -320,9 +319,9 @@ FULL_HTML = """
                 <div class="col-md-4">
                     <div class="footer-heading">Импресум (Impressum)</div>
                     <div class="impressum-box">
-                        <strong>PRO INVEST RADAR AI Ltd.</strong><br>
-                        ЕИК / ДДС Номер: BG205849120<br>
-                        Адрес: гр. София, р-н Лозенец, бул. Черни Връх<br>
+                        <strong>СД „Ковко - Василев и Сие“</strong><br>
+                        Управител / Титуляр: Васил Василев<br>
+                        IBAN: BG80UNCR70001524896321 (UniCredit Bulbank)<br>
                         Контакт: <a href="mailto:kovko.firma@gmail.com" style="color:var(--accent-cyan); text-decoration:none;">kovko.firma@gmail.com</a>
                     </div>
                 </div>
@@ -333,7 +332,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ С COPY IBAN БУТОН -->
+    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ С ТОЧНИТЕ ДАННИ -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -352,10 +351,11 @@ FULL_HTML = """
 
                     <!-- Банкови данни -->
                     <div class="bank-details-box">
-                        <div class="small text-secondary mb-1">Получател / Бенефициент:</div>
-                        <div class="fw-bold text-white mb-2">PRO INVEST RADAR AI LTD / TODOROV TEAM</div>
+                        <div class="small text-secondary mb-1">Получател / Фирма:</div>
+                        <div class="fw-bold text-white mb-1">СД „Ковко - Василев и Сие“</div>
+                        <div class="small text-secondary mb-2">Титуляр / Управител: <strong class="text-light">Васил Василев</strong></div>
 
-                        <div class="small text-secondary mb-1">Банкова сметка (IBAN - EUR / BGN):</div>
+                        <div class="small text-secondary mb-1">Банкова сметка (IBAN):</div>
                         <div class="iban-badge mb-2">
                             <span id="ibanText">BG80UNCR70001524896321</span>
                             <button class="btn btn-sm btn-info fw-bold py-1 px-2" style="font-size:11px;" onclick="copyIban()">📋 Copy IBAN</button>
@@ -465,7 +465,7 @@ FULL_HTML = """
         function completeBankOrder() {
             var email = document.getElementById('payUserEmail').value;
             if(!email || !email.includes('@')) { alert('Моля въведете валиден служебен имейл!'); return; }
-            alert('Заявката за [' + activeOrderName + '] е регистрирана успешно! Изпратени са банкови инструкции към ' + email);
+            alert('Заявката за [' + activeOrderName + '] е регистрирана! Данните за превод към СД Ковко - Василев и Сие са изпратени на ' + email);
             location.reload();
         }
 
