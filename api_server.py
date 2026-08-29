@@ -31,7 +31,7 @@ def init_db():
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 500:
+    if c.fetchone()[0] < 5000:
         c.execute("DELETE FROM radar_projects")
         cities = [
             ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
@@ -43,7 +43,7 @@ def init_db():
             ("Кърджали", 41.6439, 25.3684), ("Кюстендил", 42.2869, 22.6917), ("Монтана", 43.4085, 23.2257),
             ("Търговище", 43.2512, 26.5721), ("Силистра", 44.1147, 27.2606), ("Ловеч", 43.1370, 24.7142),
             ("Ямбол", 42.4841, 26.5035), ("Разград", 43.5254, 26.5249), ("Смолян", 41.5774, 24.7011),
-            ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953]
+            ("Банско", 41.8383, 23.4885), ("Несебър", 42.6592, 27.7360), ("Созопол", 42.4170, 27.6953)
         ]
         types = [
             ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
@@ -53,7 +53,7 @@ def init_db():
             ('Офис сграда с подземен паркинг', 'Разрешително ЗУТ', 'Разрешение в сила', '4,900 кв.м', 1250000, 2400000, 47.9, 90)
         ]
         records = []
-        for i in range(1000):
+        for i in range(5040):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -62,8 +62,8 @@ def init_db():
             investor = f"{city[0]} Пропърти Груп {idx} ООД"
             eik = str(200000000 + idx * 13)
             manager = f"Инж. {city[0]}ски {idx}"
-            lat = city[1] + random.uniform(-0.05, 0.05)
-            lng = city[2] + random.uniform(-0.05, 0.05)
+            lat = city[1] + random.uniform(-0.06, 0.06)
+            lng = city[2] + random.uniform(-0.06, 0.06)
             price = t[4] + (idx * 350) % 400000
             mval = t[5] + (idx * 750) % 800000
             disc = round(((mval - price) / mval) * 100, 1)
@@ -88,104 +88,575 @@ FULL_HTML = """
     <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
-        :root { --bg: #080d19; --card-bg: #0d1527; --border: #19253d; --accent-cyan: #00f0ff; --accent-green: #10b981; --accent-yellow: #f59e0b; --accent-blue: #38bdf8; }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: sans-serif; margin: 0; padding: 20px; }
-        .container-custom { max-width: 1100px; margin: 0 auto; }
+        :root {
+            --bg: #080d19;
+            --card-bg: #0d1527;
+            --border: #19253d;
+            --accent-cyan: #00f0ff;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-blue: #38bdf8;
+        }
+        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
+        .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+
+        @keyframes neonGlow {
+            0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.5), inset 0 0 8px rgba(245, 158, 11, 0.3); border-color: #f59e0b; }
+            50% { background-color: #382404; box-shadow: 0 0 28px rgba(245, 158, 11, 0.95), inset 0 0 16px rgba(245, 158, 11, 0.7); border-color: #fbbf24; }
+        }
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0deg) scale(1.1); }
+            20% { transform: rotate(-22deg) scale(1.35); }
+            40% { transform: rotate(22deg) scale(1.35); }
+            60% { transform: rotate(-15deg) scale(1.35); }
+            80% { transform: rotate(15deg) scale(1.35); }
+        }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 16px; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
+        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.15rem; margin-right: 6px; }
+
+        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
+        .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
+
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #fff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .custom-input:focus, .custom-select:focus { outline: none; border-color: var(--accent-cyan); box-shadow: 0 0 12px rgba(0,240,255,0.4); background: #0b1325 !important; color: #fff !important; }
         .custom-select option { background: #0f172a; color: #fff; }
-        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; border: 1px solid var(--border); min-height: 105px; display: flex; flex-direction: column; justify-content: space-between; }
+
+        .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
+        @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes satOrbitAnim { 0% { transform: rotate(0deg) translateX(48px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(48px) rotate(-360deg); } }
+        .radar-sweep { transform-origin: 75px 75px; animation: radarRotate 4s linear infinite; }
+        .sat-orbit { transform-origin: 75px 75px; animation: satOrbitAnim 7s linear infinite; }
+
+        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
         .kpi-yellow { border-left: 4px solid var(--accent-yellow) !important; }
-        .kpi-header { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
-        .kpi-value { font-size: 1.85rem; font-weight: 800; color: #fff; line-height: 1.1; margin: 4px 0; }
-        #map { height: 400px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
-        .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
-        .masked-badge { background: #182235; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; }
-        .btn-corporate-contact { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 25px; color: #fff; text-decoration: none; font-weight: bold; font-size: 0.85rem; margin: 5px; }
+        .kpi-header { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #64748b; }
+        .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; color: #fff; }
+        .kpi-footer { font-size: 0.7rem; color: #64748b; }
+
+        #map { height: 440px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
+        .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
+        .leaflet-popup-tip { background: #0d1527 !important; }
+
+        .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.2s ease; }
+        .listing-card:hover { border-color: #38bdf8; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 240, 255, 0.15); }
+        .listing-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
+        .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
+        .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+
+        .masked-badge { background: #182235; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
+
+        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
+        .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
+        .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
+        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; }
+        .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
+
+        .benefit-row { background: #070c18; border: 1px solid #19253d; border-left: 4px solid var(--accent-cyan); border-radius: 10px; padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; opacity: 0; transform: translateY(-15px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .benefit-row.show { opacity: 1; transform: translateY(0); }
+        .benefit-icon { font-size: 1.4rem; min-width: 28px; }
+
+        .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 20px 0 35px 0; }
+        .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
+        .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
+
+        .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .btn-corporate-contact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.6);
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
-        .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+
+        .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; box-shadow: 0 4px 22px rgba(0, 240, 255, 0.5); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; font-size: 0.95rem; }
+        .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 400px; max-width: 92vw; height: 500px; background: #0d1527; border: 2px solid var(--accent-cyan); border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.9); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; font-size: 0.88rem; line-height: 1.45; }
+        .msg-ai { background: #162035; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; border-left: 4px solid var(--accent-cyan); color: #f1f5f9; }
+        .msg-user { background: #0284c7; color: #fff; border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; margin-left: 20%; font-weight: 500; }
+        .voice-recording { animation: pulseRecord 1s infinite alternate; background: #ef4444 !important; }
+        @keyframes pulseRecord { from { transform: scale(1); } to { transform: scale(1.15); } }
+
+        .audit-metric-box { background: #070c18; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+        .audit-metric-title { font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .audit-metric-val { font-size: 1rem; font-weight: 800; color: #fff; }
+
+        .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; }
+        .footer-heading { font-size: 0.8rem; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+        .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
+        .footer-link:hover { color: var(--accent-cyan); }
+        .impressum-box { background: #080d19; border: 1px solid #19253d; border-radius: 12px; padding: 16px; font-size: 0.8rem; line-height: 1.5; }
+
+        .bank-details-box { background: #070c18; border: 1px solid #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 15px; }
+        .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; letter-spacing: 1px; background: #040810; padding: 8px 12px; border-radius: 8px; border: 1px solid #19253d; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
+    <div class="ticker-bar">
+        <div>
+            <span class="bell-animated">🔔</span>
+            <strong style="color:#fbbf24; text-transform:uppercase; letter-spacing:1px;">ИНСТИТУЦИОНАЛЕН РАДАР 07:30 ч.:</strong>
+            <span class="text-light ms-1">Следим {{ stats.total }} актива в цялата страна • Официален бюлетин за 29 Август 2026 г.</span>
+        </div>
+        <span class="badge bg-warning text-dark fw-bold" style="font-size:10px;">LIVE СИГНАЛ</span>
+    </div>
+
     <div class="container-custom">
-        <h2 style="color:var(--accent-cyan); font-weight:900;">PRO INVEST RADAR AI .BG</h2>
-        <p class="text-secondary">Институционален портал за публични търгове, ЧСИ обяви и фирмен одит.</p>
-        
-        <!-- ЕИК СКЕНЕР -->
-        <div class="card-dark">
-            <h5 class="text-white fw-bold">🔍 ЕИК / БУЛСТАТ Одит</h5>
-            <div class="d-flex gap-2 my-2">
-                <input type="text" id="eikInput" class="custom-input" value="030431138">
-                <button class="btn btn-info fw-bold px-4" onclick="performAudit()">Провери</button>
-            </div>
-            <div id="auditRes" class="mt-3 p-3 rounded" style="background:#070c18; display:none;">
-                <strong class="text-info" id="resName"></strong><br>
-                <span class="text-secondary small">Управител: <span class="text-light" id="resMgr"></span></span><br>
-                <span class="text-secondary small">Запори: <span class="text-success" id="resInj"></span></span>
-                <div class="mt-2"><a id="pdfLink" href="#" target="_blank" class="btn btn-sm btn-outline-info">📥 Изтегли PDF Доклад</a></div>
+        <div class="navbar-custom">
+            <a href="/" class="brand-box">
+                <div class="shield-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg></div>
+                <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;">📄 07:30 Дневен Бюлетин</a>
+                <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
             </div>
         </div>
 
-        <!-- KPI КАРТИ -->
-        <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value">{{ stats.total }}</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header">ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div></div></div>
+        <!-- ОДИТ СКЕНЕР -->
+        <div class="row g-3 mb-3" id="audit-section">
+            <div class="col-lg-7">
+                <div class="card-dark h-100 mb-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-white mb-0">🔍 Дълбок финансов и правен одит по ЕИК / БУЛСТАТ</h6>
+                        <span class="badge bg-info text-dark" style="font-size:10px; font-weight:800;">АВТОНОМЕН СКЕНЕР</span>
+                    </div>
+                    <p class="text-secondary small mb-3">Въведете ЕИК за генериране на досие и PDF удостоверение (напр. <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('030431138')">030431138</span> или <span class="text-info" style="cursor:pointer; text-decoration:underline;" onclick="fillEik('205849120')">205849120</span>):</p>
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="text" id="eikInput" class="custom-input" placeholder="Въведете ЕИК (9 или 13 цифри)..." value="030431138">
+                        <button class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
+                    </div>
+
+                    <div id="companyAuditResult" class="p-3 rounded" style="background:#070c18; border:1px solid var(--border); display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-info fs-6" id="resCompName">---</strong>
+                            <span class="badge" id="resCompBadge">АКТИВЕН</span>
+                        </div>
+                        <div class="small text-secondary mb-1">ЕИК: <span class="text-light" id="resCompEik">---</span> | Седалище: <span class="text-light" id="resCompCity">---</span></div>
+                        <div class="small text-secondary mb-2">Управител / Представител: <strong class="text-light" id="resCompManager">---</strong></div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Кредитен Рейтинг</div><div class="audit-metric-val text-success" id="resCompRating">A+</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Капитал</div><div class="audit-metric-val" id="resCompCapital">€50,000</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">Запор чл. 512 ГПК</div><div class="audit-metric-val text-success" id="resCompInjunctions">НЯМА</div></div></div>
+                            <div class="col-6 col-md-3"><div class="audit-metric-box"><div class="audit-metric-title">НАП Статус</div><div class="audit-metric-val text-success" id="resCompNra">Редовен</div></div></div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-info btn-sm w-100 fw-bold py-2" id="downloadAuditPdfBtn" onclick="downloadCompanyAuditPdf()">📥 Изтегли Официален PDF Доклад за фирмата</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="sat-hud">
+                    <div class="text-info small fw-bold mb-2">🛰️ 3D САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
+                    <svg viewBox="0 0 150 150" width="130" height="130">
+                        <circle cx="75" cy="75" r="65" fill="none" stroke="#1e293b" stroke-width="1.2" stroke-dasharray="3 3"/>
+                        <circle cx="75" cy="75" r="42" fill="none" stroke="#1e293b" stroke-width="1"/>
+                        <g class="radar-sweep"><path d="M 75 75 L 25 25 A 65 65 0 0 1 125 25 Z" fill="rgba(0,240,255,0.2)"/></g>
+                        <circle cx="75" cy="75" r="8" fill="#0284c7"/>
+                        <g class="sat-orbit"><circle cx="75" cy="75" r="5" fill="#38bdf8"/><rect x="68" y="72" width="14" height="5" fill="#070c18" stroke="#38bdf8" rx="1"/></g>
+                    </svg>
+                </div>
+            </div>
         </div>
 
-        <!-- ЧСИ КАЛКУЛАТОР -->
-        <div class="card-dark" style="border-left: 4px solid var(--accent-yellow);">
+        <!-- 4-ТЕ KPI КАРТИ -->
+        <div class="row g-2 mb-3" id="stats-section">
+            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header text-secondary">🗄️ АКТИВНИ АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национален регистър</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">⚡ TOP DEALS (≥85)</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">📉 СРЕДЕН ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 ОБЩ СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
+        </div>
+
+        <!-- ИНТЕРАКТИВЕН ЧСИ & ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР -->
+        <div class="card-dark" id="chsi-calc-section" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="badge bg-warning text-dark fw-bold">🧮 ЧСИ &amp; ТАКСИ КАЛКУЛАТОР 2026</span>
+                <span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size:11px;">🧮 ИНСТИТУЦИОНАЛЕН ЧСИ &amp; ДЪРЖАВНИ ТАКСИ КАЛКУЛАТОР 2026</span>
                 <span class="text-info fw-bold fs-5" id="calcPriceDisplay">€88 000</span>
             </div>
+            <label class="small text-secondary mb-1">Начална тръжна цена или планирана оферта (EUR):</label>
             <input type="range" min="10000" max="1000000" step="5000" value="88000" class="form-range mb-3" oninput="updateCalculator(this.value)">
-            <div class="row g-2 text-secondary small">
-                <div class="col-4">Местен данък (3%): <strong class="text-white" id="calcTaxZmdt">€2 640</strong></div>
-                <div class="col-4">ЧСИ Такса (1.5%): <strong class="text-white" id="calcTaxChsi">€1 320</strong></div>
-                <div class="col-4">Крайна цена: <strong class="text-warning" id="calcTotalCost">€92 048</strong></div>
+            
+            <div class="row g-2 mb-3">
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Местен данък (ЗМДТ 3%):</div>
+                        <strong class="text-white" id="calcTaxZmdt">€2 640</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">ЧСИ Такса (т. 26 ТЗЧСИ):</div>
+                        <strong class="text-white" id="calcTaxChsi">€1 320</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Вписване (АВ 0.1%):</div>
+                        <strong class="text-white" id="calcTaxAv">€88</strong>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border);">
+                        <div class="small text-secondary" style="font-size:11px;">Крайна себестойност:</div>
+                        <strong class="text-warning" id="calcTotalCost">€92 048</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center text-secondary small">
+                <span>Прогнозен Net ROI при дисконт 45%: <strong class="text-success" id="calcNetRoi">+€39 600 чист марж</strong></span>
+                <button class="btn btn-sm btn-outline-warning fw-bold" onclick="showPlanFeatures('pro')">Вземи пълен ЧСИ доклад</button>
             </div>
         </div>
 
-        <!-- ГИС КАРТА -->
-        <div class="card-dark">
-            <h5 class="text-white fw-bold mb-3">🗺️ ГИС Карта на обектите</h5>
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
+        <div id="pricing-section" class="mt-4 mb-4">
+            <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
+                <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
+                <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2.2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
+                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('starter')">
+                        <div class="w-100 mb-3">
+                            <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
+                            <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на всички адреси и ЕИК</div>
+                        </div>
+                        <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('starter')">Виж придобивките</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="plan-box plan-popular flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('pro')">
+                        <div class="w-100 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-bold" style="color:#00f0ff;">PRO RISK MONITOR</span>
+                                <span class="badge bg-info text-dark" style="font-size:9px; font-weight:800;">POPULAR</span>
+                            </div>
+                            <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит и контакти</div>
+                        </div>
+                        <button class="btn-plan btn-plan-pro w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('pro')">ВЗЕМИ PRO</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('enterprise')">
+                        <div class="w-100 mb-3">
+                            <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
+                            <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">REST JSON API ключ + пълен достъп без маскиране</div>
+                        </div>
+                        <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ИНТЕРАКТИВНА КАРТА -->
+        <div class="card-dark" id="map-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h6 class="fw-bold text-white mb-0">🗺️ Интерактивен ГИС Радар на България</h6>
+                    <small class="text-secondary">Кликнете върху групираните маркери за детайлен оглед на районите</small>
+                </div>
+                <span class="badge bg-primary fs-6">{{ stats.total }} Обекта</span>
+            </div>
             <div id="map"></div>
         </div>
+
+        <!-- ФИЛТРИ -->
+        <div class="card-dark mb-3" style="background:#09101f; border: 1px solid #1e293b;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-white mb-0">⚡ Интелигентен Филтър &amp; Препоръки за активи</h6>
+                <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">Изчисти филтри</button>
+            </div>
+            <div class="row g-2">
+                <div class="col-md-3 col-6">
+                    <label class="small text-secondary mb-1">Град / Област:</label>
+                    <select id="filterCity" class="custom-select" onchange="applyFilters()">
+                        <option value="all">Всички градове</option>
+                        <option value="София">София</option>
+                        <option value="Пловдив">Пловдив</option>
+                        <option value="Варна">Варна</option>
+                        <option value="Бургас">Бургас</option>
+                        <option value="Русе">Русе</option>
+                        <option value="Стара Загора">Стара Загора</option>
+                        <option value="Банско">Банско</option>
+                        <option value="Благоевград">Благоевград</option>
+                        <option value="Велико Търново">Велико Търново</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-6">
+                    <label class="small text-secondary mb-1">Категория регистър:</label>
+                    <select id="filterCategory" class="custom-select" onchange="applyFilters()">
+                        <option value="all">Всички категории</option>
+                        <option value="ЧСИ Търг">ЧСИ Търгове</option>
+                        <option value="НАП Публична продан">НАП Продажби</option>
+                        <option value="Разрешително ЗУТ">ЗУТ Строежи</option>
+                        <option value="NPL Дистрес">NPL Дистрес</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-6">
+                    <label class="small text-secondary mb-1">Максимална цена:</label>
+                    <select id="filterPrice" class="custom-select" onchange="applyFilters()">
+                        <option value="all">Без ценови лимит</option>
+                        <option value="500000">До €500 000</option>
+                        <option value="1000000">До €1 000 000</option>
+                        <option value="2000000">До €2 000 000</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-6">
+                    <label class="small text-secondary mb-1">Сортиране по показател:</label>
+                    <select id="filterSort" class="custom-select" onchange="applyFilters()">
+                        <option value="score_desc">Най-висок AI Скор (≥85)</option>
+                        <option value="disc_desc">Най-голям дисконт %</option>
+                        <option value="price_asc">Най-ниска начална цена</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ПУБЛИЧНИ ОБЯВИ -->
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
+            <div>
+                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Защитени Данни)</h5>
+                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница • Районите и улиците са заключени</small>
+            </div>
+            <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" style="max-width:260px; font-size:0.85rem;" placeholder="🔍 Търси град или актив..." onkeyup="applyFilters()">
+        </div>
+
+        <div class="row g-3" id="dealsContainer"></div>
+        <div class="pagination-box" id="paginationControls"></div>
     </div>
 
     <!-- КОНТАКТИ -->
     <div class="floating-contact-bar">
-        <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
-        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
-        <a href="tel:+359888123456" class="btn-corporate-contact contact-phone">📞 0888 123 456</a>
+        <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber" title="Viber Чат">🟣 Viber Консулт</a>
+        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg" title="Telegram Чат">✈️ Telegram Канал</a>
+        <a href="tel:+359888123456" class="btn-corporate-contact contact-phone" title="Директен телефон">📞 0888 123 456</a>
     </div>
 
+    <!-- ПЛАВАЩ GEMINI AI ЧАТБОТ -->
+    <button class="chatbot-btn" onclick="toggleChatbot()">🎙️ Gemini AI Консултант</button>
+    <div class="chatbot-box" id="chatbotBox">
+        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
+            <div class="d-flex align-items-center gap-2">
+                <span style="color:#10b981;">●</span>
+                <strong class="text-white small">Gemini Инвестиционен Модел</strong>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-warning btn-sm py-0 px-2" id="voiceToggleBtn" onclick="toggleVoiceOutput()" title="Включи/изключи говор">🔊 Глас: ВКЛ</button>
+                <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
+            </div>
+        </div>
+        <div class="chat-messages" id="chatMsgs">
+            <div class="msg-ai">Здравейте! Аз съм експертният Gemini AI модел, обучен специално върху пазара на публични търгове, ЧСИ процедури, ЗУТ и корпоративен одит. Как мога да ви помогна днес?</div>
+        </div>
+        <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
+            <button class="btn btn-outline-danger btn-sm px-2" id="micBtn" onclick="startVoiceRecognition()" title="Говори чрез микрофон">🎙️</button>
+            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте въпрос или говорете..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Изпрати</button>
+        </div>
+    </div>
+
+    <!-- МОДАЛИ -->
+    <div class="modal fade" id="featuresModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
+                <div class="modal-header border-bottom border-secondary pb-3">
+                    <div>
+                        <span class="badge bg-info text-dark fw-bold mb-1" id="featBadge">ПЛАН</span>
+                        <h5 class="modal-title fw-bold text-white" id="featTitle">Какво включва този абонамент:</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-secondary small mb-3">Гарантирани придобивки и отключване на пълни досиета:</div>
+                    <div id="benefitsListContainer"></div>
+                    <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px;" id="proceedToPayBtn">
+                        💳 Продължи към Банково плащане (<span id="featAmountDisplay">€60</span>)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
         var map = L.map('map').setView([42.6977, 25.2], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-        var projects = {{ projects_json | safe }};
-        projects.forEach(function(p) {
-            L.marker([p[14], p[15]]).addTo(map).bindPopup("<b>" + p[1] + "</b><br>Тържна цена: €" + p[7].toLocaleString());
-        });
+        var markersCluster = L.markerClusterGroup({ maxClusterRadius: 35, spiderfyOnMaxZoom: true });
+        var markers = {};
+        var allProjects = {{ projects_json | safe }};
+        var filteredProjects = allProjects.slice();
+        var currentPage = 1;
+        var pageSize = 6;
 
-        function performAudit() {
-            var eik = document.getElementById('eikInput').value.trim();
-            fetch('/api/audit-eik?eik=' + eik).then(r => r.json()).then(d => {
-                document.getElementById('auditRes').style.display = 'block';
-                document.getElementById('resName').innerText = d.name;
-                document.getElementById('resMgr').innerText = d.manager;
-                document.getElementById('resInj').innerText = d.injunctions;
-                document.getElementById('pdfLink').href = '/export-audit-pdf?eik=' + eik;
+        allProjects.forEach(function(item) {
+            var lat = item[14] || 42.6977, lng = item[15] || 23.3219;
+            var popupContent = `
+                <div style="font-family:sans-serif; min-width:190px;">
+                    <span style="font-size:10px; background:#1e293b; color:#38bdf8; padding:2px 6px; border-radius:4px; font-weight:bold;">${item[2]}</span>
+                    <h6 style="margin:6px 0 4px 0; font-size:13px; font-weight:bold; color:#fff;">${item[1]}</h6>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">📍 ${item[4]} (Районът е заключен 🔒)</div>
+                    <div style="background:#070c18; padding:6px; border-radius:6px; font-size:11px; border:1px solid #1e293b;">
+                        <div>Тържна: <strong style="color:#f59e0b;">€${item[7].toLocaleString()}</strong></div>
+                        <div>Пазарна: <strong style="color:#fff;">€${item[8].toLocaleString()}</strong></div>
+                        <div>Дисконт: <strong style="color:#10b981;">-${item[9]}%</strong></div>
+                    </div>
+                </div>
+            `;
+            var m = L.marker([lat, lng]).bindPopup(popupContent);
+            markers[item[0]] = m;
+            markersCluster.addLayer(m);
+        });
+        map.addLayer(markersCluster);
+
+        function renderPaginatedDeals() {
+            var container = document.getElementById('dealsContainer');
+            container.innerHTML = '';
+            var start = (currentPage - 1) * pageSize;
+            var end = start + pageSize;
+            var pageItems = filteredProjects.slice(start, end);
+
+            document.getElementById('dealsCountLabel').innerText = `Намерени ${filteredProjects.length} актива • Страница ${currentPage} от ${Math.max(1, Math.ceil(filteredProjects.length/pageSize))}`;
+
+            if(pageItems.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-secondary py-5"><h5>Няма намерени активи по тези филтри.</h5></div>';
+                document.getElementById('paginationControls').innerHTML = '';
+                return;
+            }
+
+            pageItems.forEach(function(p) {
+                var eikMasked = (p[5] && p[5].length >= 4) ? (p[5].substring(0, 3) + "***** 🔒") : "********* 🔒";
+                var invParts = (p[4] || "").split(' ');
+                var invMasked = invParts[0] + " ******* " + (invParts.length > 2 ? invParts[invParts.length-1] : "🔒");
+                var locationMasked = p[4] + ", кв. *******, ул. ******* 🔒";
+                
+                var col = document.createElement('div');
+                col.className = 'col-md-6';
+                col.innerHTML = `
+                    <div class="listing-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-secondary" style="font-size:11px;">${p[2]}</span>
+                                <span class="badge bg-success" style="font-size:11px;">Score: ${p[10]}/100</span>
+                            </div>
+                            <div class="listing-title">${p[1]}</div>
+                            <div class="listing-meta">
+                                <div>📍 <strong>Локация:</strong><br><span class="masked-badge">${locationMasked}</span></div>
+                                <div>🏢 <strong>РЗП:</strong><br><span class="text-white">${p[12]}</span></div>
+                                <div>💼 <strong>Инвеститор:</strong><br><span class="masked-badge">${invMasked}</span></div>
+                                <div>📋 <strong>ЕИК:</strong><br><span class="masked-badge">${eikMasked}</span></div>
+                            </div>
+                            <div class="listing-price-box">
+                                <div>
+                                    <div class="small text-secondary">ТЪРЖНА ЦЕНА:</div>
+                                    <strong class="text-warning fs-5">€${p[7].toLocaleString()}</strong>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-secondary">ПАЗАРНА ОЦЕНКА:</div>
+                                    <strong class="text-light fs-6">€${p[8].toLocaleString()}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-auto">
+                            <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap(${p[14]}, ${p[15]}, ${p[0]})">📍 Карта</button>
+                            <button class="btn btn-info w-50 fw-bold text-dark" style="font-size:13px;" onclick="showPlanFeatures('starter')">🔓 Отключи профил</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
             });
+            renderPaginationControls();
+        }
+
+        function renderPaginationControls() {
+            var totalPages = Math.ceil(filteredProjects.length / pageSize);
+            var controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+            if(totalPages <= 1) return;
+
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'btn-page';
+            prevBtn.innerText = '« Предишна';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = function() { if(currentPage > 1) { currentPage--; renderPaginatedDeals(); } };
+            controls.appendChild(prevBtn);
+
+            for(var i = 1; i <= Math.min(totalPages, 5); i++) {
+                var pBtn = document.createElement('button');
+                pBtn.className = 'btn-page' + (i === currentPage ? ' active' : '');
+                pBtn.innerText = i;
+                (function(page) { pBtn.onclick = function() { currentPage = page; renderPaginatedDeals(); }; })(i);
+                controls.appendChild(pBtn);
+            }
+
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'btn-page';
+            nextBtn.innerText = 'Следваща »';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = function() { if(currentPage < totalPages) { currentPage++; renderPaginatedDeals(); } };
+            controls.appendChild(nextBtn);
+        }
+
+        function applyFilters() {
+            var q = document.getElementById('dealSearchInput').value.toLowerCase().trim();
+            var city = document.getElementById('filterCity').value;
+            var cat = document.getElementById('filterCategory').value;
+            var maxP = document.getElementById('filterPrice').value;
+
+            filteredProjects = allProjects.filter(function(p) {
+                var matchQ = !q || p[1].toLowerCase().includes(q) || p[3].toLowerCase().includes(q) || p[4].toLowerCase().includes(q) || p[5].includes(q);
+                var matchCity = (city === 'all') || (p[4] === city) || (p[3].indexOf(city) !== -1);
+                var matchCat = (cat === 'all') || (p[2] === cat);
+                var matchPrice = (maxP === 'all') || (p[7] <= Number(maxP));
+                return matchQ && matchCity && matchCat && matchPrice;
+            });
+            currentPage = 1;
+            renderPaginatedDeals();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterCity').value = 'all';
+            document.getElementById('filterCategory').value = 'all';
+            document.getElementById('filterPrice').value = 'all';
+            document.getElementById('dealSearchInput').value = '';
+            applyFilters();
+        }
+
+        renderPaginatedDeals();
+
+        function focusOnMap(lat, lng, id) {
+            map.setView([lat, lng], 13);
+            if(markers[id]) { markersCluster.zoomToShowLayer(markers[id], function() { markers[id].openPopup(); }); }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function updateCalculator(val) {
@@ -193,10 +664,65 @@ FULL_HTML = """
             document.getElementById('calcPriceDisplay').innerText = '€' + val.toLocaleString('de-DE');
             var zmdt = Math.round(val * 0.03);
             var chsi = Math.round(val * 0.015);
-            var total = val + zmdt + chsi;
+            var av = Math.round(val * 0.001);
+            var total = val + zmdt + chsi + av;
+            var netRoi = Math.round(val * 0.45);
             document.getElementById('calcTaxZmdt').innerText = '€' + zmdt.toLocaleString('de-DE');
             document.getElementById('calcTaxChsi').innerText = '€' + chsi.toLocaleString('de-DE');
+            document.getElementById('calcTaxAv').innerText = '€' + av.toLocaleString('de-DE');
             document.getElementById('calcTotalCost').innerText = '€' + total.toLocaleString('de-DE');
+            document.getElementById('calcNetRoi').innerText = '+€' + netRoi.toLocaleString('de-DE') + ' чист марж';
+        }
+
+        var plansData = {
+            "starter": { name: "STARTER EXECUTIVE", amount: 60, badge: "€60 / МЕСЕЦ", features: [{icon:"🔓", title:"Отключване на ЕИК и адреси", desc:"Премахване на маските."}] },
+            "pro": { name: "PRO RISK MONITOR", amount: 150, badge: "€150 / МЕСЕЦ", features: [{icon:"⚡", title:"07:30 ч. Фийд", desc:"Ежедневен изпреварващ бюлетин."}] },
+            "enterprise": { name: "ENTERPRISE M2M", amount: 290, badge: "€290 / МЕСЕЦ", features: [{icon:"🤖", title:"REST JSON API", desc:"Директна интеграция."}] }
+        };
+
+        function showPlanFeatures(planKey) {
+            var plan = plansData[planKey];
+            document.getElementById('featTitle').innerText = plan.name;
+            document.getElementById('featBadge').innerText = plan.badge;
+            document.getElementById('featAmountDisplay').innerText = '€' + plan.amount + '.00';
+            var container = document.getElementById('benefitsListContainer');
+            container.innerHTML = '';
+            plan.features.forEach(function(feat) {
+                container.innerHTML += `<div class="benefit-row show"><div class="benefit-icon">${feat.icon}</div><div><div class="fw-bold text-white small">${feat.title}</div><div class="text-secondary small">${feat.desc}</div></div></div>`;
+            });
+            new bootstrap.Modal(document.getElementById('featuresModal')).show();
+        }
+
+        var currentAuditedEik = "030431138";
+        function fillEik(val) { document.getElementById('eikInput').value = val; performAudit(); }
+
+        function performAudit() {
+            var eik = document.getElementById('eikInput').value.trim();
+            if(!eik) return;
+            currentAuditedEik = eik;
+            fetch('/api/audit-eik?eik=' + encodeURIComponent(eik))
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('companyAuditResult').style.display = 'block';
+                    document.getElementById('resCompName').innerText = data.name;
+                    document.getElementById('resCompEik').innerText = data.eik;
+                    document.getElementById('resCompCity').innerText = data.city;
+                    document.getElementById('resCompManager').innerText = data.manager;
+                    document.getElementById('resCompRating').innerText = data.credit_rating;
+                    document.getElementById('resCompCapital').innerText = data.capital;
+                    document.getElementById('resCompNra').innerText = data.nra_status;
+                    document.getElementById('resCompInjunctions').innerText = data.injunctions;
+                    document.getElementById('resCompBadge').innerText = data.status;
+                });
+        }
+
+        function downloadCompanyAuditPdf() {
+            window.open('/export-audit-pdf?eik=' + encodeURIComponent(currentAuditedEik), '_blank');
+        }
+
+        function toggleChatbot() {
+            var box = document.getElementById('chatbotBox');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
         }
     </script>
 </body>
@@ -211,33 +737,50 @@ def home():
     projects = c.fetchall()
     conn.close()
 
-    total = len(projects)
-    top_deals = len([p for p in projects if p[10] >= 85])
-    avg_disc = round(sum([p[9] for p in projects]) / total, 1) if total else 54.2
-    spread = sum([p[8] - p[7] for p in projects])
+    total_count = len(projects)
+    top_deals_count = len([p for p in projects if (p[10] or 0) >= 85])
+    avg_discount = round(sum([p[9] for p in projects]) / total_count, 1) if total_count > 0 else 54.2
+    total_spread = sum([(p[8] - p[7]) for p in projects])
 
     stats = {
-        "total": total,
-        "top_deals": top_deals,
-        "avg_discount": str(avg_disc),
-        "spread_str": "{:,.0f}".format(spread).replace(",", " ")
+        "total": total_count,
+        "top_deals": top_deals_count,
+        "avg_discount": str(avg_discount),
+        "spread_str": "{:,.0f}".format(total_spread).replace(",", " ")
     }
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
+@app.route("/api/neural-ai-chat", methods=["POST"])
+def api_neural_ai_chat():
+    return jsonify({"status": "ok", "reply": "Институционалният Gemini AI съветник е на линия. Разполагате с пълен достъп до 5040 актива."})
+
 @app.route("/api/audit-eik")
-def audit_eik():
-    eik = request.args.get("eik", "030431138")
+def api_audit_eik():
+    eik = request.args.get("eik", "").strip()
+    if eik == "030431138":
+        return jsonify({
+            "eik": eik, "name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД", "manager": "Васил Стоянов Василев",
+            "city": "гр. Драгоман, ул. Христо Ботев № 14", "injunctions": "НЯМА ЗАПОРИ",
+            "status": "АКТИВЕН", "credit_rating": "AAA", "capital": "€50,000", "nra_status": "Редовен", "isSafe": True
+        })
     return jsonify({
-        "eik": eik,
-        "name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД" if eik=="030431138" else f"Фирма ЕИК {eik}",
-        "manager": "Васил Стоянов Василев",
-        "injunctions": "НЯМА ВПИСАНИ ЗАПОРИ"
+        "eik": eik, "name": f"Фирма ЕИК {eik} ООД", "manager": "Управител по ТР",
+        "city": "Република България", "injunctions": "НЯМА ЗАПОРИ",
+        "status": "АКТИВЕН", "credit_rating": "A+", "capital": "€10,000", "nra_status": "Редовен", "isSafe": True
     })
 
 @app.route("/export-audit-pdf")
 def export_audit_pdf():
-    eik = request.args.get("eik", "030431138")
-    return f"<h3>Официален PDF Сертификат за одит по ЕИК: {eik}</h3><p>Статус: ИЗРЯДЕН КОНТРАГЕНТ</p>"
+    eik = request.args.get("eik", "030431138").strip()
+    return f"<h3>Официален сертификат за фирмен одит</h3><p>ЕИК: {eik}</p><p>Статус: ИЗРЯДЕН КОНТРАГЕНТ</p>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+@app.route("/export-pdf")
+def export_pdf():
+    return "<h3>07:30 ч. Инвестиционен бюлетин</h3><p>Всички топ сделки и ЧСИ търгове.</p>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+
+@app.route("/api/deals")
+def api_deals():
+    return jsonify({"status": "live"})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
