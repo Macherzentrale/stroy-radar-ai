@@ -104,7 +104,7 @@ FULL_HTML = """
             --accent-blue: #38bdf8;
         }
         body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
-        .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+        .container-custom { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
 
         @keyframes neonGlow {
             0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); border-color: #f59e0b; }
@@ -126,9 +126,11 @@ FULL_HTML = """
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
-        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
-        .custom-select option { background: #131f36; color: #fff; }
+        
+        /* КОРЕКЦИЯ НА ФИЛТРИ И ПАДАЩИ МЕНЮТА: ЯСЕН ВИДИМ ДИЗАЙН БЕЗ ЧЕРНО НА ЧЕРНО */
+        .custom-input, .custom-select { background: #0f1c33 !important; border: 2px solid #00f0ff !important; color: #ffffff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; font-weight: bold; }
+        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 12px rgba(0,240,255,0.5); background: #0a1426 !important; }
+        .custom-select option { background: #0f1c33; color: #fff; padding: 8px; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -188,36 +190,35 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        /* ФИКС ЗА ДЕСКТОП И МОБИЛНИ: ПОЗИЦИОНИРАНЕ В ЛЯВОТО ПРАЗНО ПРОСТРАНСТВО, ЕДИН ПОД ДРУГ */
-        @media (min-width: 992px) {
-            .desktop-left-contacts {
-                position: fixed;
-                top: 130px;
-                left: 15px;
-                display: flex;
-                flex-direction: column;
-                gap: 10px;
-                z-index: 99;
-                width: 180px;
-            }
+        /* ПРЕСТРУКТУРИРАНЕ НА БУТОНИТЕ ЗА КОНТАКТ: ИЗВЪН ЦЕНТРАЛНИЯ БЛОК, БЕЗ ЗАСЪПВАНЕ */
+        .desktop-left-contacts {
+            position: absolute;
+            top: 130px;
+            left: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 50;
+            width: 170px;
         }
-        @media (max-width: 991px) {
-            .desktop-left-contacts { display: none; }
+        @media (max-width: 1400px) {
+            .desktop-left-contacts { position: relative; top: auto; left: auto; flex-direction: row; justify-content: center; margin-bottom: 15px; width: 100%; }
         }
         .btn-corporate-contact {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
+            padding: 9px 12px;
             border-radius: 20px;
             color: #fff;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.78rem;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
             transition: all 0.2s;
             border: 1px solid rgba(255,255,255,0.2);
             text-align: left;
+            white-space: nowrap;
         }
         .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
@@ -245,14 +246,6 @@ FULL_HTML = """
     </style>
 </head>
 <body>
-    <!-- ФИКСИРАНИ КОНТАКТИ В ЛЯВОТО ПРАЗНО ПРОСТРАНСТВО НА ДЕСКТОП -->
-    <div class="desktop-left-contacts">
-        <div style="font-size:0.7rem; color:#38bdf8; font-weight:bold; text-transform:uppercase; margin-bottom:2px;">📞 Корпоративна връзка</div>
-        <a href="viber://chat?number=%2B359879495767" class="btn-corporate-contact contact-viber">🟣 Viber Чат</a>
-        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
-        <a href="tel:+359879495767" class="btn-corporate-contact contact-phone">📞 0879 495 767</a>
-    </div>
-
     <div class="ticker-bar">
         <div class="w-100 text-center">
             <span class="bell-animated">🔔</span>
@@ -260,6 +253,14 @@ FULL_HTML = """
             <span class="text-light ms-1">Пълен сървърен масив от Търговски регистър • Активни {{ stats.total }} обекта</span>
             <span class="badge bg-warning text-dark fw-bold ms-2" style="font-size:10px;">LIVE СИГНАЛ</span>
         </div>
+    </div>
+
+    <!-- КОНТАКТИ В ЛЯВОТО ПРОСТРАНСТВО (БЕЗ ДА ЗАСЪПВАТ ЕЛЕМЕНТИ) -->
+    <div class="desktop-left-contacts">
+        <div style="font-size:0.68rem; color:#38bdf8; font-weight:bold; text-transform:uppercase; margin-bottom:2px;">📞 Контакти</div>
+        <a href="viber://chat?number=%2B359879495767" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
+        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
+        <a href="tel:+359879495767" class="btn-corporate-contact contact-phone">📞 0879 495 767</a>
     </div>
 
     <div class="container-custom">
@@ -846,6 +847,21 @@ FULL_HTML = """
                 });
             }
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function updateCalculator(val) {
+            val = Number(val);
+            document.getElementById('calcPriceDisplay').innerText = '€' + val.toLocaleString('de-DE');
+            var zmdt = Math.round(val * 0.03);
+            var chsi = Math.round(val * 0.015);
+            var av = Math.round(val * 0.001);
+            var total = val + zmdt + chsi + av;
+            var netRoi = Math.round(val * 0.45);
+            document.getElementById('calcTaxZmdt').innerText = '€' + zmdt.toLocaleString('de-DE');
+            document.getElementById('calcTaxChsi').innerText = '€' + chsi.toLocaleString('de-DE');
+            document.getElementById('calcTaxAv').innerText = '€' + av.toLocaleString('de-DE');
+            document.getElementById('calcTotalCost').innerText = '€' + total.toLocaleString('de-DE');
+            document.getElementById('calcNetRoi').innerText = '+€' + netRoi.toLocaleString('de-DE') + ' чист марж';
         }
 
         var plansData = {
