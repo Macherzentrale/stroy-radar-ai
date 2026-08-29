@@ -104,6 +104,45 @@ FULL_HTML = """
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 600; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
 
+        /* ЕКСПЕРТЕН СЛАЙД ЗА ЗАЩИТА НА КАПИТАЛА */
+        .security-banner {
+            background: linear-gradient(145deg, #091224 0%, #060b17 100%);
+            border: 1px solid #1d335a;
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 240, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+        .security-banner::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #00f0ff, #3b82f6);
+        }
+        .pillar-card {
+            background: #080e1c;
+            border: 1px solid #162644;
+            border-radius: 14px;
+            padding: 16px;
+            height: 100%;
+            transition: all 0.2s ease;
+        }
+        .pillar-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+        .pillar-icon {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
         .nav-link-custom:hover { background: #131d31; color: var(--accent-cyan); border-color: var(--accent-cyan); }
@@ -253,7 +292,7 @@ FULL_HTML = """
         </div>
 
         <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
-        <div id="pricing-section" class="mt-5 mb-4">
+        <div id="pricing-section" class="mt-5 mb-3">
             <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
@@ -288,6 +327,55 @@ FULL_HTML = """
                     <div class="text-secondary" style="font-size:11px;">REST JSON API ключ + llms.txt AI Gateway</div>
                 </div>
                 <button class="btn-plan" onclick="openPaymentModal('Enterprise M2M API Gateway', 290)">API Ключ</button>
+            </div>
+        </div>
+
+        <!-- СПЕЦИАЛЕН ЕКСПЕРТЕН СЛАЙД: ЗАЩИТА СРЕЩУ ФИНАНСОВИ ЗАГУБИ -->
+        <div class="security-banner">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-info text-dark fw-bold px-3 py-1" style="font-size:11px;">ИНСТИТУЦИОНАЛЕН ЩИТ 2026</span>
+                <span class="text-secondary small">Автономна верификация</span>
+            </div>
+            <h3 class="fw-bold text-white mb-2" style="font-size:1.35rem;">
+                Защита срещу финансови загуби, скрити запори и изпуснати търгове
+            </h3>
+            <p class="text-secondary small mb-4">
+                Преди да преведете аванс или да подпишете предварителен договор, радарът извършва пълен правен и имотен одит в реално време.
+            </p>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <div class="pillar-card">
+                        <span class="pillar-icon">🛡️</span>
+                        <h6 class="fw-bold text-white mb-1">Неизрядни партньори</h6>
+                        <p class="text-secondary mb-0" style="font-size:0.8rem; line-height:1.4;">
+                            Мониторинг на управители, свързани фирми и ликвидност в Търговския регистър преди сключване на сделка.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pillar-card">
+                        <span class="pillar-icon">⚖️</span>
+                        <h6 class="fw-bold text-white mb-1">Скрити запори &amp; ЧСИ</h6>
+                        <p class="text-secondary mb-0" style="font-size:0.8rem; line-height:1.4;">
+                            Рентгенова проверка за наложени възбрани, тежести по ГПК и изпълнителни дела преди превод на капитал.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pillar-card">
+                        <span class="pillar-icon">⚡</span>
+                        <h6 class="fw-bold text-white mb-1">Изпуснати търгове</h6>
+                        <p class="text-secondary mb-0" style="font-size:0.8rem; line-height:1.4;">
+                            Ежедневен 07:30 ч. фийд на подценени активи от НАП и публични продажби с дисконти до 60%.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary mt-3 flex-wrap gap-2">
+                <span class="small text-light">Имате конкретен контрагент за проверка?</span>
+                <a href="#audit-section" class="btn btn-outline-info btn-sm fw-bold px-3 py-2" style="border-radius:8px;">🔍 Направи ЕИК одит сега</a>
             </div>
         </div>
     </div>
