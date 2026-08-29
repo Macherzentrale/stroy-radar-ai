@@ -107,6 +107,13 @@ FULL_HTML = """
         .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
 
         .ticker-bar { background: #040810; border-bottom: 1px solid #131c31; padding: 6px 14px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
+        @keyframes pulseBell {
+            0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
+            50% { transform: scale(1.35) rotate(-10deg); filter: drop-shadow(0 0 10px #f59e0b); }
+            100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px #f59e0b); }
+        }
+        .bell-animated { display: inline-block; animation: pulseBell 1.4s infinite ease-in-out; margin-right: 4px; }
+
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
@@ -140,6 +147,7 @@ FULL_HTML = """
         .listing-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .masked-badge { background: #162033; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
@@ -203,9 +211,12 @@ FULL_HTML = """
 </head>
 <body>
     <div class="ticker-bar">
-        <span style="color:#38bdf8; font-family:monospace; font-weight:700;">NEURAL RADAR 2026:</span>
-        <span class="text-secondary">🔔 [07:30 PROTOCOL] {{ stats.total }} институционални обекта • Национален фийд в реално време</span>
-        <span class="badge bg-success" style="font-size:9px;">LIVE</span>
+        <div>
+            <span class="bell-animated">🔔</span>
+            <span style="color:#f59e0b; font-weight:800; letter-spacing:0.5px;">LIVE СИГНАЛ 07:30 ч.:</span>
+            <span class="text-secondary ms-1">{{ stats.total }} активи активни • Дневен бюлетин за 29 Август 2026 г.</span>
+        </div>
+        <span class="badge bg-success" style="font-size:9px;">ONLINE</span>
     </div>
 
     <div class="container-custom">
@@ -326,11 +337,11 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ: ПО 20 НА СТРАНИЦА -->
+        <!-- ПУБЛИЧНИ ОБЯВИ: СТРОГО ПО 6 НА СТРАНИЦА СЪС ЗВЕЗДИЧКИ (СКРИТИ ДАННИ) -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
-                <small class="text-secondary" id="dealsCountLabel">Показват се по 20 обекта на страница</small>
+                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница (данните са защитени със звездички)</small>
             </div>
         </div>
 
@@ -432,7 +443,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- КОРПОРАТИВЕН ФУТЪР / ИМПРЕСУМ С ФИРМЕНИТЕ ДАННИ -->
+    <!-- КОРПОРАТИВЕН ФУТЪР / ИМПРЕСУМ С ФИРМЕНИТЕ ДАННИ НА СД КОВКО -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -499,7 +510,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ -->
+    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ (ПЛАВАЩИ АНИМАЦИИ) -->
     <div class="modal fade" id="featuresModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -511,7 +522,7 @@ FULL_HTML = """
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="text-secondary small mb-3">Гарантирани придобивки към вашия абонамент:</div>
+                    <div class="text-secondary small mb-3">Гарантирани придобивки и отключване на пълни досиета:</div>
                     <div id="benefitsListContainer"></div>
 
                     <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" id="proceedToPayBtn">
@@ -522,7 +533,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ С ФИРМЕНИТЕ ДАННИ НА СД КОВКО -->
+    <!-- ОФИЦИАЛЕН БАНКОВ МОДАЛ -->
     <div class="modal fade" id="paymentModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -610,7 +621,7 @@ FULL_HTML = """
         var allProjects = {{ projects_json | safe }};
         var filteredProjects = allProjects.slice();
         var currentPage = 1;
-        var pageSize = 20;
+        var pageSize = 6; // СТРОГО ПО 6 ОБЕКТА НА СТРАНИЦА
 
         allProjects.forEach(function(item) {
             var lat = item[13] || 42.6977, lng = item[14] || 23.3219;
@@ -641,6 +652,11 @@ FULL_HTML = """
             var pageItems = filteredProjects.slice(start, end);
 
             pageItems.forEach(function(p) {
+                // МАСКИРАНЕ НА ДАННИТЕ СЪС ЗВЕЗДИЧКИ
+                var maskedLoc = p[3].split(',')[0] + ", кв. ***, ул. *** 🔒";
+                var maskedInv = (p[4] || "Инвестор").substring(0, 4) + " ******* 🔒";
+                var maskedEik = (p[5] || "205849120").substring(0, 3) + "****** 🔒";
+
                 var col = document.createElement('div');
                 col.className = 'col-md-6';
                 col.innerHTML = `
@@ -652,10 +668,10 @@ FULL_HTML = """
                             </div>
                             <div class="listing-title">${p[1]}</div>
                             <div class="listing-meta">
-                                <div>📍 <strong>Локация:</strong><br><span class="text-white">${p[3]}</span></div>
+                                <div>📍 <strong>Локация:</strong><br><span class="masked-badge">${maskedLoc}</span></div>
                                 <div>🏢 <strong>РЗП / Площ:</strong><br><span class="text-white">${p[11]}</span></div>
-                                <div>💼 <strong>Инвеститор:</strong><br><span class="text-white">${p[4]}</span></div>
-                                <div>📋 <strong>ЕИК:</strong><br><span class="text-white">${p[5]}</span></div>
+                                <div>💼 <strong>Инвеститор:</strong><br><span class="masked-badge">${maskedInv}</span></div>
+                                <div>📋 <strong>ЕИК:</strong><br><span class="masked-badge">${maskedEik}</span></div>
                             </div>
                             <div class="listing-price-box">
                                 <div>
@@ -670,7 +686,7 @@ FULL_HTML = """
                         </div>
                         <div class="d-flex gap-2 mt-auto">
                             <button class="btn btn-outline-warning w-50" style="font-size:13px; font-weight:700;" onclick="focusOnMap(${p[13]}, ${p[14]}, ${p[0]})">📍 Карта</button>
-                            <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="showPlanFeatures('starter')">⚡ Меморандум</button>
+                            <button class="btn btn-outline-info w-50" style="font-size:13px; font-weight:700;" onclick="showPlanFeatures('starter')">⚡ Отключи данни</button>
                         </div>
                     </div>
                 `;
@@ -724,7 +740,7 @@ FULL_HTML = """
             var cat = document.getElementById('filterCategory').value;
 
             filteredProjects = allProjects.filter(function(p) {
-                var matchQ = !q || p[1].toLowerCase().includes(q) || p[3].toLowerCase().includes(q) || p[4].toLowerCase().includes(q) || p[5].includes(q);
+                var matchQ = !q || p[1].toLowerCase().includes(q) || p[3].toLowerCase().includes(q);
                 var matchCity = city === 'all' || p[3].includes(city);
                 var matchCat = cat === 'all' || p[2] === cat;
                 return matchQ && matchCity && matchCat;
@@ -752,14 +768,15 @@ FULL_HTML = """
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        /* ПЛАВАЩИ АНИМИРАНИ ПРИДОБИВКИ ПРИ КЛИК НА АБОНАМЕНТ */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
                 amount: 60,
                 badge: "€60 / МЕСЕЦ",
                 features: [
-                    { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на всички нови търгове и разрешителни за строеж." },
-                    { icon: "🏛️", title: "Достъп до всички 5000+ ЧСИ & НАП търгове", desc: "Филтриран списък с ликвидационни цени и пазарни дисконти." },
+                    { icon: "🔓", title: "Отключване на ЕИК и точни адреси", desc: "Премахване на звездичките и маските за всички 5000+ обекта." },
+                    { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на актуалните търгове и разрешителни за строеж." },
                     { icon: "🗺️", title: "Интерактивна ГИС карта на България", desc: "Пълна визуализация на парцелите и сградите в реално време." },
                     { icon: "🏢", title: "До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." }
                 ]
@@ -769,7 +786,7 @@ FULL_HTML = """
                 amount: 150,
                 badge: "€150 / МЕСЕЦ (POPULAR)",
                 features: [
-                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден." },
+                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден с топ дисконти." },
                     { icon: "🔍", title: "НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори (ТР), ЧСИ дела и свързани дружества." },
                     { icon: "🧮", title: "ЧСИ Net ROI & Такси Калкулатор", desc: "Автоматично начисляване на такси по т. 26 ТЗЧСИ и местен данък." },
                     { icon: "🔔", title: "VIP SMS & Имейл Алерти в реално време", desc: "Известия при пускане на нов търг в избран от вас регион." },
@@ -927,7 +944,7 @@ FULL_HTML = """
                 } else if(t.includes("булстат") || t.includes("еик") || t.includes("запор")) {
                     reply += "Въведете ЕИК в горния модул за мигновена проверка за възбрани и запори по чл. 512 от ГПК.";
                 } else {
-                    reply += "Системата следи над 5000 активни обекта в реално време (ЧСИ, НАП, ЗУТ). Можете да филтрирате по град или категория над обявите.";
+                    reply += "Системата следи над 5000 активни обекта в реално време (ЧСИ, НАП, ЗУТ). Данните са защитени със звездички до отключване с план.";
                 }
                 msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
                 msgs.scrollTop = msgs.scrollHeight;
