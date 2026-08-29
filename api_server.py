@@ -54,46 +54,62 @@ FULL_HTML = """
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root { --bg: #080d19; --card-bg: #0d1527; --border: #19253d; --accent-cyan: #00f0ff; --accent-green: #10b981; --accent-yellow: #f59e0b; --accent-blue: #38bdf8; }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 15px; }
-        .container-custom { max-width: 1100px; margin: 0 auto; }
-        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
-        .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
-        .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #fff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 20px 0; }
+        .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 25px; }
+        .brand-box { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .shield-icon { width: 42px; height: 42px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+        
+        /* МИГАЩА КАМБАНКА */
+        @keyframes pulse-bell { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.15); } 100% { opacity: 1; transform: scale(1); } }
+        .live-bell-badge { display: flex; align-items: center; gap: 8px; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--accent-cyan); padding: 6px 14px; border-radius: 20px; color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; }
+        .bell-icon { animation: pulse-bell 1.5s infinite ease-in-out; display: inline-block; }
+
+        .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 24px; margin-bottom: 20px; }
+        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #fff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
         .custom-select option { background: #0f172a; color: #fff; }
-        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); }
+        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; min-height: 120px; border: 1px solid var(--border); }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
         .kpi-yellow { border-left: 4px solid var(--accent-yellow) !important; }
-        .kpi-header { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
-        .kpi-value { font-size: 1.85rem; font-weight: 800; color: #fff; line-height: 1.1; margin: 4px 0; }
+        .kpi-header { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #64748b; }
+        .kpi-value { font-size: 2rem; font-weight: 800; color: #fff; line-height: 1.1; margin: 6px 0; }
         #map { height: 440px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
         .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         .masked-badge { background: #182235; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; font-weight: bold; }
-        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
-        .plan-popular { border: 2px solid var(--accent-cyan) !important; }
-        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; width: 100%; }
+        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 14px; display: flex; flex-direction: column; justify-content: space-between; height: 100%; }
+        .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 20px rgba(0,240,255,0.15); }
+        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 11px 22px; border-radius: 10px; width: 100%; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
-        .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 20px 0 35px 0; }
-        .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; }
+        .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 25px 0; }
+        .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 8px 14px; font-weight: bold; cursor: pointer; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
-        .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .btn-corporate-contact { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 25px; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.2); }
+        
+        /* ПЛАВАЩИ БУТОНИ ВЛЯВО */
+        .floating-contact-bar { position: fixed; bottom: 30px; left: 25px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
+        .btn-corporate-contact { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 30px; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.88rem; box-shadow: 0 4px 15px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); transition: transform 0.2s; }
+        .btn-corporate-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
-        .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 13px 22px; border-radius: 30px; cursor: pointer; z-index: 1000; border: none; }
+        .chatbot-btn { position: fixed; bottom: 30px; right: 25px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 14px 24px; border-radius: 30px; cursor: pointer; z-index: 1000; border: none; box-shadow: 0 4px 20px rgba(0,240,255,0.3); }
     </style>
 </head>
 <body>
     <div class="container-custom">
+        <!-- НАВИГАЦИЯ С МИГАЩА КАМБАНКА -->
         <div class="navbar-custom">
             <a href="/" class="brand-box">
-                <div class="shield-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-                <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
+                <div class="shield-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                <div><div style="font-weight:900; font-size:1.3rem; color:#fff; line-height:1.1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG PLATINUM</small></div>
             </a>
-            <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold">📄 07:30 Дневен Бюлетин</a>
+            <div class="d-flex align-items-center gap-3">
+                <div class="live-bell-badge">
+                    <span class="bell-icon">🔔</span>
+                    <span>Режим на живо • 07:30 Бюлетин активен</span>
+                </div>
+                <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold px-3 py-2">📄 PDF Бюлетин</a>
+            </div>
         </div>
 
         <!-- ОДИТ СКЕНЕР -->
@@ -111,7 +127,7 @@ FULL_HTML = """
         </div>
 
         <!-- KPI КАРТИ -->
-        <div class="row g-2 mb-3">
+        <div class="row g-3 mb-4">
             <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div></div></div>
@@ -158,7 +174,7 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
-    <!-- КОНТАКТИ -->
+    <!-- ПЛАВАЩИ КОНТАКТИ ВЛЯВО -->
     <div class="floating-contact-bar">
         <a href="viber://chat?number=%2B359888123456" class="btn-corporate-contact contact-viber">🟣 Viber Консулт</a>
         <a href="https://t.me/stroyradar_support" target="_blank" class="btn-corporate-contact contact-tg">✈️ Telegram Канал</a>
