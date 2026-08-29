@@ -62,7 +62,7 @@ FULL_HTML = """
             --accent-yellow: #f59e0b;
             --accent-blue: #38bdf8;
         }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 60px; }
+        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0px; }
         .container-custom { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 
         .ticker-bar { background: #040810; border-bottom: 1px solid #131c31; padding: 6px 14px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
@@ -89,7 +89,6 @@ FULL_HTML = """
         .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
         .kpi-footer { font-size: 0.68rem; color: #64748b; }
 
-        /* ИНТЕРАКТИВНА ГИС КАРТА */
         #map { height: 360px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
         .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
         .leaflet-popup-tip { background: #0d1527 !important; }
@@ -103,6 +102,42 @@ FULL_HTML = """
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
         .nav-link-custom:hover { background: #131d31; color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+        /* ИМПРЕСУМ & ФУТЪР СТИЛОВЕ */
+        .site-footer {
+            background: #040810;
+            border-top: 1px solid #131c31;
+            padding: 40px 0 30px 0;
+            margin-top: 50px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .footer-heading {
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: #f1f5f9;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            transition: color 0.15s;
+        }
+        .footer-link:hover {
+            color: var(--accent-cyan);
+        }
+        .impressum-box {
+            background: #080d19;
+            border: 1px solid #19253d;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -174,7 +209,7 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен марж</div></div></div>
         </div>
 
-        <!-- ИНТЕРАКТИВНА КАРТА С ФУНКЦИОНАЛНИ МАРКЕРИ -->
+        <!-- ИНТЕРАКТИВНА КАРТА -->
         <div class="card-dark" id="map-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
@@ -186,7 +221,7 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ОБЯВИ С БУТОН ЗА ПОЗИЦИОНИРАНЕ В КАРТАТА -->
+        <!-- ПУБЛИЧНИ ОБЯВИ -->
         <h5 class="fw-bold text-white mb-3 mt-4" id="deals-section">📋 Актуални Публични Обяви &amp; Сделки</h5>
         <div id="dealsContainer">
             {% for p in projects %}
@@ -221,6 +256,64 @@ FULL_HTML = """
         </div>
     </div>
 
+    <!-- КОРПОРАТИВЕН ФУТЪР / ИМПРЕСУМ -->
+    <footer class="site-footer">
+        <div class="container-custom">
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="shield-icon" style="width:28px; height:28px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                        <span class="fw-bold text-white fs-6">PRO INVEST RADAR .BG</span>
+                    </div>
+                    <p class="text-secondary small mb-3">Автономен корпоративен радар и AI агрегатор на публични търгове, ЧСИ обявления, разрешения за строеж (ЗУТ) и фирмени рискови профили в реално време.</p>
+                    <div class="small text-secondary">Статус на системата: <strong class="text-success">● Всички регистри активни</strong></div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="footer-heading">Модули</div>
+                    <a href="#audit-section" class="footer-link">ЕИК Одит</a>
+                    <a href="#map-section" class="footer-link">ГИС Карта</a>
+                    <a href="#deals-section" class="footer-link">ЧСИ Сделки</a>
+                    <a href="/api/deals" target="_blank" class="footer-link">REST JSON API</a>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="footer-heading">Правна база</div>
+                    <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('terms')">Общи условия</a>
+                    <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('privacy')">GDPR &amp; Поверителност</a>
+                    <a href="javascript:void(0)" class="footer-link" onclick="openLegalModal('disclaimer')">Отказ от отговорност</a>
+                    <a href="/llms.txt" target="_blank" class="footer-link">llms.txt Спецификация</a>
+                </div>
+                <div class="col-md-4">
+                    <div class="footer-heading">Импресум (Impressum)</div>
+                    <div class="impressum-box">
+                        <strong>PRO INVEST RADAR AI Ltd.</strong><br>
+                        ЕИК / ДДС Номер: BG205849120<br>
+                        Адрес: гр. София, р-н Лозенец, бул. Черни Връх<br>
+                        Контакт: <a href="mailto:kovko.firma@gmail.com" style="color:var(--accent-cyan); text-decoration:none;">kovko.firma@gmail.com</a><br>
+                        Надзорен орган: Комисия за защита на личните данни (КЗЛД)
+                    </div>
+                </div>
+            </div>
+            <div class="border-top border-secondary pt-3 text-center text-secondary small">
+                © 2026 PRO INVEST RADAR .BG. Платформата използва публични данни от Търговски регистър, РДНСК и ЧСИ. Всички права запазени.
+            </div>
+        </div>
+    </footer>
+
+    <!-- ПРАВЕН МОДАЛ ЗА ОБЩИ УСЛОВИЯ / GDPR -->
+    <div class="modal fade" id="legalModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:16px;">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fw-bold text-info" id="legalModalTitle">Правна информация</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="legalModalBody" style="font-size:0.88rem; color:#cbd5e1; max-height:60vh; overflow-y:auto;">
+                    <!-- Динамичен текст -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- МОБИЛНО МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
@@ -233,10 +326,9 @@ FULL_HTML = """
         <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
             <div>
                 <div class="offcanvas-menu-section">📡 Оперативни модули</div>
-                <a href="#stats-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">📊</span> Инвестиционни KPI метрики</a>
-                <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
                 <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
                 <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
+                <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
             </div>
         </div>
     </div>
@@ -303,6 +395,24 @@ FULL_HTML = """
             document.getElementById('resCompInjunctions').innerText = comp.injunctions;
             document.getElementById('resCompBadge').innerText = comp.status;
         }
+
+        function openLegalModal(type) {
+            var title = "Правна информация";
+            var body = "";
+            if(type === 'terms') {
+                title = "Общи условия за ползване";
+                body = "<p>Платформата PRO INVEST RADAR .BG предоставя аналитични B2B услуги и достъп до структурирана публична информация съгласно действащото законодателство на Република България и ЕС.</p><p>Всички права върху агрегираните и алгоритмично преработени данни са запазени.</p>";
+            } else if(type === 'privacy') {
+                title = "Политика за поверителност (GDPR)";
+                body = "<p>Ние обработваме лични данни в съответствие с Регламент (ЕС) 2016/679. Не съхраняваме незащитена лична информация и не споделяме данни с трети страни за маркетингови цели.</p>";
+            } else if(type === 'disclaimer') {
+                title = "Отказ от отговорност (Disclaimer)";
+                body = "<p>Данните за пазарни оценки, търгове и запори се извличат от официални публични източници (Търговски регистър, Камара на ЧСИ, НАП). Платформата не представлява официален инвестиционен съвет по смисъла на ЗПФИ.</p>";
+            }
+            document.getElementById('legalModalTitle').innerText = title;
+            document.getElementById('legalModalBody').innerHTML = body;
+            new bootstrap.Modal(document.getElementById('legalModal')).show();
+        }
     </script>
 </body>
 </html>
@@ -323,6 +433,12 @@ def home():
         "spread_str": "332 094"
     }
     return render_template_string(FULL_HTML, projects=projects, projects_json=json.dumps(projects), stats=stats)
+
+@app.route("/llms.txt")
+def llms_txt(): return Response("# PRO INVEST RADAR AI Gateway", mimetype='text/plain')
+
+@app.route("/api/deals")
+def api_deals(): return jsonify({"status": "live", "count": 4})
 
 @app.route("/export-pdf")
 def export_pdf(): return "<script>window.print();</script><h2>PRO INVEST RADAR .BG – ДОКЛАД</h2>"
