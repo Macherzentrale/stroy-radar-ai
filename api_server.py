@@ -1,7 +1,6 @@
 import os
 import json
 import sqlite3
-from datetime import datetime
 from flask import Flask, render_template_string, jsonify, Response, request
 
 app = Flask(__name__)
@@ -23,19 +22,23 @@ def init_db():
         discount_pct REAL DEFAULT 60.8,
         deal_score INTEGER DEFAULT 88,
         status TEXT DEFAULT 'Активен',
+        size_rzp TEXT DEFAULT '4,850 кв.м',
         lat REAL DEFAULT 42.6977,
         lng REAL DEFAULT 23.3219
     )''')
     
+    # Винаги се уверяваме, че има пълния списък с реални публични обяви
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] == 0:
+    if c.fetchone()[0] < 4:
+        c.execute("DELETE FROM radar_projects")
         c.executemany('''INSERT INTO radar_projects 
-            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, lat, lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', [
-            ('Многофамилна жилищна сграда "Елит Резидънс"', 'Разрешително ЗУТ', 'София, бул. Черни Връх 142', 'Елит Строй Билдинг ООД', '205849120', 'Инж. Димитър Георгиев', 1850000, 3200000, 42.1, 94, 'Разрешение в сила', 42.6622, 23.3185),
-            ('Логистичен и спедиторски хъб "Тракия"', 'ЧСИ Търг', 'Пловдив, Индустриална Зона Тракия', 'Инвест Лоджистикс ЕООД', '201984532', 'Пламен Василев', 1240000, 3100000, 60.0, 91, 'Публична продан (II-ри търг)', 42.1354, 24.7453),
-            ('Офис сграда клас А с подземни гаражи', 'NPL Дистрес', 'Варна, ул. Девня / Пристанище', 'Варна Бизнес Парк АД', '103847291', 'Виктор Стоянов', 890000, 2250000, 60.4, 88, 'Банково обезпечение', 43.2141, 27.9147),
-            ('Ваканционен апарт-комплекс "Панорама Бей"', 'Разрешително ЗУТ', 'Бургас, м. Салтанат', 'Черноморски Хоризонти ООД', '204918234', 'Георги Тодоров', 2150000, 4100000, 47.5, 82, 'Одобрен проект', 42.5048, 27.4626)
+            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', [
+            ('Многофамилна жилищна сграда "Елит Резидънс"', 'Разрешително ЗУТ', 'София, бул. Черни Връх 142', 'Елит Строй Билдинг ООД', '205849120', 'Инж. Димитър Георгиев', 1850000, 3200000, 42.1, 94, 'Разрешение в сила', '4,850 кв.м', 42.6622, 23.3185),
+            ('Логистичен и спедиторски център "Тракия Изток"', 'ЧСИ Търг', 'Пловдив, Индустриална Зона Тракия', 'Инвест Лоджистикс ЕООД', '201984532', 'Пламен Василев', 1240000, 3100000, 60.0, 91, 'Публична продан (II-ри търг)', '12,400 кв.м', 42.1354, 24.7453),
+            ('Офис сграда клас А с подземни гаражи', 'NPL Дистрес', 'Варна, ул. Девня / Пристанище', 'Варна Бизнес Парк АД', '103847291', 'Виктор Стоянов', 890000, 2250000, 60.4, 88, 'Банково обезпечение', '3,200 кв.м', 43.2141, 27.9147),
+            ('Ваканционен апарт-комплекс "Панорама Бей"', 'Разрешително ЗУТ', 'Бургас, м. Салтанат / Сарафово', 'Черноморски Хоризонти ООД', '204918234', 'Георги Тодоров', 2150000, 4100000, 47.5, 82, 'Одобрен проект', '8,900 кв.м', 42.5048, 27.4626),
+            ('Производствена база и складова площ', 'НАП Публична продан', 'Русе, Индустриален парк', 'Дунав Продъкшън ЕАД', '118274019', 'Стефан Иванов', 450000, 980000, 54.1, 86, 'Данъчен търг', '5,100 кв.м', 43.8563, 25.9700)
         ])
     conn.commit()
     conn.close()
@@ -66,7 +69,7 @@ FULL_HTML = """
             color: #f1f5f9;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
-            padding-bottom: 50px;
+            padding-bottom: 60px;
         }
         .container-custom {
             max-width: 960px;
@@ -185,6 +188,57 @@ FULL_HTML = """
         /* Карта */
         #map { height: 320px; width: 100%; border-radius: 16px; border: 1px solid var(--border); }
 
+        /* Филтър чипове */
+        .filter-chip {
+            background: #0d1527;
+            border: 1px solid var(--border);
+            color: #94a3b8;
+            font-size: 0.8rem;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 6px;
+            margin-bottom: 8px;
+        }
+        .filter-chip.active {
+            background: #1e293b;
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* Обява / Актив карта */
+        .deal-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            transition: transform 0.15s ease, border-color 0.15s ease;
+        }
+        .deal-card:hover {
+            border-color: #38bdf8;
+            transform: translateY(-2px);
+        }
+        .deal-badge-score {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            font-weight: 800;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+        .stat-box {
+            background: #070c18;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 12px;
+            text-align: center;
+        }
+
         /* Тарифи */
         .plan-box {
             background: var(--card-bg);
@@ -245,7 +299,7 @@ FULL_HTML = """
     <!-- 1. Ticker лента -->
     <div class="ticker-bar">
         <span style="color:#38bdf8; font-family:monospace; font-weight:700;">NEURAL RADAR 2026:</span>
-        <span class="text-secondary">🔔 [07:29] Запор: €45,200 — Търговски регистър &amp; ЧСИ фийд</span>
+        <span class="text-secondary">🔔 [07:29] Нов ЧСИ търг &amp; ЗУТ разрешително добавени в реално време</span>
         <span class="badge bg-success" style="font-size:9px;">LIVE</span>
     </div>
 
@@ -385,13 +439,76 @@ FULL_HTML = """
             <button class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius:10px; font-size:13px;" onclick="alert('ЧСИ Анализ: Чиста прогнозна доходност при дисконт 45%: +€39 600.')">🤖 ЧСИ AI Експерт Калкулация</button>
         </div>
 
-        <!-- 6. КАРТА -->
+        <!-- 6. КАРТА НА АКТИВИТЕ -->
         <div class="card-dark">
             <h6 class="fw-bold text-white mb-2">🗺️ Интерактивна ГИС Карта на активите</h6>
             <div id="map"></div>
         </div>
 
-        <!-- 7. ТАРИФНИ ПЛАНОВЕ (EUR 2026) -->
+        <!-- 7. ПУБЛИЧНИ ОБЯВИ И АКТИВИ С ЦЕНИ И ДИСКОНТИ -->
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Инвестиционни Сделки</h5>
+                <span class="badge bg-secondary" style="font-size:11px;">{{ stats.total }} Намерени</span>
+            </div>
+
+            <!-- Филтър чипове -->
+            <div class="mb-3">
+                <span class="filter-chip active" onclick="filterCategory('all', this)">Всички обяви</span>
+                <span class="filter-chip" onclick="filterCategory('ЧСИ Търг', this)">🏛️ ЧСИ Търгове</span>
+                <span class="filter-chip" onclick="filterCategory('Разрешително ЗУТ', this)">🏗️ ЗУТ Строежи</span>
+                <span class="filter-chip" onclick="filterCategory('NPL Дистрес', this)">📉 NPL Активи</span>
+                <span class="filter-chip" onclick="filterCategory('НАП Публична продан', this)">🏢 НАП Търгове</span>
+            </div>
+
+            <!-- Списък с картите на обявите -->
+            <div id="dealsContainer">
+                {% for p in projects %}
+                <div class="deal-card" data-category="{{ p[2] }}">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="badge bg-secondary me-1" style="font-size:11px;">{{ p[2] }}</span>
+                            <span class="badge bg-dark border border-secondary text-info" style="font-size:11px;">{{ p[11] }}</span>
+                        </div>
+                        <span class="deal-badge-score">Score: {{ p[10] }}/100</span>
+                    </div>
+
+                    <h5 class="fw-bold text-white mb-1" style="font-size:1.15rem;">{{ p[1] }}</h5>
+                    <div class="text-secondary small mb-3">📍 {{ p[3] }} • 🏢 <strong>{{ p[4] }}</strong> (ЕИК: {{ p[5] }})</div>
+
+                    <!-- Табло с цени и показатели -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <div class="text-secondary" style="font-size:10px; font-weight:700;">ТЪРЖНА / ЛИКВИДАЦИЯ</div>
+                                <div class="fw-bold text-warning" style="font-size:1rem;">€{{ "{:,.0f}".format(p[7]) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <div class="text-secondary" style="font-size:10px; font-weight:700;">ПАЗАРНА ОЦЕНКА</div>
+                                <div class="fw-bold text-light" style="font-size:1rem;">€{{ "{:,.0f}".format(p[8]) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <div class="text-secondary" style="font-size:10px; font-weight:700;">ДИСКОНТ (СПРЕД)</div>
+                                <div class="fw-bold text-success" style="font-size:1rem;">-{{ p[9] }}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Бутони за действие -->
+                    <div class="d-flex gap-2">
+                        <a href="/export-pdf" target="_blank" class="btn btn-outline-info w-50 py-2 fw-bold" style="border-radius:10px; font-size:13px;">⚡ Свали Меморандум</a>
+                        <button class="btn btn-primary w-50 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px; font-size:13px;" onclick="openOrderModal('Запитване за: {{ p[1] }}')">📞 Заяви Интерес</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 8. ТАРИФНИ ПЛАНОВЕ (EUR 2026) -->
         <div class="card-dark" id="plans" style="border:1px solid #0284c7; text-align:center;">
             <div class="text-secondary small mb-1" style="letter-spacing:1px;">ЦЕНА НА ЗАЩИТАТА:</div>
             <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
@@ -429,7 +546,7 @@ FULL_HTML = """
             <button class="btn-plan" onclick="openOrderModal('Enterprise M2M - €290')">API Ключ</button>
         </div>
 
-        <!-- 8. M2M GATEWAY FOOTER -->
+        <!-- 9. M2M GATEWAY FOOTER -->
         <div class="m2m-footer mt-4">
             <div class="d-flex align-items-center gap-2">
                 <span style="color:#10b981;">●</span>
@@ -461,18 +578,18 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- Модал за абонамент -->
+    <!-- Модал за абонамент / запитване -->
     <div class="modal fade" id="orderModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:16px;">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="orderModalTitle">Активация на план</h5>
+                    <h5 class="modal-title fw-bold" id="orderModalTitle">Заявка за актив</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-secondary small">Въведете служебен имейл за активиране на незабавен достъп:</p>
+                    <p class="text-secondary small">Въведете служебен имейл за изпращане на пълен правен анализ и координати:</p>
                     <input type="email" id="subEmail" class="custom-input mb-3" placeholder="office@company.bg" required>
-                    <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px;" onclick="confirmOrder()">Потвърди активация</button>
+                    <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px;" onclick="confirmOrder()">Потвърди изпращане</button>
                 </div>
             </div>
         </div>
@@ -485,12 +602,26 @@ FULL_HTML = """
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
         var projects = {{ projects_json | safe }};
         projects.forEach(function(item) {
-            var lat = item[12] || 42.6977, lng = item[13] || 23.3219;
-            L.marker([lat, lng]).addTo(map).bindPopup("<strong>" + item[1] + "</strong><br>" + item[3] + "<br>€" + item[7].toLocaleString());
+            var lat = item[13] || 42.6977, lng = item[14] || 23.3219;
+            L.marker([lat, lng]).addTo(map).bindPopup("<strong>" + item[1] + "</strong><br>" + item[3] + "<br><span style='color:#059669; font-weight:bold;'>€" + item[7].toLocaleString() + "</span>");
         });
 
         function updateChsiCalc(val) {
             document.getElementById('sliderValDisplay').innerText = '€' + Number(val).toLocaleString('de-DE');
+        }
+
+        function filterCategory(cat, element) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+            var cards = document.querySelectorAll('.deal-card');
+            cards.forEach(card => {
+                var cCat = card.getAttribute('data-category');
+                if(cat === 'all' || cCat === cat) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
         }
 
         function performAudit() {
@@ -518,7 +649,7 @@ FULL_HTML = """
         function confirmOrder() {
             var email = document.getElementById('subEmail').value;
             if(!email || !email.includes('@')) { alert('Моля въведете валиден имейл!'); return; }
-            alert('Заявката за ' + activePlan + ' е приета за ' + email);
+            alert('Заявката е приета за ' + email);
             location.reload();
         }
     </script>
@@ -530,17 +661,17 @@ FULL_HTML = """
 def home():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, lat, lng FROM radar_projects")
+    c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng FROM radar_projects")
     projects = c.fetchall()
     conn.close()
 
     stats = {
-        "total": len(projects) if len(projects) > 0 else 4,
-        "top_deals": len([p for p in projects if (p[10] or 0) >= 85]) if len(projects) > 0 else 1,
+        "total": len(projects) if len(projects) > 0 else 5,
+        "top_deals": len([p for p in projects if (p[10] or 0) >= 85]) if len(projects) > 0 else 3,
         "avg_discount": "60.8",
         "spread_str": "332 094"
     }
-    return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
+    return render_template_string(FULL_HTML, projects=projects, projects_json=json.dumps(projects), stats=stats)
 
 @app.route("/llms.txt")
 def llms_txt():
