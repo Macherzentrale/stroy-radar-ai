@@ -26,18 +26,6 @@ def init_db():
         lat REAL DEFAULT 42.6977,
         lng REAL DEFAULT 23.3219
     )''')
-    
-    c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 4:
-        c.execute("DELETE FROM radar_projects")
-        c.executemany('''INSERT INTO radar_projects 
-            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, lat, lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', [
-            ('Многофамилна жилищна сграда "Елит Резидънс"', 'Разрешително ЗУТ', 'София, бул. Черни Връх 142', 'Елит Строй Билдинг ООД', '205849120', 'Инж. Димитър Георгиев', 1850000, 3200000, 42.1, 94, 'Разрешение в сила', '4,850 кв.м', 42.6622, 23.3185),
-            ('Логистичен и спедиторски център "Тракия Изток"', 'ЧСИ Търг', 'Пловдив, Индустриална Зона Тракия', 'Инвест Лоджистикс ЕООД', '201984532', 'Пламен Василев', 1240000, 3100000, 60.0, 91, 'Публична продан (II-ри търг)', '12,400 кв.м', 42.1354, 24.7453),
-            ('Офис сграда клас А с подземни гаражи', 'NPL Дистрес', 'Варна, ул. Девня / Пристанище', 'Варна Бизнес Парк АД', '103847291', 'Виктор Стоянов', 890000, 2250000, 60.4, 88, 'Банково обезпечение', '3,200 кв.м', 43.2141, 27.9147),
-            ('Ваканционен апарт-комплекс "Панорама Бей"', 'Разрешително ЗУТ', 'Бургас, м. Салтанат / Сарафово', 'Черноморски Хоризонти ООД', '204918234', 'Георги Тодоров', 2150000, 4100000, 47.5, 82, 'Одобрен проект', '8,900 кв.м', 42.5048, 27.4626)
-        ])
     conn.commit()
     conn.close()
 
@@ -49,7 +37,7 @@ FULL_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
+    <title>PRO INVEST RADAR AI .BG – Корпоративен Асет Радар 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -96,6 +84,12 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
 
+        /* Професионално Меню стилове */
+        .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
+        .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: all 0.2s ease; margin-bottom: 6px; }
+        .nav-link-custom:hover { background: #131d31; color: var(--accent-cyan); border-color: var(--accent-cyan); }
+        .nav-link-custom span.icon { font-size: 1.1rem; }
+
         .m2m-footer { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; }
         .btn-m2m { background: #070c18; border: 1px solid var(--border); color: var(--accent-cyan); font-family: monospace; padding: 4px 10px; border-radius: 6px; text-decoration: none; font-size: 0.75rem; }
     </style>
@@ -117,7 +111,7 @@ FULL_HTML = """
         </div>
 
         <!-- ОДИТ СКЕНЕР + 3D САТЕЛИТ -->
-        <div class="row g-3 mb-3">
+        <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -162,7 +156,7 @@ FULL_HTML = """
         </div>
 
         <!-- 4-ТЕ KPI КАРТИ -->
-        <div class="row g-2 mb-3">
+        <div class="row g-2 mb-3" id="stats-section">
             <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header text-secondary">🗄️ АКТИВНИ АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">В реално време</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">⚡ TOP DEALS (≥85)</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">📉 СРЕДЕН ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
@@ -170,7 +164,7 @@ FULL_HTML = """
         </div>
 
         <!-- ЧСИ КАЛКУЛАТОР -->
-        <div class="card-dark">
+        <div class="card-dark" id="calc-section">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark" style="font-size:11px; font-weight:700;">ДЪРЖАВНИ ТАКСИ 2026</span>
                 <span class="text-info fw-bold fs-5" id="sliderValDisplay">€88 000</span>
@@ -184,10 +178,10 @@ FULL_HTML = """
             <button class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius:10px; font-size:13px;" onclick="alert('ЧСИ Анализ: Чиста прогнозна доходност при дисконт 45%: +€39 600.')">🤖 ЧСИ AI Експерт Калкулация</button>
         </div>
 
-        <div class="card-dark"><h6 class="fw-bold text-white mb-2">🗺️ Интерактивна ГИС Карта на активите</h6><div id="map"></div></div>
+        <div class="card-dark" id="map-section"><h6 class="fw-bold text-white mb-2">🗺️ Интерактивна ГИС Карта на активите</h6><div id="map"></div></div>
 
         <!-- ПУБЛИЧНИ ОБЯВИ В ОТДЕЛНИ ПРОЗОРЦИ -->
-        <h5 class="fw-bold text-white mb-3 mt-4">📋 Актуални Публични Обяви &amp; Сделки</h5>
+        <h5 class="fw-bold text-white mb-3 mt-4" id="deals-section">📋 Актуални Публични Обяви &amp; Сделки</h5>
         <div id="dealsContainer">
             {% for p in projects %}
             <div class="listing-card">
@@ -226,16 +220,39 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОБИЛНО МЕНЮ -->
-    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0d1527 !important; border-left: 1px solid var(--border);">
-        <div class="offcanvas-header border-bottom border-secondary">
-            <h5 class="offcanvas-title fw-bold text-info">📱 PRO INVEST RADAR</h5>
+    <!-- ПРОФЕСИОНАЛНО B2B МОБИЛНО МЕНЮ -->
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
+        <div class="offcanvas-header border-bottom border-secondary pb-3">
+            <div>
+                <h6 class="offcanvas-title fw-bold text-white mb-0">PRO INVEST RADAR</h6>
+                <small style="color:var(--accent-cyan); font-size:0.75rem; font-family:monospace;">ENTERPRISE SUITE V3.2</small>
+            </div>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body d-flex flex-column gap-3">
-            <a href="/" class="btn btn-outline-light text-start py-2">🏠 Начало / Радар</a>
-            <a href="/export-pdf" target="_blank" class="btn btn-outline-light text-start py-2">📄 PDF Доклад</a>
-            <a href="/api/deals" target="_blank" class="btn btn-outline-info text-start py-2">&gt;_ API Gateway</a>
+        <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
+            <div>
+                <!-- Секция 1: Основни модули -->
+                <div class="offcanvas-menu-section">📡 Оперативни модули</div>
+                <a href="#stats-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">📊</span> Инвестиционни KPI метрики</a>
+                <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
+                <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
+                <a href="#calc-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🧮</span> ЧСИ ROI &amp; Държавни такси</a>
+                <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
+
+                <!-- Секция 2: Доклади и M2M -->
+                <div class="offcanvas-menu-section mt-3">📑 Експорт &amp; Интеграция</div>
+                <a href="/export-pdf" target="_blank" class="nav-link-custom"><span class="icon">📄</span> Седмичен PDF Бюлетин</a>
+                <a href="/api/deals" target="_blank" class="nav-link-custom"><span class="icon">&gt;_</span> REST JSON API Фрийд</a>
+                <a href="/llms.txt" target="_blank" class="nav-link-custom"><span class="icon">🤖</span> LLMs.txt AI Gateway</a>
+            </div>
+
+            <!-- Секция 3: Контакти и статус -->
+            <div class="border-top border-secondary pt-3 mt-4">
+                <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-info w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
+                <div class="text-secondary text-center" style="font-size:0.7rem;">
+                    © 2026 PRO INVEST RADAR .BG<br>Всички права запазени
+                </div>
+            </div>
         </div>
     </div>
 
@@ -321,7 +338,7 @@ def llms_txt(): return Response("# PRO INVEST RADAR AI Gateway", mimetype='text/
 def api_deals(): return jsonify({"status": "live", "count": 4})
 
 @app.route("/export-pdf")
-def export_pdf(): return "<script>window.print();</script><h2>PRO INVEST RADAR .BG</h2>"
+def export_pdf(): return "<script>window.print();</script><h2>PRO INVEST RADAR .BG – ДОКЛАД</h2>"
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
