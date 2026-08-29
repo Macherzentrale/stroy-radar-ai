@@ -65,8 +65,10 @@ FULL_HTML = """
         .blinking-bell { animation: blink-bell 1s infinite; color: var(--accent-cyan); font-weight: bold; font-size: 0.85rem; }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #0f172a !important; border: 1px solid #334155 !important; color: #fff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
-        .custom-select option { background: #0f172a; color: #fff; }
+        
+        /* ЯСНИ И ВИДИМИ ФИЛТРИ (КОНТРАСТЕН ФОН ВМЕСТО ЧЕРНО НА ЧЕРНО) */
+        .custom-input, .custom-select { background: #152238 !important; border: 2px solid #00f0ff !important; color: #fff !important; padding: 12px 16px; border-radius: 10px; width: 100%; font-family: monospace; font-weight: bold; }
+        .custom-select option { background: #152238; color: #fff; }
         
         .kpi-card { background: var(--card-bg); border-radius: 14px; padding: 16px; border: 1px solid var(--border); height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
@@ -153,10 +155,11 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
+        <!-- ФИЛТРИ С ВИДИМИ И КОНТРАСТНИ ЕЛЕМЕНТИ -->
         <div class="card-dark" style="background:#09101f;">
             <div class="row g-2">
-                <div class="col-md-4"><label class="small text-secondary mb-1">Град:</label><select id="filterCity" class="custom-select" onchange="applyFilters()"><option value="all">Всички градове</option><option value="София">София</option><option value="Пловдив">Пловдив</option></select></div>
-                <div class="col-md-4"><label class="small text-secondary mb-1">Търсене:</label><input type="text" id="dealSearchInput" class="custom-input" placeholder="Търси актив..." onkeyup="applyFilters()"></div>
+                <div class="col-md-4"><label class="small text-info fw-bold mb-1">Филтър по град:</label><select id="filterCity" class="custom-select" onchange="applyFilters()"><option value="all">Всички градове</option><option value="София">София</option><option value="Пловдив">Пловдив</option></select></div>
+                <div class="col-md-4"><label class="small text-info fw-bold mb-1">Търсене по актив:</label><input type="text" id="dealSearchInput" class="custom-input" placeholder="Въведете ключова дума..." onkeyup="applyFilters()"></div>
             </div>
         </div>
 
