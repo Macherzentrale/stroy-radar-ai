@@ -120,43 +120,108 @@ def send_email_msg(to_email, subject, body_html):
         print(f"[!] SMTP грешка: {e}")
         return False
 
-# --- 3. HTML Шаблони с пълна SEO & OpenGraph оптимизация ---
+# --- 3. Автоматична B2B Аутрийч Кампания (Партиди по 20) ---
+def execute_outreach_batch(batch_size=20):
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT id, email, company_name FROM leads_outreach WHERE status = 'pending' LIMIT ?", (batch_size,))
+    leads = c.fetchall()
+    
+    sent_count = 0
+    for lead_id, email, company in leads:
+        comp_name = company if company else "Колеги"
+        subject = f"Нови разрешителни за строеж и търгове за вашия район – Stroy Radar AI"
+        body = f"""
+        <div style='font-family:Segoe UI, sans-serif; background:#0f172a; color:#f8fafc; padding:25px; border-radius:10px; max-width:600px;'>
+            <h2 style='color:#38bdf8; margin-top:0;'>🏗️ Stroy Radar AI</h2>
+            <p>Здравейте, {comp_name},</p>
+            <p>Платформата за строителен интелиджънс <strong>Stroy Radar AI</strong> следи в реално време новоиздадените разрешителни за строеж и публичните ЧСИ търгове в България.</p>
+            <p>Предоставяме ви <strong>7-дневен пълен безплатен тестов достъп</strong>, включващ:</p>
+            <ul>
+                <li>Ежедневен анализ на новите обекти всяка сутрин в 07:30 ч.</li>
+                <li>Директни контакти на инвеститори и възложители</li>
+                <li>Интерактивна GIS карта и експорт в Excel</li>
+            </ul>
+            <p style='margin:25px 0;'>
+                <a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#ffffff; padding:12px 24px; text-decoration:none; border-radius:6px; font-weight:bold; display:inline-block;'>Активирай 7 дни тест безплатно</a>
+            </p>
+            <p style='font-size:12px; color:#94a3b8; border-top:1px solid #334155; padding-top:15px;'>
+                За връзка с нас: <a href='mailto:kovko.firma@gmail.com' style='color:#38bdf8;'>kovko.firma@gmail.com</a>
+            </p>
+        </div>
+        """
+        if send_email_msg(email, subject, body):
+            c.execute("UPDATE leads_outreach SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = ?", (lead_id,))
+            conn.commit()
+            sent_count += 1
+            time.sleep(2)
+            
+    conn.close()
+    return sent_count
+
+# --- 4. Напълно автономен 24/7 Scheduler ---
+def background_scheduler():
+    already_sent_digest = False
+    already_sent_outreach = False
+    
+    while True:
+        try:
+            now_bg = datetime.now(ZoneInfo("Europe/Sofia"))
+            time_str = now_bg.strftime("%H:%M")
+
+            if time_str == "00:00":
+                already_sent_digest = False
+                already_sent_outreach = False
+
+            # В 07:30 ч. -> Изпращане на сутрешния бюлетин
+            if time_str == "07:30" and not already_sent_digest:
+                conn = sqlite3.connect(DB_PATH)
+                c = conn.cursor()
+                c.execute("SELECT title, category, location, investor, size_rzp, price_eur FROM radar_projects ORDER BY id DESC LIMIT 3")
+                top_items = c.fetchall()
+                conn.close()
+
+                items_html = "".join([
+                    f"<div style='background:#1e293b; padding:12px; border-radius:6px; margin-bottom:10px; border-left:4px solid #3b82f6;'>"
+                    f"<h4 style='color:#ffffff; margin:0;'>{p[0]}</h4>"
+                    f"<p style='color:#94a3b8; margin:4px 0 0 0; font-size:13px;'>{p[1]} | {p[2]} | Възложител: {p[3]}</p>"
+                    f"</div>" for p in top_items
+                ])
+
+                mail_body = f"""
+                <div style='font-family:sans-serif; background:#0f172a; color:#f8fafc; padding:20px; border-radius:8px;'>
+                    <h2 style='color:#38bdf8;'>Сутрешен Бюлетин ({now_bg.strftime('%d.%m.%Y')})</h2>
+                    {items_html}
+                    <p><a href='https://stroy-radar-ai.onrender.com' style='background:#2563eb; color:#fff; padding:10px 18px; text-decoration:none; border-radius:6px; display:inline-block;'>Вход в Радара</a></p>
+                </div>
+                """
+                send_email_msg("kovko.firma@gmail.com", f"🏗️ Сутрешен Строителен Радар ({now_bg.strftime('%d.%m.%Y')})", mail_body)
+                already_sent_digest = True
+
+            # В 08:00 ч. -> Автоматично изпращане на 20 B2B покани
+            if time_str == "08:00" and not already_sent_outreach:
+                sent_total = execute_outreach_batch(20)
+                if sent_total > 0:
+                    send_email_msg(
+                        "kovko.firma@gmail.com",
+                        f"🚀 Автономен B2B Аутрийч: Изпратени {sent_total} покани",
+                        f"<p>Днес в 08:00 ч. системата автоматично обработи и изпрати покани към {sent_total} фирми с Zero-Bounce валидация.</p>"
+                    )
+                already_sent_outreach = True
+
+            time.sleep(30)
+        except Exception:
+            time.sleep(60)
+
+threading.Thread(target=background_scheduler, daemon=True).start()
+
+# --- 5. HTML Шаблони ---
 MAIN_HTML = """
 <!DOCTYPE html>
-<html lang="bg" prefix="og: https://ogp.me/ns#">
+<html lang="bg">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroy Radar AI – Мониторинг на нови строежи, разрешителни и ЧСИ имоти в България</title>
-    
-    <!-- B2B SEO & OpenGraph Meta Tags -->
-    <meta name="description" content="Автоматизирана ConTech платформа за мониторинг на строителни разрешителни по ЗУТ и публични търгове от ЧСИ. Директни контакти на инвеститори и ежедневни бюлетини.">
-    <meta name="keywords" content="разрешителни за строеж, ЧСИ търгове, строителни обекти, инвеститори, подизпълнители строителство, ConTech България">
-    <meta name="author" content="Stroy Radar AI">
-    
-    <meta property="og:title" content="Stroy Radar AI – Строителен & ЧСИ Мониторинг">
-    <meta property="og:description" content="Научавайте първи за новите строителни обекти и търгове на парцели в България. Вземете 7 дни безплатен тестов достъп.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://stroy-radar-ai.onrender.com">
-    <meta property="og:site_name" content="Stroy Radar AI">
-    
-    <!-- Schema.org JSON-LD Structured Data -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Stroy Radar AI",
-      "operatingSystem": "Web",
-      "applicationCategory": "BusinessApplication",
-      "offers": {
-        "@type": "Offer",
-        "price": "0.00",
-        "priceCurrency": "EUR"
-      },
-      "description": "B2B платформа за мониторинг на разрешителни за строеж и търгове на ЧСИ в България."
-    }
-    </script>
-
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stroy Radar AI – Мониторинг на строежи и ЧСИ имоти</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
@@ -382,14 +447,14 @@ ADMIN_HTML = """
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold text-warning">🎯 Lead Scoring & Анализ на Горещите Клиенти</h2>
-                <small class="text-secondary">Автоматично класифициране на потребителите според ангажираността</small>
+                <h2 class="fw-bold text-warning">🤖 Напълно Автономно Управление</h2>
+                <small class="text-secondary">Автоматичен бюлетин в 07:30 ч. | Автоматичен аутрийч в 08:00 ч.</small>
             </div>
             <a href="/" class="btn btn-outline-light btn-sm">← Към сайта</a>
         </div>
 
         <div class="card card-custom p-4 mb-4">
-            <h4 class="fw-bold text-white mb-3">🔥 Класиране на лидовете по потенциал за продажба</h4>
+            <h4 class="fw-bold text-white mb-3">🔥 Класиране на лидовете по активност (Lead Scoring)</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
                     <thead>
