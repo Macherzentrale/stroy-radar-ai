@@ -70,17 +70,11 @@ def init_db():
         )
     ''')
 
-    try:
-        c.execute("ALTER TABLE leads_outreach ADD COLUMN score INTEGER DEFAULT 0")
-    except Exception:
-        pass
-
     conn.commit()
     conn.close()
 
 init_db()
 
-# --- Функция за обновяване на Lead Score ---
 def add_lead_score(email, points):
     if not email:
         return
@@ -126,19 +120,52 @@ def send_email_msg(to_email, subject, body_html):
         print(f"[!] SMTP грешка: {e}")
         return False
 
-# --- 3. HTML Шаблони ---
+# --- 3. HTML Шаблони с пълна SEO & OpenGraph оптимизация ---
 MAIN_HTML = """
 <!DOCTYPE html>
-<html lang="bg">
+<html lang="bg" prefix="og: https://ogp.me/ns#">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stroy Radar AI - B2B Строителен Интелиджънс</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stroy Radar AI – Мониторинг на нови строежи, разрешителни и ЧСИ имоти в България</title>
+    
+    <!-- B2B SEO & OpenGraph Meta Tags -->
+    <meta name="description" content="Автоматизирана ConTech платформа за мониторинг на строителни разрешителни по ЗУТ и публични търгове от ЧСИ. Директни контакти на инвеститори и ежедневни бюлетини.">
+    <meta name="keywords" content="разрешителни за строеж, ЧСИ търгове, строителни обекти, инвеститори, подизпълнители строителство, ConTech България">
+    <meta name="author" content="Stroy Radar AI">
+    
+    <meta property="og:title" content="Stroy Radar AI – Строителен & ЧСИ Мониторинг">
+    <meta property="og:description" content="Научавайте първи за новите строителни обекти и търгове на парцели в България. Вземете 7 дни безплатен тестов достъп.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://stroy-radar-ai.onrender.com">
+    <meta property="og:site_name" content="Stroy Radar AI">
+    
+    <!-- Schema.org JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Stroy Radar AI",
+      "operatingSystem": "Web",
+      "applicationCategory": "BusinessApplication",
+      "offers": {
+        "@type": "Offer",
+        "price": "0.00",
+        "priceCurrency": "EUR"
+      },
+      "description": "B2B платформа за мониторинг на разрешителни за строеж и търгове на ЧСИ в България."
+    }
+    </script>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { background: #0b0f19; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }
         .btn-brand { background: #2563eb; color: #fff; font-weight: 600; border-radius: 8px; }
+        .btn-brand:hover { background: #1d4ed8; color: #fff; }
+        .btn-viber { background: #7360f2; color: #fff; font-weight: 600; border-radius: 8px; }
+        .btn-viber:hover { background: #5e4bd8; color: #fff; }
         #map { height: 380px; width: 100%; border-radius: 12px; }
     </style>
 </head>
@@ -147,7 +174,7 @@ MAIN_HTML = """
         <div class="container">
             <a class="navbar-brand fw-bold text-primary" href="/">🏗️ STROY RADAR AI</a>
             <div class="d-flex gap-2">
-                <a href="/admin" class="btn btn-outline-warning btn-sm">📊 Админ (Scoring)</a>
+                <a href="/admin" class="btn btn-outline-warning btn-sm">📊 Админ</a>
                 {% if session.get('user_email') %}
                     <a href="/portal" class="btn btn-outline-info btn-sm">👤 Портал</a>
                     <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
@@ -158,12 +185,16 @@ MAIN_HTML = """
         </div>
     </nav>
 
-    <div class="container py-4">
+    <main class="container py-4">
         <div class="row align-items-center g-4 py-3">
             <div class="col-lg-7">
                 <span class="badge bg-primary mb-2 px-3 py-2">B2B ConTech Интелиджънс</span>
                 <h1 class="display-6 fw-bold text-white mb-3">Мониторинг на нови строежи и ЧСИ имоти</h1>
-                <p class="text-secondary lead fs-6">Интерактивна карта, разрешителни за строеж и търгове на парцели в България.</p>
+                <p class="text-secondary lead fs-6">Интерактивна сателитна карта, разрешителни за строеж и търгове на парцели в реално време.</p>
+                <div class="d-flex gap-2 mt-3">
+                    <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-light btn-sm">✉️ kovko.firma@gmail.com</a>
+                    <a href="viber://chat" class="btn btn-viber btn-sm">💬 Viber Чат</a>
+                </div>
             </div>
             <div class="col-lg-5">
                 <div class="card card-custom p-4 shadow-lg">
@@ -184,12 +215,12 @@ MAIN_HTML = """
             </div>
         </div>
 
-        <div class="card card-custom p-4 my-4">
+        <section class="card card-custom p-4 my-4">
             <h4 class="fw-bold text-white mb-3">🗺️ Интерактивна Карта на Обектите</h4>
             <div id="map"></div>
-        </div>
+        </section>
 
-        <div class="card card-custom p-4 my-4">
+        <section class="card card-custom p-4 my-4">
             <h4 class="fw-bold text-white mb-3">🔍 Обекти и разрешителни на живо</h4>
             <div class="table-responsive">
                 <table class="table table-dark table-hover mb-0 align-middle">
@@ -212,10 +243,9 @@ MAIN_HTML = """
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
-    <!-- Модален прозорец за B2B Заявка -->
     <div class="modal fade" id="inquiryModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content bg-dark text-light border-secondary">
@@ -250,12 +280,22 @@ MAIN_HTML = """
                         </div>
                     </div>
                     <div class="modal-footer border-secondary">
-                        <button type="submit" class="btn btn-primary">Изпрати заявката (+50 т.)</button>
+                        <button type="submit" class="btn btn-primary">Изпрати заявката</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <footer class="border-top border-secondary py-4 mt-5 text-center text-secondary small">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>© 2026 Stroy Radar AI. Всички права запазени.</div>
+            <div class="d-flex gap-3">
+                <a href="mailto:kovko.firma@gmail.com" class="text-info text-decoration-none">✉️ kovko.firma@gmail.com</a>
+                <a href="viber://chat" class="text-light text-decoration-none">💬 Viber Поддръжка</a>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -298,7 +338,7 @@ PORTAL_HTML = """
                 <span class="badge bg-success">7-дневен тест активен</span>
             </div>
             <div class="d-flex gap-2">
-                <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV (+25 т.)</a>
+                <a href="/api/export-leads-csv" class="btn btn-success btn-sm">📥 Свали CSV</a>
                 <a href="/logout" class="btn btn-outline-danger btn-sm">Изход</a>
             </div>
         </div>
@@ -334,7 +374,7 @@ ADMIN_HTML = """
 <html lang="bg">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lead Scoring & Анализ - Stroy Radar AI</title>
+    <title>Админ Панел - Stroy Radar AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>body { background: #0b0f19; color: #f1f5f9; } .card-custom { background: #111827; border: 1px solid #1f2937; border-radius: 12px; }</style>
 </head>
@@ -415,7 +455,7 @@ def portal():
     if "user_email" not in session:
         return redirect(url_for("login"))
     
-    add_lead_score(session["user_email"], 10) # +10 точки за активност
+    add_lead_score(session["user_email"], 10)
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -452,7 +492,7 @@ def submit_inquiry():
     conn.commit()
     conn.close()
 
-    add_lead_score(email, 50) # +50 точки за подадена оферта
+    add_lead_score(email, 50)
 
     send_email_msg(
         "kovko.firma@gmail.com",
@@ -460,7 +500,7 @@ def submit_inquiry():
         f"<p>Фирма: {company}<br>Имейл: {email}<br>Тел: {phone}<br>Дейност: {service_type}</p>"
     )
 
-    return "<script>alert('Заявката ви е подадена успешно (+50 Lead Score)!'); window.location.href='/';</script>"
+    return "<script>alert('Заявката ви е приета успешно!'); window.location.href='/';</script>"
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -500,7 +540,7 @@ def register_trial():
 @app.route("/api/export-leads-csv")
 def export_leads():
     if "user_email" in session:
-        add_lead_score(session["user_email"], 25) # +25 точки за сваляне на CSV
+        add_lead_score(session["user_email"], 25)
 
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
