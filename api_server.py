@@ -104,15 +104,23 @@ FULL_HTML = """
             --accent-blue: #38bdf8;
         }
         body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
-        .container-custom { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+        
+        /* РАЗШИРЕН КОНТЕЙНЕР ЗА ПРЕМАХВАНЕ НА ПРЕКАЛЕНОТО ЧЕРНО ПРОСТРАНСТВО НА ДЕСКТОП */
+        .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
 
-        .ticker-bar { background: #040810; border-bottom: 1px solid #131c31; padding: 6px 14px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
-        @keyframes pulseBell {
-            0% { transform: scale(1); filter: drop-shadow(0 0 2px #f59e0b); }
-            50% { transform: scale(1.35) rotate(-10deg); filter: drop-shadow(0 0 10px #f59e0b); }
-            100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 2px #f59e0b); }
+        @keyframes neonGlow {
+            0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 0 6px rgba(245, 158, 11, 0.2); border-color: #f59e0b; }
+            50% { background-color: #382404; box-shadow: 0 0 24px rgba(245, 158, 11, 0.85), inset 0 0 12px rgba(245, 158, 11, 0.5); border-color: #fbbf24; }
         }
-        .bell-animated { display: inline-block; animation: pulseBell 1.4s infinite ease-in-out; margin-right: 4px; }
+        @keyframes bellShake {
+            0%, 100% { transform: rotate(0deg) scale(1.1); }
+            20% { transform: rotate(-22deg) scale(1.35); }
+            40% { transform: rotate(22deg) scale(1.35); }
+            60% { transform: rotate(-15deg) scale(1.35); }
+            80% { transform: rotate(15deg) scale(1.35); }
+        }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 8px 18px; font-size: 0.84rem; display: flex; justify-content: space-between; align-items: center; }
+        .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; font-size: 1.15rem; margin-right: 6px; }
 
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
@@ -182,13 +190,6 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        .floating-contact-bar { position: fixed; bottom: 25px; left: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .btn-float { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; text-decoration: none; box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-size: 1.3rem; transition: transform 0.2s; }
-        .btn-float:hover { transform: scale(1.1); color: #fff; }
-        .float-viber { background: #7360f2; }
-        .float-tg { background: #229ED9; }
-        .float-phone { background: #10b981; }
-
         .chatbot-btn { position: fixed; bottom: 25px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 12px 20px; border-radius: 30px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 1000; display: flex; align-items: center; gap: 8px; border: none; }
         .chatbot-box { position: fixed; bottom: 85px; right: 20px; width: 360px; max-width: 90vw; height: 460px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 1001; overflow: hidden; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
@@ -210,13 +211,14 @@ FULL_HTML = """
     </style>
 </head>
 <body>
+    <!-- ПУЛСИРАЩ И ЖИВ TICKER ХЕДЪР -->
     <div class="ticker-bar">
         <div>
             <span class="bell-animated">🔔</span>
-            <span style="color:#f59e0b; font-weight:800; letter-spacing:0.5px;">LIVE СИГНАЛ 07:30 ч.:</span>
-            <span class="text-secondary ms-1">{{ stats.total }} активи активни • Дневен бюлетин за 29 Август 2026 г.</span>
+            <span style="color:#fbbf24; font-weight:800; letter-spacing:0.5px;">07:30 ПРОТОКОЛ • ИНСТИТУЦИОНАЛНИ ОБЕКТИ:</span>
+            <span class="text-light ms-1">Национален feed в реално време • Активни {{ stats.total }} обекта</span>
         </div>
-        <span class="badge bg-success" style="font-size:9px;">ONLINE</span>
+        <span class="badge bg-warning text-dark fw-bold" style="font-size:10px;">LIVE СИГНАЛ</span>
     </div>
 
     <div class="container-custom">
@@ -337,11 +339,11 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ПУБЛИЧНИ ОБЯВИ: СТРОГО ПО 6 НА СТРАНИЦА СЪС ЗВЕЗДИЧКИ (СКРИТИ ДАННИ) -->
+        <!-- ПУБЛИЧНИ ОБЯВИ: СТРОГО ПО 6 НА СТРАНИЦА СЪС ЗВЕЗДИЧКИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
-                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница (данните са защитени със звездички)</small>
+                <small class="text-secondary" id="dealsCountLabel">Показват се по 6 обекта на страница (локация, инвеститор и ЕИК са със звездички)</small>
             </div>
         </div>
 
@@ -362,7 +364,7 @@ FULL_HTML = """
                         <div class="w-100 mb-3">
                             <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
                             <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + пълен национален фийд</div>
+                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на ЕИК/адреси</div>
                         </div>
                         <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('starter')">Виж придобивките</button>
                     </div>
@@ -385,7 +387,7 @@ FULL_HTML = """
                         <div class="w-100 mb-3">
                             <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
                             <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">REST JSON API ключ + llms.txt Gateway</div>
+                            <div class="text-secondary small mt-1">REST JSON API ключ + пълна M2M интеграция без маскиране</div>
                         </div>
                         <button class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
                     </div>
@@ -484,13 +486,6 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩИ КОНТАКТИ ВЛЯВО -->
-    <div class="floating-contact-bar">
-        <a href="viber://chat?number=%2B359888123456" class="btn-float float-viber" title="Viber Чат">🟣</a>
-        <a href="https://t.me/stroyradar_support" target="_blank" class="btn-float float-tg" title="Telegram">✈️</a>
-        <a href="tel:+359888123456" class="btn-float float-phone" title="Директен телефон">📞</a>
-    </div>
-
     <!-- ПЛАВАЩ AI ЧАТБОТ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
@@ -510,7 +505,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ (ПЛАВАЩИ АНИМАЦИИ) -->
+    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -522,7 +517,7 @@ FULL_HTML = """
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="text-secondary small mb-3">Гарантирани придобивки и отключване на пълни досиета:</div>
+                    <div class="text-secondary small mb-3">Гарантирани придобивки към вашия абонамент:</div>
                     <div id="benefitsListContainer"></div>
 
                     <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" id="proceedToPayBtn">
@@ -652,7 +647,6 @@ FULL_HTML = """
             var pageItems = filteredProjects.slice(start, end);
 
             pageItems.forEach(function(p) {
-                // МАСКИРАНЕ НА ДАННИТЕ СЪС ЗВЕЗДИЧКИ
                 var maskedLoc = p[3].split(',')[0] + ", кв. ***, ул. *** 🔒";
                 var maskedInv = (p[4] || "Инвестор").substring(0, 4) + " ******* 🔒";
                 var maskedEik = (p[5] || "205849120").substring(0, 3) + "****** 🔒";
@@ -768,7 +762,7 @@ FULL_HTML = """
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        /* ПЛАВАЩИ АНИМИРАНИ ПРИДОБИВКИ ПРИ КЛИК НА АБОНАМЕНТ */
+        /* ДИФЕРЕНЦИРАНИ ПРИДОБИВКИ ЗА ВСЕКИ ПЛАН */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
@@ -798,7 +792,7 @@ FULL_HTML = """
                 amount: 290,
                 badge: "€290 / МЕСЕЦ",
                 features: [
-                    { icon: "🤖", title: "REST JSON API Ключ с 99.9% Ъптайм", desc: "Директна Machine-to-Machine интеграция към вашия софтуер." },
+                    { icon: "🤖", title: "REST JSON API Ключ с 99.9% Ъптайм", desc: "Директна Machine-to-Machine интеграция към вашия софтуер без маскиране." },
                     { icon: "🧠", title: "LLMs.txt AI Gateway Поддръжка", desc: "Готов структуриран интерфейс за свързване към корпоративни AI агенти." },
                     { icon: "📊", title: "Пълен архив на исторически сделки", desc: "База данни за ценови нива и реализирани търгове от 2024 г. насам." },
                     { icon: "🛡️", title: "Персонален SLA договор & фактуриране", desc: "Официален договор с включена правна и техническа поддръжка." }
