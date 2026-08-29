@@ -62,7 +62,7 @@ FULL_HTML = """
             --accent-yellow: #f59e0b;
             --accent-blue: #38bdf8;
         }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0px; }
+        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
         .container-custom { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 
         .ticker-bar { background: #040810; border-bottom: 1px solid #131c31; padding: 6px 14px; font-size: 0.75rem; display: flex; justify-content: space-between; align-items: center; }
@@ -99,45 +99,21 @@ FULL_HTML = """
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
 
+        /* Тарифни планове */
+        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 600; padding: 8px 18px; border-radius: 10px; text-decoration: none; font-size: 0.85rem; }
+        .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; box-shadow: 0 0 15px rgba(0, 240, 255, 0.5); }
+
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
         .nav-link-custom:hover { background: #131d31; color: var(--accent-cyan); border-color: var(--accent-cyan); }
 
-        /* ИМПРЕСУМ & ФУТЪР СТИЛОВЕ */
-        .site-footer {
-            background: #040810;
-            border-top: 1px solid #131c31;
-            padding: 40px 0 30px 0;
-            margin-top: 50px;
-            font-size: 0.85rem;
-            color: #94a3b8;
-        }
-        .footer-heading {
-            font-size: 0.8rem;
-            font-weight: 800;
-            color: #f1f5f9;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 14px;
-        }
-        .footer-link {
-            color: #94a3b8;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 8px;
-            transition: color 0.15s;
-        }
-        .footer-link:hover {
-            color: var(--accent-cyan);
-        }
-        .impressum-box {
-            background: #080d19;
-            border: 1px solid #19253d;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 0.8rem;
-            line-height: 1.5;
-        }
+        .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; }
+        .footer-heading { font-size: 0.8rem; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
+        .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
+        .footer-link:hover { color: var(--accent-cyan); }
+        .impressum-box { background: #080d19; border: 1px solid #19253d; border-radius: 12px; padding: 16px; font-size: 0.8rem; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -202,11 +178,26 @@ FULL_HTML = """
         </div>
 
         <!-- 4-ТЕ KPI КАРТИ -->
-        <div class="row g-2 mb-3">
+        <div class="row g-2 mb-3" id="stats-section">
             <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header text-secondary">🗄️ АКТИВНИ АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">В реално време</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">⚡ TOP DEALS (≥85)</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">📉 СРЕДЕН ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">💰 СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен марж</div></div></div>
+        </div>
+
+        <!-- ЧСИ КАЛКУЛАТОР -->
+        <div class="card-dark" id="calc-section">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-warning text-dark" style="font-size:11px; font-weight:700;">ДЪРЖАВНИ ТАКСИ 2026</span>
+                <span class="text-info fw-bold fs-5" id="sliderValDisplay">€88 000</span>
+            </div>
+            <label class="small text-secondary mb-1">Начална цена / Оферирана сума (EUR):</label>
+            <input type="range" min="10000" max="500000" step="5000" value="88000" class="form-range mb-3" oninput="updateChsiCalc(this.value)">
+            <div class="row g-2 mb-3">
+                <div class="col-6"><label class="small text-secondary" style="font-size:11px;">МЕСТЕН ДАНЪК (ЗМДТ):</label><div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border); font-size:12px; color:#fff;">3.0% (София / Пловдив)</div></div>
+                <div class="col-6"><label class="small text-secondary" style="font-size:11px;">ТАКСА ЧСИ (Т. 26 ТЗЧСИ):</label><div class="p-2 rounded" style="background:#070c18; border:1px solid var(--border); font-size:12px; color:#fff;">1.5% с ДДС (Закон)</div></div>
+            </div>
+            <button class="btn btn-outline-info w-100 py-2 fw-bold" style="border-radius:10px; font-size:13px;" onclick="alert('ЧСИ Анализ: Чиста прогнозна доходност при дисконт 45%: +€39 600.')">🤖 ЧСИ AI Експерт Калкулация</button>
         </div>
 
         <!-- ИНТЕРАКТИВНА КАРТА -->
@@ -254,6 +245,45 @@ FULL_HTML = """
             </div>
             {% endfor %}
         </div>
+
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
+        <div id="pricing-section" class="mt-5 mb-4">
+            <div class="card-dark" style="border:1px solid #0284c7; text-align:center;">
+                <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">ЦЕНА НА ЗАЩИТАТА:</div>
+                <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
+                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" onclick="openOrderModal('Абонаментен Радар - €60')">АКТИВИРАЙ АБОНАМЕНТЕН РАДАР</button>
+            </div>
+
+            <div class="plan-box">
+                <div>
+                    <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
+                    <div class="fw-bold text-white fs-4">€60 <span class="fs-6 text-secondary">/ месец</span></div>
+                    <div class="text-secondary" style="font-size:11px;">Седмичен луксозен PDF отчет + достъп до обяви</div>
+                </div>
+                <button class="btn-plan" onclick="openOrderModal('Starter Executive - €60')">Избери</button>
+            </div>
+
+            <div class="plan-box plan-popular">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="small fw-bold" style="color:#00f0ff;">PRO RISK MONITOR</span>
+                        <span class="badge bg-info text-dark" style="font-size:9px; font-weight:800;">POPULAR</span>
+                    </div>
+                    <div class="fw-bold text-white fs-4">€150 <span class="fs-6 text-secondary">/ месец</span></div>
+                    <div class="text-secondary" style="font-size:11px;">Ежедневен 07:30 ч. радар + неограничен ЕИК одит</div>
+                </div>
+                <button class="btn-plan btn-plan-pro" onclick="openOrderModal('PRO RISK MONITOR - €150')">ВЗЕМИ PRO</button>
+            </div>
+
+            <div class="plan-box">
+                <div>
+                    <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
+                    <div class="fw-bold text-white fs-4">€290 <span class="fs-6 text-secondary">/ месец</span></div>
+                    <div class="text-secondary" style="font-size:11px;">REST JSON API ключ + llms.txt AI Gateway</div>
+                </div>
+                <button class="btn-plan" onclick="openOrderModal('Enterprise M2M - €290')">API Ключ</button>
+            </div>
+        </div>
     </div>
 
     <!-- КОРПОРАТИВЕН ФУТЪР / ИМПРЕСУМ -->
@@ -273,6 +303,7 @@ FULL_HTML = """
                     <a href="#audit-section" class="footer-link">ЕИК Одит</a>
                     <a href="#map-section" class="footer-link">ГИС Карта</a>
                     <a href="#deals-section" class="footer-link">ЧСИ Сделки</a>
+                    <a href="#pricing-section" class="footer-link">Абонаменти</a>
                     <a href="/api/deals" target="_blank" class="footer-link">REST JSON API</a>
                 </div>
                 <div class="col-6 col-md-2">
@@ -308,13 +339,29 @@ FULL_HTML = """
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="legalModalBody" style="font-size:0.88rem; color:#cbd5e1; max-height:60vh; overflow-y:auto;">
-                    <!-- Динамичен текст -->
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- МОБИЛНО МЕНЮ -->
+    <!-- МОДАЛ ЗА АБОНАМЕНТ -->
+    <div class="modal fade" id="orderModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:16px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-info" id="orderModalTitle">Активация на абонамент</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary small">Въведете служебен имейл за изпращане на данъчна фактура и активиране на достъпа:</p>
+                    <input type="email" id="subEmail" class="custom-input mb-3" placeholder="office@company.bg" required>
+                    <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#0284c7; border:none; border-radius:10px;" onclick="confirmOrder()">Потвърди активация</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОБИЛНО МЕНЮ С АБОНАМЕНТИ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; border-left: 1px solid var(--border); width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <div>
@@ -329,6 +376,11 @@ FULL_HTML = """
                 <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
                 <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
                 <a href="#deals-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🏛️</span> Публични Търгове &amp; Сделки</a>
+                <a href="#calc-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🧮</span> ЧСИ Такси &amp; Net ROI</a>
+                <a href="#pricing-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">💳</span> Тарифни планове &amp; Абонаменти</a>
+            </div>
+            <div class="border-top border-secondary pt-3 mt-4">
+                <a href="mailto:kovko.firma@gmail.com" class="btn btn-outline-info w-100 py-2 fw-bold mb-2" style="border-radius:10px; font-size:0.85rem;">✉️ Връзка с екипа</a>
             </div>
         </div>
     </div>
@@ -377,6 +429,8 @@ FULL_HTML = """
             document.getElementById('map-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
+        function updateChsiCalc(val) { document.getElementById('sliderValDisplay').innerText = '€' + Number(val).toLocaleString('de-DE'); }
+
         var companyDb = {
             "030431138": { name: "Трейс Груп Холд АД", manager: "инж. Боян Делчев / проф. Николай Михайлов", city: "София, бул. Никола Образписов 12", injunctions: "НЯМА ВПИСАНИ ЗАПОРИ", status: "АКТИВЕН", isSafe: true },
             "205849120": { name: "Елит Строй Билдинг ООД", manager: "инж. Димитър Георгиев", city: "София, р-н Лозенец", injunctions: "НЯМА ВПИСАНИ ЗАПОРИ", status: "АКТИВЕН", isSafe: true }
@@ -394,6 +448,20 @@ FULL_HTML = """
             document.getElementById('resCompManager').innerText = comp.manager;
             document.getElementById('resCompInjunctions').innerText = comp.injunctions;
             document.getElementById('resCompBadge').innerText = comp.status;
+        }
+
+        var activePlan = '';
+        function openOrderModal(plan) {
+            activePlan = plan;
+            document.getElementById('orderModalTitle').innerText = plan;
+            new bootstrap.Modal(document.getElementById('orderModal')).show();
+        }
+
+        function confirmOrder() {
+            var email = document.getElementById('subEmail').value;
+            if(!email || !email.includes('@')) { alert('Моля въведете валиден имейл!'); return; }
+            alert('Заявката за план [' + activePlan + '] е приета за ' + email);
+            location.reload();
         }
 
         function openLegalModal(type) {
