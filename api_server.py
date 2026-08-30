@@ -105,7 +105,7 @@ FULL_HTML = """
         .header-contacts-group { display: flex; align-items: center; gap: 10px; }
         .btn-header-contact {
             display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 20px; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.82rem;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25); transition: transform 0.2s; white-space: nowrap;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25); transition: transform 0.2s; white-space: nowrap; cursor: pointer;
         }
         .btn-header-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
@@ -154,7 +154,7 @@ FULL_HTML = """
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; transition: all 0.2s ease; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
-        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; cursor: pointer; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
 
         .benefit-row {
@@ -228,7 +228,7 @@ FULL_HTML = """
                     <p class="text-secondary small mb-3">Въведете ЕИК (напр. <span class="text-info cursor-pointer" onclick="fillEik('030431138')">030431138</span>):</p>
                     <div class="d-flex gap-2 mb-3">
                         <input type="text" id="eikInput" class="custom-input" placeholder="Въведете ЕИК..." value="030431138">
-                        <button class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
+                        <button type="button" class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
                     </div>
 
                     <div id="companyAuditResult" class="p-3 rounded" style="background:#070c18; border:1px solid var(--border); display:none;">
@@ -289,12 +289,12 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (РАЗМЕНЕНИ НА МЯСТОТО НА КАРТАТА) -->
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (НА МЯСТОТО НА КАРТАТА) -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2.2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
-                <button type="button" class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
+                <button type="button" class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem; cursor:pointer;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
             </div>
 
             <div class="row g-3">
@@ -305,7 +305,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на ЕИК/адреси</div>
                         </div>
-                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('starter')">Виж придобивките</button>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('starter'); return false;">Виж придобивките</button>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -318,7 +318,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит</div>
                         </div>
-                        <button type="button" class="btn-plan btn-plan-pro w-100 mt-auto" onclick="showPlanFeatures('pro')">ВЗЕМИ PRO</button>
+                        <button type="button" class="btn-plan btn-plan-pro w-100 mt-auto" onclick="showPlanFeatures('pro'); return false;">ВЗЕМИ PRO</button>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -328,7 +328,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">REST JSON API ключ + пълна M2M интеграция без маскиране</div>
                         </div>
-                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('enterprise')">API Ключ</button>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('enterprise'); return false;">API Ключ</button>
                     </div>
                 </div>
             </div>
@@ -389,22 +389,22 @@ FULL_HTML = """
     </footer>
 
     <!-- ЧАТБОТ -->
-    <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
+    <button type="button" class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
             <strong class="text-white small">AI Инвестиционен Асистент</strong>
-            <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
+            <button type="button" class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
         </div>
         <div class="chat-messages" id="chatMsgs">
             <div class="msg-ai">Здравейте! Натиснете бутона долу за гласов режим.</div>
         </div>
         <div class="voice-mode-bar">
-            <button class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ Гласов режим: ИЗКЛ</button>
+            <button type="button" class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ Гласов режим: ИЗКЛ</button>
             <span class="text-secondary small" id="voiceStatusText">Готов</span>
         </div>
         <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#09101f;">
             <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
-            <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Прати</button>
+            <button type="button" class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Прати</button>
         </div>
     </div>
 
@@ -427,16 +427,16 @@ FULL_HTML = """
     </div>
 
     <!-- МОДАЛ ПРИДОБИВКИ -->
-    <div class="modal fade" id="featuresModal" tabindex="-1">
+    <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
                 <div class="modal-header border-bottom border-secondary pb-3">
                     <h5 class="modal-title fw-bold text-white" id="featTitle">Абонамент</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div id="benefitsListContainer"></div>
-                    <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none;" id="proceedToPayBtn">💳 Продължи към плащане</button>
+                    <button type="button" class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none;" id="proceedToPayBtn">💳 Продължи към плащане</button>
                 </div>
             </div>
         </div>
@@ -620,7 +620,6 @@ FULL_HTML = """
         function showPlanFeatures(planKey) {
             var plan = plansData[planKey];
             document.getElementById('featTitle').innerText = plan.name;
-            document.getElementById('featBadge').innerText = plan.badge;
             
             var container = document.getElementById('benefitsListContainer');
             container.innerHTML = '';
