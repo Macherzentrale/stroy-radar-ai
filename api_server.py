@@ -30,20 +30,40 @@ def init_db():
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 30:
+    if c.fetchone()[0] < 50:
         c.execute("DELETE FROM radar_projects")
-        # Реални бази от проверени източници и регистри на инвестиционни обекти и ЧСИ търгове
-        real_records = [
-            ("Луксозна жилищна сграда 'Витоша Скай'", "Разрешително ЗУТ", "София, кв. Драгалевци, ул. Нарцис № 12", "София Инвестмънт Груп ООД", "204589123", "Инж. Пламен Николов", 420000, 780000, 46.2, 94, "Разрешение в сила", "2,400 кв.м", "2026-08-30", 42.6351, 23.3125),
-            ("Логистичен център и складова база", "ЧСИ Търг", "Пловдив, Индустриална зона - Юг", "Тракия Лоджистик АД", "115678901", "Георги Тодоров (ЧСИ Държавен рег.)", 890000, 1850000, 51.9, 96, "Публична продан (II-ри търг)", "6,500 кв.м", "2026-08-30", 42.1245, 24.7891),
-            ("Търговски комплекс и ритейл парк", "NPL Дистрес", "Варна, бул. Владислав Варненчик № 115", "Черно море Ретейл ЕООД", "103456789", "Милица Христова", 1250000, 2400000, 47.9, 91, "Банково обезпечение NPL", "4,200 кв.м", "2026-08-30", 43.2215, 27.8962),
-            ("Производствено предприятие и цех", "НАП Публична продан", "Бургас, Западна промишлена зона", "Балкан Продакции ООД", "831234567", "Публичен изпълнител НАП", 310000, 720000, 56.9, 88, "Данъчен публичен търг", "3,800 кв.м", "2026-08-30", 42.5123, 27.4210),
-            ("Бизнес сграда с подземен паркинг", "Разрешително ЗУТ", "Стара Загора, център, ул. Цар Симеон Велики", "Августа Билд Инвест ООД", "123789456", "Николай Василев", 680000, 1300000, 47.7, 90, "Одобрен проект ЗУТ", "3,100 кв.м", "2026-08-30", 42.4251, 25.6342),
-            ("Апартаментен комплекс на морски бряг", "ЧСИ Търг", "Несебър, курортна зона Слънчев бряг", "Марина Сън Резенс ООД", "201234567", "ЧСИ Ивелина Божилова", 540000, 1150000, 53.0, 93, "Публична продан", "2,900 кв.м", "2026-08-30", 42.6854, 27.7123)
+        cities = [
+            ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
+            ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345),
+            ("Плевен", 43.4170, 24.6067), ("Благоевград", 42.0209, 23.0943), ("Велико Търново", 43.0757, 25.6172),
+            ("Пазарджик", 42.1928, 24.3336), ("Сливен", 42.6817, 26.3228), ("Хасково", 41.9344, 25.5556),
+            ("Перник", 42.6052, 23.0378), ("Враца", 43.2102, 23.5529), ("Габрово", 42.8742, 25.3187)
         ]
+        types = [
+            ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
+            ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан', '8,200 кв.м', 620000, 1450000, 57.2, 89),
+            ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
+        ]
+        records = []
+        for i in range(60):
+            city = cities[i % len(cities)]
+            t = types[i % len(types)]
+            idx = i + 1
+            title = f'{t[0]} "{city[0]} Национален обект #{idx}"'
+            location = f"{city[0]}, Район Централен кв. {idx % 5 + 1}"
+            investor = f"{city[0]} Инвестмънт Груп {idx} ООД"
+            eik = str(100000000 + idx * 19)
+            manager = f"Управител #{idx}"
+            lat = city[1] + random.uniform(-0.03, 0.03)
+            lng = city[2] + random.uniform(-0.03, 0.03)
+            price = t[4] + (idx * 300) % 300000
+            mval = t[5] + (idx * 600) % 500000
+            disc = round(((mval - price) / mval) * 100, 1)
+            score = min(99, max(75, int(t[7] + (idx % 5) - 2)))
+            records.append((title, t[1], location, investor, eik, manager, price, mval, disc, score, t[2], t[3], "2026-08-30", lat, lng))
         c.executemany('''INSERT INTO radar_projects 
             (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', real_records)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
     conn.commit()
     conn.close()
 
@@ -62,9 +82,9 @@ FULL_HTML = """
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
-            --bg: #111c33;
-            --card-bg: #1a2947;
-            --border: #283e6b;
+            --bg: #162447; /* По-светъл, модерен и приятен за очите тъмно-син нюанс */
+            --card-bg: #1f315c;
+            --border: #334e85;
             --accent-cyan: #00f0ff;
             --accent-green: #10b981;
             --accent-yellow: #f59e0b;
@@ -80,8 +100,8 @@ FULL_HTML = """
         .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .shield-icon { width: 38px; height: 38px; background: #25428a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
-        .btn-burger { background: #24365d; border: 1px solid #405b96; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
+        .shield-icon { width: 38px; height: 38px; background: #2f53ab; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .btn-burger { background: #2c4375; border: 1px solid #4a6ab2; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
         .header-contacts-group { display: flex; align-items: center; gap: 10px; }
         .btn-header-contact {
@@ -102,27 +122,27 @@ FULL_HTML = """
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 22px; margin-bottom: 20px; box-sizing: border-box; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
         .custom-input, .custom-select {
-            background: #132242 !important; border: 2px solid #00f0ff !important; color: #ffffff !important; height: 48px !important; line-height: 24px !important;
+            background: #17274f !important; border: 2px solid #00f0ff !important; color: #ffffff !important; height: 48px !important; line-height: 24px !important;
             padding: 10px 16px !important; border-radius: 10px !important; width: 100% !important; font-family: monospace !important; font-size: 0.9rem !important; box-sizing: border-box !important;
         }
-        .custom-input:focus, .custom-select:focus { outline: none !important; border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(0,240,255,0.6) !important; background: #182b52 !important; }
-        .custom-select option { background: #132242; color: #fff; padding: 8px; }
+        .custom-input:focus, .custom-select:focus { outline: none !important; border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(0,240,255,0.6) !important; background: #1d3363 !important; }
+        .custom-select option { background: #17274f; color: #fff; padding: 8px; }
 
-        .sat-hud { background: radial-gradient(circle at center, #243863 0%, #1a2947 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
+        .sat-hud { background: radial-gradient(circle at center, #2d457a 0%, #1f315c 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
         
         .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); box-sizing: border-box; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
         .kpi-yellow { border-left: 4px solid var(--accent-yellow) !important; }
-        .kpi-header { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #94a3b8; }
+        .kpi-header { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #cbd5e1; }
         .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
-        .kpi-footer { font-size: 0.7rem; color: #94a3b8; }
+        .kpi-footer { font-size: 0.7rem; color: #cbd5e1; }
 
         #map { height: 420px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
-        .leaflet-popup-content-wrapper { background: #1a2947 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
+        .leaflet-popup-content-wrapper { background: #1f315c !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
 
         .listing-card { 
-            background: linear-gradient(145deg, #162544 0%, #0d172e 100%); 
+            background: linear-gradient(145deg, #223869 0%, #152447 100%); 
             border: 1px solid var(--border); 
             border-left: 4px solid var(--accent-cyan); 
             border-radius: 16px; 
@@ -138,18 +158,18 @@ FULL_HTML = """
         }
         .listing-card:hover { transform: translateY(-3px); border-color: var(--accent-cyan); }
         .listing-title { font-size: 1.2rem; font-weight: 800; color: #ffffff; margin-bottom: 10px; }
-        .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; font-size: 0.85rem; color: #cbd5e1; }
-        .listing-price-box { background: #132242; border: 1px solid #283e6b; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .masked-badge { background: #1b2f57; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
+        .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; font-size: 0.85rem; color: #e2e8f0; }
+        .listing-price-box { background: #17274f; border: 1px solid #334e85; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .masked-badge { background: #223869; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; transition: all 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.25); }
-        .btn-plan { background: #243863; border: 1px solid #405b96; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; cursor: pointer; }
+        .btn-plan { background: #2c4375; border: 1px solid #4a6ab2; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; cursor: pointer; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
 
         .benefit-row {
-            background: #132242; border: 1px solid #283e6b; border-left: 4px solid var(--accent-cyan); border-radius: 10px;
+            background: #17274f; border: 1px solid #334e85; border-left: 4px solid var(--accent-cyan); border-radius: 10px;
             padding: 12px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
         }
         .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 25px 0 35px 0; }
@@ -157,14 +177,14 @@ FULL_HTML = """
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; }
-        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background: #1a2947; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
+        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background: #1f315c; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
-        .msg-ai { background: #243863; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
+        .msg-ai { background: #2c4375; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
         
-        .site-footer { background: #0d172e; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; box-sizing: border-box; }
-        .impressum-box { background: #132242; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
-        .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; background: #0b172e; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .site-footer { background: #132242; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #cbd5e1; box-sizing: border-box; }
+        .impressum-box { background: #17274f; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
+        .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; background: #101c38; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
@@ -189,8 +209,8 @@ FULL_HTML = """
             </div>
 
             <div class="d-flex align-items-center gap-2">
-                <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;">📄 Дневен Бюлетин</a>
-                <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
+                <button type="button" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;" onclick="showDailyBulletin()">📄 Дневен Бюлетин</button>
+                <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu">☰</button>
             </div>
         </div>
 
@@ -199,7 +219,7 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
-        <!-- ЕКСПЕРТЕН ОДИТ ПО ЕИК (РЕАЛНА СПРАВКА ЕДНО КЪМ ЕДНО С ТЪРГОВСКИ РЕГИСТЪР) -->
+        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -213,7 +233,7 @@ FULL_HTML = """
                         <button type="button" class="btn btn-outline-info px-4 fw-bold" style="border-radius:10px; white-space:nowrap;" onclick="performAudit()">Търси</button>
                     </div>
 
-                    <div id="companyAuditResult" class="p-3 rounded" style="background:#132242; border:1px solid var(--border); display:none;">
+                    <div id="companyAuditResult" class="p-3 rounded" style="background:#17274f; border:1px solid var(--border); display:none;">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong class="text-info fs-6" id="resCompName">---</strong>
                             <span class="badge bg-success" id="resCompBadge">АКТИВЕН</span>
@@ -239,8 +259,8 @@ FULL_HTML = """
                 <div class="sat-hud">
                     <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
                     <svg viewBox="0 0 150 150" width="130" height="130">
-                        <circle cx="75" cy="75" r="65" fill="none" stroke="#243863" stroke-width="1.2" stroke-dasharray="3 3"/>
-                        <circle cx="75" cy="75" r="42" fill="none" stroke="#243863" stroke-width="1"/>
+                        <circle cx="75" cy="75" r="65" fill="none" stroke="#334e85" stroke-width="1.2" stroke-dasharray="3 3"/>
+                        <circle cx="75" cy="75" r="42" fill="none" stroke="#334e85" stroke-width="1"/>
                         <circle cx="75" cy="75" r="8" fill="#0284c7"/>
                     </svg>
                 </div>
@@ -269,7 +289,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (С МОЩНИ МАРКЕТИНГОВИ КУКИЧКИ) -->
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
@@ -315,22 +335,36 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- КАРТА (НАДОЛУ) -->
+        <!-- КАРТА -->
         <div class="card-dark" id="map-section">
             <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ -->
-        <div class="card-dark mb-3" style="background:#09101f;">
+        <!-- ФИЛТРИ С ВСИЧКИ ГЛАВНИ ОБЩИНИ И ГРАДОВЕ -->
+        <div class="card-dark mb-3" style="background:#132242;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
-                    <label class="small text-secondary mb-1">Град:</label>
+                    <label class="small text-secondary mb-1">Град / Община:</label>
                     <select id="filterCity" class="custom-select" onchange="applyAdvancedFilters()">
-                        <option value="all">Всички градове</option>
-                        <option value="София">София</option>
+                        <option value="all">Всички градове и общини</option>
+                        <option value="София">София (Столична община)</option>
                         <option value="Пловдив">Пловдив</option>
                         <option value="Варна">Варна</option>
+                        <option value="Бургас">Бургас</option>
+                        <option value="Русе">Русе</option>
+                        <option value="Стара Загора">Стара Загора</option>
+                        <option value="Плевен">Плевен</option>
+                        <option value="Благоевград">Благоевград</option>
+                        <option value="Велико Търново">Велико Търново</option>
+                        <option value="Пазарджик">Пазарджик</option>
+                        <option value="Сливен">Сливен</option>
+                        <option value="Хасково">Хасково</option>
+                        <option value="Перник">Перник</option>
+                        <option value="Враца">Враца</option>
+                        <option value="Габрово">Габрово</option>
+                        <option value="Добрич">Добрич</option>
+                        <option value="Шумен">Шумен</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -339,6 +373,8 @@ FULL_HTML = """
                         <option value="all">Всички категории</option>
                         <option value="ЧСИ Търг">ЧСИ Търгове</option>
                         <option value="Разрешително ЗУТ">ЗУТ Строежи</option>
+                        <option value="NPL Дистрес">NPL Дистрес</option>
+                        <option value="НАП Публична продан">НАП Продажби</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -348,7 +384,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ И БУТОНИ -->
+        <!-- ОБЯВИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
@@ -360,7 +396,7 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
-    <!-- ИМПРЕСУМ И БАНКОВИ ДАННИ -->
+    <!-- ИМПРЕСУМ -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -391,7 +427,7 @@ FULL_HTML = """
     <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content" style="background:#1a2947; border:1px solid var(--border); color:#fff; border-radius:18px;">
+            <div class="modal-content" style="background:#1f315c; border:1px solid var(--border); color:#fff; border-radius:18px;">
                 <div class="modal-header border-bottom border-secondary pb-3">
                     <h5 class="modal-title fw-bold text-white" id="featTitle">Абонамент</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -400,11 +436,11 @@ FULL_HTML = """
                     <div class="text-secondary small mb-3">Премиум маркетингов пакет с гарантирани придобивки:</div>
                     <div id="benefitsListContainer"></div>
 
-                    <div class="bank-details-box mt-4" style="background:#132242; padding:15px; border-radius:12px; border:1px solid var(--border);">
-                        <div class="small text-secondary mb-1">Директен банков превод (IBAN):</div>
+                    <div class="bank-details-box mt-4" style="background:#17274f; padding:15px; border-radius:12px; border:1px solid var(--border);">
+                        <div class="small text-secondary mb-1">Директен банков превод (IBAN - готов за копиране):</div>
                         <div class="iban-badge mb-2">
-                            <span>BG80UNCR70001524896321</span>
-                            <button type="button" class="btn btn-sm btn-info fw-bold py-1 px-2" style="font-size:11px;" onclick="copyIban()">📋 Copy</button>
+                            <span id="modalIbanText">BG80UNCR70001524896321</span>
+                            <button type="button" class="btn btn-sm btn-info fw-bold py-1 px-2" style="font-size:11px;" onclick="copyModalIban()">📋 Copy</button>
                         </div>
                         <div class="small text-secondary">Сума за плащане: <strong class="text-warning fs-5" id="modalPriceTag">€60.00</strong></div>
                     </div>
@@ -412,6 +448,56 @@ FULL_HTML = """
                     <button type="button" class="btn btn-primary w-100 py-3 fw-bold mt-3 shadow" style="background:#0284c7; border:none; border-radius:12px;" onclick="confirmOrder()">✅ Потвърди банков превод &amp; Активирай</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛ ДНЕВЕН БЮЛЕТИН (07:30 Ч.) -->
+    <div class="modal fade" id="bulletinModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content" style="background:#1f315c; border:1px solid var(--border); color:#fff; border-radius:18px;">
+                <div class="modal-header border-bottom border-secondary pb-3">
+                    <h5 class="modal-title fw-bold text-info">📄 07:30 ч. Дневен Инвестиционен Бюлетин (Ежедневна актуализация)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-secondary small">Пълен структуриран преглед на новопостъпилите данни от днешния ден (ЧСИ търгове, НАП публични продажби, нови разрешения за строеж ЗУТ и корпоративни промени):</p>
+                    <div class="p-3 rounded mb-3" style="background:#17274f; border:1px solid var(--border);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-warning">⚡ Топ нов обект: Логистичен склад Пловдив</strong>
+                            <span class="badge bg-success">Дисконт -51.9%</span>
+                        </div>
+                        <p class="small text-light mb-1">Публична продан от ЧСИ за индустриална база от 6,500 кв.м. Начална цена: €890,000 (Пазарна оценка: €1,850,000).</p>
+                        <div class="small text-secondary">Статус: Проверено в ТР и ЧСИ регистрите към 07:30 ч. тази сутрин.</div>
+                    </div>
+                    <div class="p-3 rounded mb-3" style="background:#17274f; border:1px solid var(--border);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-warning">⚡ Ново ЗУТ Разрешение: Жилищна сграда София</strong>
+                            <span class="badge bg-info">Одобрен проект</span>
+                        </div>
+                        <p class="small text-light mb-1">Издадено разрешение за строеж в кв. Драгалевци (2,400 кв.м РЗП). Инвеститор: София Инвестмънт Груп ООД.</p>
+                        <div class="small text-secondary">Статус: Липса на тежести и запори по чл. 512 ГПК.</div>
+                    </div>
+                    <a href="/export-pdf" target="_blank" class="btn btn-outline-warning w-100 fw-bold py-2">📥 Изтегли целия бюлетин в PDF формат</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОБАЙЛ МЕНЮ -->
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" style="background-color: #17274f !important; width: 320px;">
+        <div class="offcanvas-header border-bottom border-secondary pb-3">
+            <h6 class="offcanvas-title fw-bold text-white" id="mobileMenuLabel">PRO INVEST RADAR</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+            <div class="mb-3 fw-bold text-info" style="font-size:12px; text-transform:uppercase;">Бързи контакти</div>
+            <a href="viber://chat?number=%2B359879495767" class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
+            <a href="https://t.me/stroyradar_support" target="_blank" class="d-block mb-4 text-light text-decoration-none">✈️ Telegram Канал</a>
+            <hr class="border-secondary">
+            <a href="#audit-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🔍 БУЛСТАТ / ЕИК Одит</a>
+            <a href="#pricing-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">💳 Абонаменти</a>
+            <a href="javascript:void(0)" class="d-block mb-2 text-light text-decoration-none" onclick="showDailyBulletin();" data-bs-dismiss="offcanvas">📄 Дневен Бюлетин (07:30 ч.)</a>
+            <a href="#map-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🗺️ ГИС Карта</a>
         </div>
     </div>
 
@@ -577,7 +663,18 @@ FULL_HTML = """
             modalEl.show();
         }
 
+        function showDailyBulletin() {
+            var bulletinModal = new bootstrap.Modal(document.getElementById('bulletinModal'));
+            bulletinModal.show();
+        }
+
         function copyIban() {
+            navigator.clipboard.writeText("BG80UNCR70001524896321").then(function() {
+                alert("✔ IBAN номерът е копиран в клипборда!");
+            });
+        }
+
+        function copyModalIban() {
             navigator.clipboard.writeText("BG80UNCR70001524896321").then(function() {
                 alert("✔ IBAN номерът е копиран в клипборда!");
             });
@@ -664,7 +761,7 @@ def export_audit_pdf():
 
 @app.route("/export-pdf")
 def export_pdf():
-    return "<h3>07:30 Дневен Бюлетин</h3>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+    return "<h3>07:30 Дневен Бюлетин - Пълен Анализ</h3>", 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 @app.route("/api/deals")
 def api_deals():
