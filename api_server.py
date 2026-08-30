@@ -31,7 +31,7 @@ def init_db():
     
     c.execute("SELECT count(*) FROM radar_projects")
     count = c.fetchone()[0]
-    if count < 500:
+    if count < 1000:
         c.execute("DELETE FROM radar_projects")
         cities = [
             ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
@@ -44,7 +44,7 @@ def init_db():
             ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
         ]
         records = []
-        for i in range(540):
+        for i in range(1000):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -129,6 +129,11 @@ FULL_HTML = """
         .custom-select option { background: #0f1c33; color: #fff; padding: 8px; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
+        @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes satOrbitAnim { 0% { transform: rotate(0deg) translateX(48px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(48px) rotate(-360deg); } }
+        .radar-sweep { transform-origin: 75px 75px; animation: radarRotate 4s linear infinite; }
+        .sat-orbit { transform-origin: 75px 75px; animation: satOrbitAnim 7s linear infinite; }
+
         .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); box-sizing: border-box; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
@@ -137,7 +142,7 @@ FULL_HTML = """
         .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
         .kpi-footer { font-size: 0.7rem; color: #64748b; }
 
-        #map { height: 400px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
+        #map { height: 420px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
         .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
 
         .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
@@ -146,7 +151,8 @@ FULL_HTML = """
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .masked-badge { background: #162033; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
-        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; }
+        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; transition: all 0.2s ease; }
+        .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
@@ -211,7 +217,7 @@ FULL_HTML = """
             <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
         </div>
 
-        <!-- ОДИТ СКЕНЕР (ПОПРАВЕН ЗА ДА ВАДИ ПЪЛНО ДОСИЕ) -->
+        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -239,10 +245,6 @@ FULL_HTML = """
                                 <span>Запори (Чл. 512 ГПК):</span>
                                 <strong class="text-success" id="resCompInjunctions">НЯМА ТЕЖЕСТИ</strong>
                             </div>
-                            <div class="d-flex justify-content-between small">
-                                <span>Счетоводен баланс &amp; Приходи:</span>
-                                <strong class="text-info" id="resCompBalance">Положителни фин. резултати</strong>
-                            </div>
                         </div>
 
                         <a href="#" id="downloadAuditPdfBtn" target="_blank" class="btn btn-outline-warning btn-sm w-100 fw-bold py-2" style="border-radius:8px;">📥 Изтегли Официален Пълен PDF Доклад</a>
@@ -256,7 +258,9 @@ FULL_HTML = """
                     <svg viewBox="0 0 150 150" width="130" height="130">
                         <circle cx="75" cy="75" r="65" fill="none" stroke="#1e293b" stroke-width="1.2" stroke-dasharray="3 3"/>
                         <circle cx="75" cy="75" r="42" fill="none" stroke="#1e293b" stroke-width="1"/>
+                        <g class="radar-sweep"><path d="M 75 75 L 25 25 A 65 65 0 0 1 125 25 Z" fill="rgba(0,240,255,0.2)"/></g>
                         <circle cx="75" cy="75" r="8" fill="#0284c7"/>
+                        <g class="sat-orbit"><circle cx="75" cy="75" r="5" fill="#38bdf8"/><rect x="68" y="72" width="14" height="5" fill="#070c18" stroke="#38bdf8" rx="1"/></g>
                     </svg>
                 </div>
             </div>
@@ -383,7 +387,25 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОДАЛ -->
+    <!-- МОБАЙЛ МЕНЮ (OFFCANVAS) -->
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; width: 320px;">
+        <div class="offcanvas-header border-bottom border-secondary pb-3">
+            <h6 class="offcanvas-title fw-bold text-white">PRO INVEST RADAR</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+            <div class="mb-3 fw-bold text-info" style="font-size:12px; text-transform:uppercase;">Бързи контакти</div>
+            <a href="viber://chat?number=%2B359879495767" class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
+            <a href="https://t.me/stroyradar_support" target="_blank" class="d-block mb-2 text-light text-decoration-none">✈️ Telegram Канал</a>
+            <a href="tel:+359879495767" class="d-block mb-4 text-light text-decoration-none">📞 0879 495 767</a>
+            <hr class="border-secondary">
+            <a href="#audit-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🔍 БУЛСТАТ / ЕИК Одит</a>
+            <a href="#pricing-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">💳 Абонаменти</a>
+            <a href="#map-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🗺️ ГИС Карта</a>
+        </div>
+    </div>
+
+    <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -448,6 +470,72 @@ FULL_HTML = """
             });
         }
         renderPaginatedDeals();
+
+        var plansData = {
+            "starter": {
+                name: "STARTER EXECUTIVE",
+                amount: 60,
+                badge: "€60 / МЕСЕЦ",
+                features: [
+                    { icon: "🔓", title: "1. Пълно отключване на ЕИК и точни адреси", desc: "Премахване на звездичките за всички обекта." },
+                    { icon: "📄", title: "2. Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на актуалните търгове." },
+                    { icon: "🗺️", title: "3. Интерактивна ГИС карта на България", desc: "Пълна визуализация в реално време." },
+                    { icon: "🏢", title: "4. До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси." }
+                ]
+            },
+            "pro": {
+                name: "PRO RISK MONITOR",
+                amount: 150,
+                badge: "€150 / МЕСЕЦ",
+                features: [
+                    { icon: "⚡", title: "1. 07:30 ч. Изпреварващ Фийд", desc: "Мигновен бюлетин с топ дисконти." },
+                    { icon: "🔍", title: "2. НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори и ЧСИ дела." },
+                    { icon: "🧮", title: "3. ЧСИ Net ROI Калкулатор", desc: "Автоматично начисляване на такси." },
+                    { icon: "📥", title: "4. Неограничен експорт на PDF доклади", desc: "Сваляне на официални одити от А до Я." }
+                ]
+            },
+            "enterprise": {
+                name: "ENTERPRISE M2M GATEWAY",
+                amount: 290,
+                badge: "€290 / МЕСЕЦ",
+                features: [
+                    { icon: "🤖", title: "1. REST JSON API Ключ", desc: "Директна интеграция без маскиране." },
+                    { icon: "🧠", title: "2. LLMs.txt AI Gateway", desc: "Корпоративна AI поддръжка." },
+                    { icon: "📊", title: "3. Пълен архив от 2024 г.", desc: "База данни за исторически сделки." },
+                    { icon: "🛡️", title: "4. Персонален SLA договор", desc: "Официална правна и техническа поддръжка." }
+                ]
+            }
+        };
+
+        function showPlanFeatures(planKey) {
+            var plan = plansData[planKey];
+            document.getElementById('featTitle').innerText = plan.name;
+            document.getElementById('featBadge').innerText = plan.badge;
+            document.getElementById('featAmountDisplay').innerText = '€' + plan.amount + '.00';
+            
+            var container = document.getElementById('benefitsListContainer');
+            container.innerHTML = '';
+
+            plan.features.forEach(function(feat) {
+                container.innerHTML += `
+                    <div class="benefit-row">
+                        <div class="benefit-icon">${feat.icon}</div>
+                        <div>
+                            <div class="fw-bold text-white small">${feat.title}</div>
+                            <div class="text-secondary" style="font-size:11px;">${feat.desc}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            var modalEl = new bootstrap.Modal(document.getElementById('featuresModal'));
+            modalEl.show();
+        }
+
+        function fillEik(val) {
+            document.getElementById('eikInput').value = val;
+            performAudit();
+        }
 
         function performAudit() {
             var eik = document.getElementById('eikInput').value.trim();
