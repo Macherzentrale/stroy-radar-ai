@@ -120,22 +120,31 @@ FULL_HTML = """
         .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; margin-right: 6px; }
 
-        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 0px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
-        .header-contacts-group { display: flex; align-items: center; gap: 10px; }
+        /* КОМПАКТНА ЛЕНТА ЗА КОНТАКТИ В ХЕДЪРА - ЕЛЕГАНТНО РЕШЕНИЕ ЗА ДЕСКТОП И МОБИЛЕН */
+        .mobile-contact-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 0 20px 0;
+            flex-wrap: wrap;
+        }
+        
         .btn-header-contact {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 14px;
+            padding: 6px 14px;
             border-radius: 20px;
             color: #fff;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             box-shadow: 0 3px 12px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.25);
             transition: transform 0.2s;
@@ -145,8 +154,14 @@ FULL_HTML = """
         .contact-viber { background: #7360f2; }
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
-        @media (max-width: 992px) {
-            .header-contacts-group { display: none; }
+        
+        /* Скриване на бутоните в самата навигация на десктоп, защото вече си имат отделна красива лента */
+        .desktop-nav-contacts { display: none; }
+        
+        @media (min-width: 992px) {
+            .mobile-contact-bar { display: none; }
+            .desktop-nav-contacts { display: flex; align-items: center; gap: 8px; }
+            .navbar-custom { margin-bottom: 20px; }
         }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
@@ -271,7 +286,8 @@ FULL_HTML = """
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
             
-            <div class="header-contacts-group">
+            <!-- ДЕСКТОП КОНТАКТИ -->
+            <div class="desktop-nav-contacts">
                 <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
                 <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
                 <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
@@ -281,6 +297,13 @@ FULL_HTML = """
                 <a href="/export-pdf" target="_blank" class="btn btn-outline-info btn-sm fw-bold d-none d-md-inline-block" style="border-radius:8px;">📄 07:30 Дневен Бюлетин</a>
                 <button class="btn-burger" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">☰</button>
             </div>
+        </div>
+
+        <!-- МОБИЛНА ЛЕНТА ЗА КОНТАКТИ: ПОДРЕДЕНИ И ИЗВЕДЕНИ ОТВЪН -->
+        <div class="mobile-contact-bar">
+            <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber</a>
+            <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
+            <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
         </div>
 
         <!-- ОДИТ СКЕНЕР + 3D САТЕЛИТ -->
@@ -397,7 +420,7 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ (ПЕРФЕКТНО СИМЕТРИЧНИ И ЕДНАКВИ) -->
+        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ -->
         <div class="card-dark mb-3" style="background:#09101f;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold text-white mb-0">⚡ Интелигентен Филтър &amp; Търсачка</h6>
@@ -606,7 +629,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- АНИМИРАН МОДАЛ С МАСИВНИ МАРКЕТИНГОВИ ПРИДОБИВКИ (ОТ 6 ДО 14 НОМЕРА) -->
+    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -883,7 +906,6 @@ FULL_HTML = """
             document.getElementById('calcNetRoi').innerText = '+€' + netRoi.toLocaleString('de-DE') + ' чист марж';
         }
 
-        /* МАРКЕТИНГОВИ ПАКЕТИ С РАЗЛИЧЕН БРОЙ И ДЪЛБОЧИНА НА ПРИДОБИВКИТЕ */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
@@ -1320,7 +1342,7 @@ def export_pdf():
         </table>
         
         <div class="footer">
-            СД „Ковко - Василев и Сие“ • гр. Драгоман, ул. Христо Ботев № 14 • IBAN: BG80UNCR70001524896321 • UniCredit Bulbank
+            СД „Ковко - Василев и Сие“ • гр.বিদ্যাП гр. Драгоман, ул. Христо Ботев № 14 • IBAN: BG80UNCR70001524896321 • UniCredit Bulbank
         </div>
     </body>
     </html>
