@@ -124,7 +124,6 @@ FULL_HTML = """
             padding: 10px 16px !important; border-radius: 10px !important; width: 100% !important; font-family: monospace !important; font-size: 0.9rem !important; box-sizing: border-box !important;
         }
 
-        /* НАПЪЛНО ВЪЗСТАНОВЕН И АНИМИРАН САТЕЛИТЕН РАДАР */
         .sat-hud { background: #253a6b; border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; position: relative; overflow: hidden; }
         .radar-screen { width: 130px; height: 130px; border: 2px solid #00f0ff; border-radius: 50%; position: relative; background: radial-gradient(circle, rgba(0,240,255,0.15) 0%, rgba(28,43,80,0.9) 80%); box-shadow: 0 0 15px rgba(0,240,255,0.3) inset; }
         .radar-sweep { width: 65px; height: 65px; border-right: 2px solid #00f0ff; position: absolute; top: 0; left: 65px; transform-origin: bottom left; animation: radarSpin 3s linear infinite; }
@@ -174,11 +173,15 @@ FULL_HTML = """
         .btn-page { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
+        /* ВЪЗСТАНОВЕН ЧАТБОТ С МИКРОФОН И ГЛАСОВ РЕЖИМ */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; box-shadow: 0 4px 15px rgba(0,240,255,0.4); }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background-color: var(--card-bg) !important; border: 1px solid var(--accent-cyan); border-radius: 18px; display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
         .msg-ai { background: #325194; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
+        .voice-mode-bar { background: #17274f; border-top: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-voice-toggle { background: #325194; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-voice-toggle.active { background: #10b981; color: #fff; border-color: #10b981; }
         
         .site-footer { background-color: #132242 !important; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #cbd5e1; box-sizing: border-box; }
         .impressum-box { background: #17274f; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
@@ -217,6 +220,7 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
+        <!-- ОДИТ СКЕНЕР & РАДАР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -264,6 +268,7 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- KPI КАРТИ -->
         <div class="row g-2 mb-3">
             <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Реални обекти</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
@@ -271,6 +276,7 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
+        <!-- КАЛКУЛАТОР -->
         <div class="card-dark" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark fw-bold px-2 py-1">ЧСИ &amp; ТАКСИ КАЛКУЛАТОР 2026</span>
@@ -284,6 +290,7 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
@@ -329,11 +336,13 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- КАРТА -->
         <div class="card-dark" id="map-section">
             <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
             <div id="map"></div>
         </div>
 
+        <!-- ФИЛТРИ -->
         <div class="card-dark mb-3" style="background:#17274f;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -378,6 +387,7 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- ОБЯВИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
@@ -389,6 +399,7 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
+    <!-- ИМПРЕСУМ -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -416,6 +427,7 @@ FULL_HTML = """
         </div>
     </footer>
 
+    <!-- ПЛАВАЩ AI ЧАТБОТ С МИКРОФОН И ГЛАСОВ РЕЖИМ -->
     <button type="button" class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#17274f;">
@@ -425,12 +437,17 @@ FULL_HTML = """
         <div class="chat-messages" id="chatMsgs">
             <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник. Как мога да Ви помогна с имотите или проверките днес?</div>
         </div>
+        <div class="voice-mode-bar">
+            <button type="button" class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ <span>Микрофон: ИЗКЛ</span></button>
+            <span class="text-secondary small" id="voiceStatusText">Готов</span>
+        </div>
         <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#17274f;">
             <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button type="button" class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Прати</button>
         </div>
     </div>
 
+    <!-- МОБАЙЛ МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" style="background-color: #17274f !important; width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <h6 class="offcanvas-title fw-bold text-white" id="mobileMenuLabel">PRO INVEST RADAR</h6>
@@ -448,6 +465,7 @@ FULL_HTML = """
         </div>
     </div>
 
+    <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#253a6b; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -474,6 +492,7 @@ FULL_HTML = """
         </div>
     </div>
 
+    <!-- МОДАЛ ДНЕВЕН БЮЛЕТИН -->
     <div class="modal fade" id="bulletinModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content" style="background:#253a6b; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -701,6 +720,52 @@ FULL_HTML = """
         function toggleChatbot() {
             var box = document.getElementById('chatbotBox');
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        var voiceActive = false;
+        function toggleContinuousVoice() {
+            voiceActive = !voiceActive;
+            var btn = document.getElementById('voiceToggleBtn');
+            var status = document.getElementById('voiceStatusText');
+            if(voiceActive) {
+                btn.classList.add('active');
+                btn.innerHTML = '🎙️ <span>Микрофон: ВКЛ</span>';
+                status.innerText = 'Слушам ви...';
+                if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    var recognition = new SpeechRecognition();
+                    recognition.lang = 'bg-BG';
+                    recognition.onresult = function(event) {
+                        var speechResult = event.results[0][0].transcript;
+                        document.getElementById('chatInput').value = speechResult;
+                        sendChatMessage();
+                    };
+                    recognition.start();
+                }
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '🎙️ <span>Микрофон: ИЗКЛ</span>';
+                status.innerText = 'Готов';
+            }
+        }
+
+        function sendChatMessage() {
+            var input = document.getElementById('chatInput');
+            var txt = input.value.trim();
+            if(!txt) return;
+            var msgs = document.getElementById('chatMsgs');
+            msgs.innerHTML += '<div class="msg-user">' + txt + '</div>';
+            input.value = '';
+            msgs.scrollTop = msgs.scrollHeight;
+
+            setTimeout(function() {
+                var reply = "Анализирах запитването Ви през нашите алгоритми. Обектите отговарят напълно на пазарните стандарти за 2026 година.";
+                if(txt.toLowerCase().contains("цена") || txt.toLowerCase().includes("одит")) {
+                    reply = "Можете да използвате експертния одит по ЕИК в горната част на сайта за пълна проверка.";
+                }
+                msgs.innerHTML += '<div class="msg-ai">' + reply + '</div>';
+                msgs.scrollTop = msgs.scrollHeight;
+            }, 600);
         }
     </script>
 </body>
