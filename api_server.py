@@ -30,7 +30,7 @@ def init_db():
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 50:
+    if c.fetchone()[0] < 30:
         c.execute("DELETE FROM radar_projects")
         cities = [
             ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
@@ -45,7 +45,7 @@ def init_db():
             ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
         ]
         records = []
-        for i in range(60):
+        for i in range(40):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -75,12 +75,9 @@ FULL_HTML = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="color-scheme" content="only dark">
     <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
             color-scheme: dark;
@@ -95,22 +92,21 @@ FULL_HTML = """
         html, body { background-color: #1c2b50 !important; color: #f8fafc !important; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100vw; }
         .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
 
-        @keyframes neonGlow {
-            0%, 100% { background-color: #241903; box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); border-color: #f59e0b; }
-            50% { background-color: #4a3406; box-shadow: 0 0 30px rgba(245, 158, 11, 0.9); border-color: #fbbf24; }
-        }
-        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
+        .ticker-bar { background-color: #382404; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .shield-icon { width: 38px; height: 38px; background: #3255a4; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+        .shield-icon { width: 38px; height: 38px; background: #3255a4; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); animation: neonGlow 2.5s infinite alternate; }
         .btn-burger { background: #325194; border: 1px solid #5579cc; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
-        .header-contacts-group { display: flex; align-items: center; gap: 10px; }
+        @keyframes neonGlow {
+            0% { box-shadow: 0 0 5px rgba(0,240,255,0.2); }
+            100% { box-shadow: 0 0 15px rgba(0,240,255,0.7); }
+        }
+
         .btn-header-contact {
             display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 20px; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.82rem;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.25); transition: transform 0.2s; white-space: nowrap; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.25); white-space: nowrap; cursor: pointer;
         }
-        .btn-header-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
         .contact-tg { background: #229ED9; }
         @media (max-width: 992px) { .header-contacts-group { display: none; } }
@@ -122,16 +118,20 @@ FULL_HTML = """
             .desktop-nav-contacts { display: flex; align-items: center; gap: 8px; }
         }
 
-        .card-dark { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-sizing: border-box; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+        .card-dark { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; border-radius: 18px; padding: 22px; margin-bottom: 20px; box-sizing: border-box; box-shadow: 0 8px 25px rgba(0,0,0,0.25); }
         .custom-input, .custom-select {
             background: #17274f !important; border: 2px solid #00f0ff !important; color: #ffffff !important; height: 48px !important; line-height: 24px !important;
             padding: 10px 16px !important; border-radius: 10px !important; width: 100% !important; font-family: monospace !important; font-size: 0.9rem !important; box-sizing: border-box !important;
         }
-        .custom-input:focus, .custom-select:focus { outline: none !important; border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(0,240,255,0.6) !important; background: #1d3363 !important; }
-        .custom-select option { background: #17274f; color: #fff; padding: 8px; }
 
-        .sat-hud { background: radial-gradient(circle at center, #3d5c9c 0%, #253a6b 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
-        
+        /* НАПЪЛНО ВЪЗСТАНОВЕН И АНИМИРАН САТЕЛИТЕН РАДАР */
+        .sat-hud { background: #253a6b; border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; position: relative; overflow: hidden; }
+        .radar-screen { width: 130px; height: 130px; border: 2px solid #00f0ff; border-radius: 50%; position: relative; background: radial-gradient(circle, rgba(0,240,255,0.15) 0%, rgba(28,43,80,0.9) 80%); box-shadow: 0 0 15px rgba(0,240,255,0.3) inset; }
+        .radar-sweep { width: 65px; height: 65px; border-right: 2px solid #00f0ff; position: absolute; top: 0; left: 65px; transform-origin: bottom left; animation: radarSpin 3s linear infinite; }
+        @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .radar-blip { width: 6px; height: 6px; background: #ff3366; border-radius: 50%; position: absolute; top: 40px; left: 85px; box-shadow: 0 0 8px #ff3366; animation: blipPulse 1.5s infinite; }
+        @keyframes blipPulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.8); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+
         .kpi-card { background-color: var(--card-bg) !important; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border) !important; box-sizing: border-box; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
@@ -144,7 +144,7 @@ FULL_HTML = """
         .leaflet-popup-content-wrapper { background: #253a6b !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
 
         .listing-card { 
-            background: linear-gradient(145deg, #2a437e 0%, #1a2b52 100%) !important; 
+            background: #1a2b52 !important; 
             border: 1px solid var(--border) !important; 
             border-left: 4px solid var(--accent-cyan); 
             border-radius: 16px; 
@@ -155,18 +155,14 @@ FULL_HTML = """
             flex-direction: column; 
             justify-content: space-between; 
             box-sizing: border-box; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            transition: transform 0.2s, border-color 0.2s;
         }
-        .listing-card:hover { transform: translateY(-3px); border-color: var(--accent-cyan); }
         .listing-title { font-size: 1.2rem; font-weight: 800; color: #ffffff; margin-bottom: 10px; }
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; font-size: 0.85rem; color: #e2e8f0; }
         .listing-price-box { background: #17274f; border: 1px solid #334e85; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .masked-badge { background: #2a437e; color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
-        .plan-box { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; border-radius: 16px; padding: 22px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; transition: all 0.2s ease; box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
-        .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
-        .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.25); }
+        .plan-box { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; border-radius: 16px; padding: 22px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; }
+        .plan-popular { border: 2px solid var(--accent-cyan) !important; }
         .btn-plan { background: #325194; border: 1px solid #5579cc; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; cursor: pointer; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
 
@@ -178,15 +174,12 @@ FULL_HTML = """
         .btn-page { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
-        .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; }
-        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background-color: var(--card-bg) !important; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
+        .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; box-shadow: 0 4px 15px rgba(0,240,255,0.4); }
+        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background-color: var(--card-bg) !important; border: 1px solid var(--accent-cyan); border-radius: 18px; display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
         .msg-ai { background: #325194; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
-        .voice-mode-bar { background: #17274f; border-top: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-voice-toggle { background: #325194; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
-        .btn-voice-toggle.active { background: #10b981; color: #fff; border-color: #10b981; }
-
+        
         .site-footer { background-color: #132242 !important; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #cbd5e1; box-sizing: border-box; }
         .impressum-box { background: #17274f; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
         .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; background: #101c38; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -224,7 +217,6 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
-        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -255,24 +247,23 @@ FULL_HTML = """
                             </div>
                         </div>
 
-                        <a href="#" id="downloadAuditPdfBtn" target="_blank" class="btn btn-outline-warning btn-sm w-100 fw-bold py-2" style="border-radius:8px;">📥 Изтегли Официален PDF Доклад (Едно към едно с ТР)</a>
+                        <a href="#" id="downloadAuditPdfBtn" target="_blank" class="btn btn-outline-warning btn-sm w-100 fw-bold py-2" style="border-radius:8px;">📥 Изтегли Официален PDF Доклад</a>
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-5">
                 <div class="sat-hud">
-                    <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
-                    <svg viewBox="0 0 150 150" width="130" height="130">
-                        <circle cx="75" cy="75" r="65" fill="none" stroke="#3d5c9c" stroke-width="1.2" stroke-dasharray="3 3"/>
-                        <circle cx="75" cy="75" r="42" fill="none" stroke="#3d5c9c" stroke-width="1"/>
-                        <circle cx="75" cy="75" r="8" fill="#0284c7"/>
-                    </svg>
+                    <div class="text-info small fw-bold mb-3">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
+                    <div class="radar-screen">
+                        <div class="radar-sweep"></div>
+                        <div class="radar-blip"></div>
+                    </div>
+                    <div class="text-secondary small mt-3">LIVE SATELLITE FEED ACTIVE</div>
                 </div>
             </div>
         </div>
 
-        <!-- KPI КАРТИ -->
         <div class="row g-2 mb-3">
             <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Реални обекти</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
@@ -280,7 +271,6 @@ FULL_HTML = """
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- КАЛКУЛАТОР -->
         <div class="card-dark" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark fw-bold px-2 py-1">ЧСИ &amp; ТАКСИ КАЛКУЛАТОР 2026</span>
@@ -294,7 +284,6 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
@@ -340,13 +329,11 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- КАРТА -->
         <div class="card-dark" id="map-section">
             <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ С ВСИЧКИ ГЛАВНИ ОБЩИНИ -->
         <div class="card-dark mb-3" style="background:#17274f;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -391,7 +378,6 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ОБЯВИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
@@ -403,7 +389,6 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
-    <!-- ИМПРЕСУМ -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -431,7 +416,6 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ -->
     <button type="button" class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#17274f;">
@@ -441,17 +425,12 @@ FULL_HTML = """
         <div class="chat-messages" id="chatMsgs">
             <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник. Как мога да Ви помогна с имотите или проверките днес?</div>
         </div>
-        <div class="voice-mode-bar">
-            <button type="button" class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ Гласов режим: ИЗКЛ</button>
-            <span class="text-secondary small" id="voiceStatusText">Готов</span>
-        </div>
         <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#17274f;">
             <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button type="button" class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Прати</button>
         </div>
     </div>
 
-    <!-- МОБАЙЛ МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" style="background-color: #17274f !important; width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <h6 class="offcanvas-title fw-bold text-white" id="mobileMenuLabel">PRO INVEST RADAR</h6>
@@ -469,7 +448,6 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#253a6b; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -496,7 +474,6 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОДАЛ ДНЕВЕН БЮЛЕТИН -->
     <div class="modal fade" id="bulletinModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content" style="background:#253a6b; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -513,14 +490,6 @@ FULL_HTML = """
                         </div>
                         <p class="small text-light mb-1">Публична продан от ЧСИ за индустриална база от 6,500 кв.м. Начална цена: €890,000 (Пазарна оценка: €1,850,000).</p>
                         <div class="small text-secondary">Статус: Проверено в ТР и ЧСИ регистрите към 07:30 ч. тази сутрин.</div>
-                    </div>
-                    <div class="p-3 rounded mb-3" style="background:#17274f; border:1px solid var(--border);">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <strong class="text-warning">⚡ Ново ЗУТ Разрешение: Жилищна сграда София</strong>
-                            <span class="badge bg-info">Одобрен проект</span>
-                        </div>
-                        <p class="small text-light mb-1">Издадено разрешение за строеж в кв. Драгалевци (2,400 кв.м РЗП). Инвеститор: София Инвестмънт Груп ООД.</p>
-                        <div class="small text-secondary">Статус: Липса на тежести и запори по чл. 512 ГПК.</div>
                     </div>
                     <a href="/export-pdf" target="_blank" class="btn btn-outline-warning w-100 fw-bold py-2">📥 Изтегли целия бюлетин в PDF формат</a>
                 </div>
@@ -695,12 +664,6 @@ FULL_HTML = """
             bulletinModal.show();
         }
 
-        function copyIban() {
-            navigator.clipboard.writeText("BG80UNCR70001524896321").then(function() {
-                alert("✔ IBAN номерът е копиран в клипборда!");
-            });
-        }
-
         function copyModalIban() {
             navigator.clipboard.writeText("BG80UNCR70001524896321").then(function() {
                 alert("✔ IBAN номерът е копиран в клипборда!");
@@ -772,7 +735,7 @@ def api_audit_eik():
         "city": "гр. София, Централен район", "capital": "€25,000", "balance": "Нормална данъчна и счетоводна история", "isSafe": True
     })
 
-@app.export_audit_pdf if False else app.route("/export-audit-pdf")
+@app.route("/export-audit-pdf")
 def export_audit_pdf():
     eik = request.args.get("eik", "204589123").strip()
     return f"""
