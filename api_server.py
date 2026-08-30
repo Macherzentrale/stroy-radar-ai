@@ -154,7 +154,7 @@ FULL_HTML = """
         .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; box-sizing: border-box; transition: all 0.2s ease; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
-        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; }
+        .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; text-decoration: none; display: inline-block; text-align: center; }
         .btn-plan-pro { background: var(--accent-cyan); color: #040810; font-weight: 800; border: none; }
 
         .benefit-row {
@@ -294,7 +294,7 @@ FULL_HTML = """
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2.2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
-                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
+                <button type="button" class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
             </div>
 
             <div class="row g-3">
@@ -305,7 +305,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на ЕИК/адреси</div>
                         </div>
-                        <button type="button" class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('starter')">Виж придобивките</button>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('starter')">Виж придобивките</button>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -318,7 +318,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит</div>
                         </div>
-                        <button type="button" class="btn-plan btn-plan-pro w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('pro')">ВЗЕМИ PRO</button>
+                        <button type="button" class="btn-plan btn-plan-pro w-100 mt-auto" onclick="showPlanFeatures('pro')">ВЗЕМИ PRO</button>
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -328,7 +328,7 @@ FULL_HTML = """
                             <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
                             <div class="text-secondary small mt-1">REST JSON API ключ + пълна M2M интеграция без маскиране</div>
                         </div>
-                        <button type="button" class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('enterprise')">API Ключ</button>
                     </div>
                 </div>
             </div>
@@ -367,7 +367,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ (ОРИГИНАЛЕН ДИЗАЙН) -->
+        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
@@ -408,7 +408,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОБАЙЛ МЕНЮ (OFFCANVAS) -->
+    <!-- МОБАЙЛ МЕНЮ -->
     <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" style="background-color: #0b1120 !important; width: 320px;">
         <div class="offcanvas-header border-bottom border-secondary pb-3">
             <h6 class="offcanvas-title fw-bold text-white">PRO INVEST RADAR</h6>
