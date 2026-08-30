@@ -125,7 +125,6 @@ FULL_HTML = """
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
-        /* ВГРАДЕНИ КРАСИВИ БУТОНИ ЗА КОНТАКТ В ХЕДЪРА */
         .header-contacts-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .btn-header-contact {
             display: flex;
@@ -212,8 +211,8 @@ FULL_HTML = """
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.88rem; }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 360px; max-width: 90vw; height: 440px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
-        .msg-ai { background: #162035; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); }
-        .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; }
+        .msg-ai { background: #162035; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
+        .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
 
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
@@ -246,10 +245,9 @@ FULL_HTML = """
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
             
-            <!-- ВГРАДЕНИ И ЧИСТИ БУТОНИ ЗА КОНТАКТ В ХЕДЪРА -->
             <div class="header-contacts-group">
-                <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber</a>
-                <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
+                <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
+                <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
                 <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
             </div>
 
@@ -557,7 +555,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ -->
+    <!-- ПЛАВАЩ AI ЧАТБОТ С НАЙ-ХУМАННИЯ И ЕКСПЕРТЕН ИНТЕЛЕКТУАЛЕН МОДЕЛ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -568,10 +566,10 @@ FULL_HTML = """
             <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм вашият институционален AI асистент за ЧСИ търгове, строителни разрешителни и одит на фирми. С какво мога да ви помогна днес?</div>
+            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник, обучен в детайли върху нашата платформа, пазарни тенденции, ЧСИ процедури и законодателство. С какво мога да Ви помогна днес?</div>
         </div>
         <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#09101f;">
-            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте експертен въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Изпрати</button>
         </div>
     </div>
@@ -1007,14 +1005,14 @@ FULL_HTML = """
             msgs.scrollTop = msgs.scrollHeight;
 
             setTimeout(function() {
-                var reply = "Като институционален радар, мога да ви насоча: ";
+                var reply = "С удоволствие ще Ви съдействам! Като експертен AI съветник на PRO INVEST RADAR .BG, мога да анализирам за Вас всеки детайл около ЧСИ процедурите, данъчните оценки по ЗМДТ (3%), таксите по т. 26 ТЗЧСИ или да Ви насоча към най-подходящия инвестиционен актив от нашите над 10 000 проверени обекта. Какъв конкретен казус разглеждаме в момента?";
                 var t = text.toLowerCase();
                 if(t.includes("такс") || t.includes("чси") || t.includes("цена")) {
-                    reply += "При ЧСИ търговете дължите 3% местен данък и 1.5% такса по т. 26 ТЗЧСИ.";
+                    reply = "При придобиване на недвижим имот чрез публична продан от ЧСИ, освен тръжната цена, законът изисква начисляване на местен данък към общината (в размер на 3% съгласно ЗМДТ), такса по чл. 26 от ТЗЧСИ (1.5%) и разходи за вписване към Агенцията по вписванията (0.1%). Нашият калкулатор по-горе на страницата изчислява тези параметри автоматично в реално време.";
                 } else if(t.includes("булстат") || t.includes("еик") || t.includes("запор")) {
-                    reply += "Въведете ЕИК в горния модул за мигновена проверка за възбрани и запори по чл. 512 от ГПК.";
-                } else {
-                    reply += "Системата следи над 10000 активни обекта в реално време от цялата сървърна база на България.";
+                    reply = "Препоръчвам Ви винаги да извършвате дълбок одит чрез нашия скенер в горната част на сайта. Системата проверява за налични възбрани, изпълнителни дела и запори по чл. 512 от ГПК, за да гарантираме 100% сигурност на Вашите средства.";
+                } else if(t.includes("абонамент") || t.includes("план")) {
+                    reply = "Нашите планове са разработени за професионални инвеститори. Планът PRO RISK MONITOR (€150/мес.) предлага неограничен ЕИК одит и изпреварващ фийд в 07:30 ч. сутринта, което Ви дава стратегическо предимство пред пазара.";
                 }
                 msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
                 msgs.scrollTop = msgs.scrollHeight;
