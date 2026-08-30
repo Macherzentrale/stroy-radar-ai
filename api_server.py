@@ -125,7 +125,6 @@ FULL_HTML = """
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
-        /* ЧИСТ И КОМПАКТЕН ХЕДЪР ЗА КОНТАКТИТЕ БЕЗ НИКАКВО СТР УПВАНЕ */
         .header-contacts-group { display: flex; align-items: center; gap: 10px; }
         .btn-header-contact {
             display: flex;
@@ -147,13 +146,32 @@ FULL_HTML = """
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
         @media (max-width: 992px) {
-            .header-contacts-group { display: none; } /* В мобилен се скриват в менюто за максимална чистота */
+            .header-contacts-group { display: none; }
         }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
-        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; box-sizing: border-box; }
-        .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
-        .custom-select option { background: #131f36; color: #fff; }
+        
+        /* СТРОГ И ЕДНАКЪВ СТИЛ ЗА ВСИЧКИ ФИЛТРИ И ПОЛЕ ЗА ТЪРСЕНЕ */
+        .custom-input, .custom-select {
+            background: #0f1c33 !important;
+            border: 2px solid #00f0ff !important;
+            color: #ffffff !important;
+            height: 48px !important;
+            line-height: 24px !important;
+            padding: 10px 16px !important;
+            border-radius: 10px !important;
+            width: 100% !important;
+            font-family: monospace !important;
+            font-size: 0.9rem !important;
+            box-sizing: border-box !important;
+        }
+        .custom-input:focus, .custom-select:focus {
+            outline: none !important;
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 12px rgba(0,240,255,0.5) !important;
+            background: #0a1426 !important;
+        }
+        .custom-select option { background: #0f1c33; color: #fff; padding: 8px; }
 
         .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); box-sizing: border-box; }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -213,7 +231,6 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; box-sizing: border-box; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        /* СТИЛ НА ЧАТБОТА И НЕПРЕКЪСНАТИЯ ГЛАСОВ РЕЖИМ */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.88rem; }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
@@ -256,7 +273,6 @@ FULL_HTML = """
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
             
-            <!-- ХЕНДЪР КОНТАКТИ: ЕЛЕГАНТНИ И ЧИСТИ -->
             <div class="header-contacts-group">
                 <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
                 <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
@@ -383,13 +399,13 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ -->
+        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ (ПЕРФЕКТНО СИМЕТРИЧНИ) -->
         <div class="card-dark mb-3" style="background:#09101f;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold text-white mb-0">⚡ Интелигентен Филтър &amp; Търсачка</h6>
                 <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">Изчисти</button>
             </div>
-            <div class="row g-2">
+            <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <label class="small text-secondary mb-1">Град / Област:</label>
                     <select id="filterCity" class="custom-select" onchange="applyAdvancedFilters()">
@@ -415,7 +431,7 @@ FULL_HTML = """
                 </div>
                 <div class="col-md-4">
                     <label class="small text-secondary mb-1">Търсене по дума:</label>
-                    <input type="text" id="dealSearchInput" class="custom-input py-1 px-3" placeholder="🔍 Търси проект..." onkeyup="applyAdvancedFilters()">
+                    <input type="text" id="dealSearchInput" class="custom-input" placeholder="🔍 Търси проект..." onkeyup="applyAdvancedFilters()">
                 </div>
             </div>
         </div>
@@ -567,7 +583,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ С НЕПРЕКЪСНАТ ГЛАСОВ РЕЖИМ (ГОВОРИ И ОТГОВАРЯ НА ГЛАС) -->
+    <!-- ПЛАВАЩ AI ЧАТБОТ С НЕПРЕКЪСНАТ ГЛАСОВ РЕЖИМ (GEMINI STYLE) -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -1017,7 +1033,7 @@ FULL_HTML = """
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        /* ИСТИНСКИ НЕПРЕКЪСНАТ ГЛАСОВ РЕЖИМ (GEMINI STYLE) СЪС SYNTHESIS (ГОВОРИ НА ГЛАС) */
+        /* ИСТИНСКИ НЕПРЕКЪСНАТ ГЛАСОВ ДИАЛОГ (GEMINI STYLE) */
         let continuousRecognition = null;
         let isContinuousVoiceActive = false;
 
@@ -1077,7 +1093,6 @@ FULL_HTML = """
             msgs.innerHTML += `<div class="msg-user">${text}</div>`;
             msgs.scrollTop = msgs.scrollHeight;
 
-            // Експертен отговор с хуманен подход
             var reply = "Разбирам Ви напълно. Като експертен съветник на PRO INVEST RADAR .BG, мога да Ви насоча относно актуалните ЧСИ търгове, местните данъци по ЗМДТ (3%) или детайли за конкретен актив.";
             var t = text.toLowerCase();
             if(t.includes("такс") || t.includes("чси") || t.includes("цена")) {
@@ -1091,7 +1106,6 @@ FULL_HTML = """
             msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
             msgs.scrollTop = msgs.scrollHeight;
 
-            // Ботът проговаря отговора на глас на български (Text-to-Speech)
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 var utterance = new SpeechSynthesisUtterance(reply);
