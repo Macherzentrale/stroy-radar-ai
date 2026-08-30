@@ -150,8 +150,6 @@ FULL_HTML = """
         }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
-        
-        /* СТРОГ И ЕДНАКЪВ СТИЛ ЗА ВСИЧКИ ФИЛТРИ И ПОЛЕ ЗА ТЪРСЕНЕ */
         .custom-input, .custom-select {
             background: #0f1c33 !important;
             border: 2px solid #00f0ff !important;
@@ -209,17 +207,17 @@ FULL_HTML = """
             border: 1px solid #19253d;
             border-left: 4px solid var(--accent-cyan);
             border-radius: 10px;
-            padding: 12px 16px;
-            margin-bottom: 10px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 12px;
             opacity: 0;
-            transform: translateY(-15px);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(-12px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         .benefit-row.show { opacity: 1; transform: translateY(0); }
-        .benefit-icon { font-size: 1.4rem; min-width: 28px; }
+        .benefit-icon { font-size: 1.25rem; min-width: 26px; }
 
         .pagination-box { display: flex; justify-content: center; gap: 8px; margin: 20px 0 35px 0; }
         .btn-page { background: #0d1527; border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 6px 14px; font-weight: bold; cursor: pointer; text-decoration: none; }
@@ -399,7 +397,7 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ (ПЕРФЕКТНО СИМЕТРИЧНИ) -->
+        <!-- ФИЛТРИ И ТЪРСАЧКА НА ОБЯВИ (ПЕРФЕКТНО СИМЕТРИЧНИ И ЕДНАКВИ) -->
         <div class="card-dark mb-3" style="background:#09101f;">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold text-white mb-0">⚡ Интелигентен Филтър &amp; Търсачка</h6>
@@ -608,9 +606,9 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- АНИМИРАН МОДАЛ С ПАДАЩИ ПРИДОБИВКИ -->
+    <!-- АНИМИРАН МОДАЛ С МАСИВНИ МАРКЕТИНГОВИ ПРИДОБИВКИ (ОТ 6 ДО 14 НОМЕРА) -->
     <div class="modal fade" id="featuresModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#0d1527; border:1px solid var(--border); color:#fff; border-radius:18px;">
                 <div class="modal-header border-bottom border-secondary pb-3">
                     <div>
@@ -620,7 +618,7 @@ FULL_HTML = """
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <div class="text-secondary small mb-3">Гарантирани придобивки към вашия абонамент:</div>
+                    <div class="text-secondary small mb-3">Маркетингов пакет — гаранция за максимална възвръщаемост и сигурност:</div>
                     <div id="benefitsListContainer"></div>
 
                     <button class="btn btn-primary w-100 py-3 fw-bold mt-3" style="background:#0284c7; border:none; border-radius:12px; font-size:1rem;" id="proceedToPayBtn">
@@ -885,16 +883,19 @@ FULL_HTML = """
             document.getElementById('calcNetRoi').innerText = '+€' + netRoi.toLocaleString('de-DE') + ' чист марж';
         }
 
+        /* МАРКЕТИНГОВИ ПАКЕТИ С РАЗЛИЧЕН БРОЙ И ДЪЛБОЧИНА НА ПРИДОБИВКИТЕ */
         var plansData = {
             "starter": {
                 name: "STARTER EXECUTIVE",
                 amount: 60,
                 badge: "€60 / МЕСЕЦ",
                 features: [
-                    { icon: "🔓", title: "Отключване на ЕИК и точни адреси", desc: "Премахване на звездичките и маските за всички 10000+ обекта." },
-                    { icon: "📄", title: "Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на актуалните търгове и разрешителни за строеж." },
-                    { icon: "🗺️", title: "Интерактивна ГИС карта на България", desc: "Пълна визуализация на парцелите и сградите в реално време." },
-                    { icon: "🏢", title: "До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." }
+                    { icon: "🔓", title: "1. Пълно отключване на ЕИК и точни адреси", desc: "Премахване на звездичките и маските за всички 10 000+ обекта." },
+                    { icon: "📄", title: "2. Седмичен PDF Инвестиционен Меморандум", desc: "Пълен експорт на актуалните търгове и разрешителни за строеж." },
+                    { icon: "🗺️", title: "3. Интерактивна ГИС карта на България", desc: "Пълна визуализация на парцелите и сградите в реално време." },
+                    { icon: "🏢", title: "4. До 20 ЕИК одит справки месечно", desc: "Проверка на управители и статуси на фирми-контрагенти." },
+                    { icon: "🔔", title: "5. Имейл известия за нови обекти", desc: "Седмичен отчет за нови потенциални сделки." },
+                    { icon: "📊", title: "6. Базов достъп до пазарни анализи", desc: "Месечни трендове на цените на кв.м в големите градове." }
                 ]
             },
             "pro": {
@@ -902,11 +903,16 @@ FULL_HTML = """
                 amount: 150,
                 badge: "€150 / МЕСЕЦ (POPULAR)",
                 features: [
-                    { icon: "⚡", title: "07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден с топ дисконти." },
-                    { icon: "🔍", title: "НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори (ТР), ЧСИ дела и свързани дружества." },
-                    { icon: "🧮", title: "ЧСИ Net ROI & Такси Калкулатор", desc: "Автоматично начисляване на такси по т. 26 ТЗЧСИ и местен данък." },
-                    { icon: "🔔", title: "VIP SMS & Имейл Алерти в реално време", desc: "Известия при пускане на нов търг в избран от вас регион." },
-                    { icon: "📞", title: "Приоритетна директна връзка", desc: "Консултация с анализатор за конкретен търг или имот." }
+                    { icon: "⚡", title: "1. 07:30 ч. Ежедневен Изпреварващ Фийд", desc: "Мигновен бюлетин преди старта на работния ден с топ дисконти." },
+                    { icon: "🔍", title: "2. НЕОГРАНИЧЕН БУЛСТАТ / ЕИК Одит", desc: "Дълбок скенер за запори (ТР), ЧСИ дела и свързани дружества." },
+                    { icon: "🧮", title: "3. ЧСИ Net ROI & Такси Калкулатор", desc: "Автоматично начисляване на такси по т. 26 ТЗЧСИ и местен данък." },
+                    { icon: "🔔", title: "4. VIP SMS & Имейл Алерти в реално време", desc: "Незабавни известия при пускане на нов търг в избран от вас регион." },
+                    { icon: "📞", title: "5. Приоритетна директна връзка", desc: "Консултация с анализатор за конкретен търг или имот." },
+                    { icon: "📥", title: "6. Неограничен експорт на PDF доклади", desc: "Сваляне на официални одити за всяка фирма от А до Я." },
+                    { icon: "🛡️", title: "7. Рентген за скрити запори (чл. 512 ГПК)", desc: "Автоматична проверка за тежести преди превод на капаро." },
+                    { icon: "📈", title: "8. Пълен достъп до исторически средни цени", desc: "Сравнителен анализ на сделките по райони за последните 2 години." },
+                    { icon: "⭐", title: "9. Приоритетно класиране в обектите", desc: "Виж първи най-печелившите активи с deal score над 85." },
+                    { icon: "💼", title: "10. Персонален мениджър портфолио", desc: "Поддръжка при организацията на документацията за търга." }
                 ]
             },
             "enterprise": {
@@ -914,10 +920,20 @@ FULL_HTML = """
                 amount: 290,
                 badge: "€290 / МЕСЕЦ",
                 features: [
-                    { icon: "🤖", title: "REST JSON API Ключ с 99.9% Ъптайм", desc: "Директна Machine-to-Machine интеграция към вашия софтуер без маскиране." },
-                    { icon: "🧠", title: "LLMs.txt AI Gateway Поддръжка", desc: "Готов структуриран интерфейс за свързване към корпоративни AI агенти." },
-                    { icon: "📊", title: "Пълен архив на исторически сделки", desc: "База данни за ценови нива и реализирани търгове от 2024 г. насам." },
-                    { icon: "🛡️", title: "Персонален SLA договор & фактуриране", desc: "Официален договор с включена правна и техническа поддръжка." }
+                    { icon: "🤖", title: "1. REST JSON API Ключ с 99.9% Ъптайм", desc: "Директна Machine-to-Machine интеграция към вашия софтуер без маскиране." },
+                    { icon: "🧠", title: "2. LLMs.txt AI Gateway Поддръжка", desc: "Готов структуриран интерфейс за свързване към корпоративни AI агенти." },
+                    { icon: "📊", title: "3. Пълен архив на исторически сделки", desc: "База данни за ценови нива и реализирани търгове от 2024 г. насам." },
+                    { icon: "🛡️", title: "4. Персонален SLA договор & фактуриране", desc: "Официален договор с включена правна и техническа поддръжка." },
+                    { icon: "⚡", title: "5. Ултра бърз суров дата фийд (Real-time stream)", desc: "Поточни данни директно от Търговски регистър и ЧСИ за секунди." },
+                    { icon: "🌐", title: "6. Неограничен достъп за целия екип (Multi-seat)", desc: "До 10 активни корпоративни профила под един лиценз." },
+                    { icon: "🔒", title: "7. Ексклузивна защита срещу киберрискове", desc: "Корпоративно ниво на криптиране и сигурност на данните." },
+                    { icon: "📑", title: "8. Автоматизирано фактуриране към юридическо лице", desc: "Месечен данъчен документ с право на данъчен кредит." },
+                    { icon: "🛠️", title: "9. Безплатна техническа интеграция от наш девелъпър", desc: "Пълно съдействие за връзка с вашия ERP или CRM софтуер." },
+                    { icon: "🎯", title: "10. Персонализирани филтри по заявка", desc: "Възможност за добавяне на специфични алгоритми за търсене." },
+                    { icon: "💎", title: "11. VIP достъп до затворени банкови дистрес портфейли", desc: "Активи преди официалното им обявяване на публичен търг." },
+                    { icon: "📞", title: "12. 24/7 Денонощна директна линия с главен анализатор", desc: "Аварийни правни консултации при големи сделки." },
+                    { icon: "🚀", title: "13. Неограничен обем заявки без лимити и тротлинг", desc: "Максимална скорост на обработка на масиви от данни." },
+                    { icon: "🏆", title: "14. Официален статус на институционален партньор", desc: "Пълни права за препродажба на аналитични справки." }
                 ]
             }
         };
@@ -952,7 +968,7 @@ FULL_HTML = """
                 setTimeout(function() {
                     var el = document.getElementById('benefit-row-' + idx);
                     if(el) el.classList.add('show');
-                }, 100 * (idx + 1));
+                }, 40 * (idx + 1));
             });
 
             document.getElementById('proceedToPayBtn').onclick = function() {
