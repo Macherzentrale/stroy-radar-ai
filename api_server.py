@@ -103,7 +103,6 @@ FULL_HTML = """
             --accent-yellow: #f59e0b;
             --accent-blue: #38bdf8;
         }
-        /* СТРОГ ФИКС НА ХОРИЗОНТАЛНОТО БЯГАНЕ НА ЕКРАНА */
         html, body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100vw; }
         .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
 
@@ -121,30 +120,35 @@ FULL_HTML = """
         .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; margin-right: 6px; }
 
-        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
         .shield-icon { width: 38px; height: 38px; background: #1e3a8a; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #1e293b; border: 1px solid #334155; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
 
-        .header-contacts-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        /* ЧИСТ И КОМПАКТЕН ХЕДЪР ЗА КОНТАКТИТЕ БЕЗ НИКАКВО СТР УПВАНЕ */
+        .header-contacts-group { display: flex; align-items: center; gap: 10px; }
         .btn-header-contact {
             display: flex;
             align-items: center;
             gap: 6px;
-            padding: 7px 12px;
+            padding: 8px 14px;
             border-radius: 20px;
             color: #fff;
             text-decoration: none;
             font-weight: 700;
-            font-size: 0.78rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.82rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.25);
             transition: transform 0.2s;
+            white-space: nowrap;
         }
         .btn-header-contact:hover { transform: scale(1.05); color: #fff; }
         .contact-viber { background: #7360f2; }
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
+        @media (max-width: 992px) {
+            .header-contacts-group { display: none; } /* В мобилен се скриват в менюто за максимална чистота */
+        }
 
         .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
         .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; box-sizing: border-box; }
@@ -209,15 +213,17 @@ FULL_HTML = """
         .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; box-sizing: border-box; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
-        /* СТИЛ НА ЧАТБОТА И ВГРАДЕНИЯ МИКРОФОН */
+        /* СТИЛ НА ЧАТБОТА И НЕПРЕКЪСНАТИЯ ГЛАСОВ РЕЖИМ */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.88rem; }
-        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 360px; max-width: 90vw; height: 460px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
+        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
         .msg-ai { background: #162035; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
-        .btn-mic { background: #1e293b; border: 1px solid #00f0ff; color: #00f0ff; border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
-        .btn-mic.recording { background: #ef4444; color: #fff; border-color: #ef4444; animation: pulseMic 1.2s infinite; }
-        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+        
+        .voice-mode-bar { background: #040810; border-top: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-voice-toggle { background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .btn-voice-toggle.active { background: #10b981; color: #fff; border-color: #10b981; animation: pulseVoice 1.5s infinite; }
+        @keyframes pulseVoice { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); } 70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
 
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
@@ -250,6 +256,7 @@ FULL_HTML = """
                 <div><div style="font-weight:900; font-size:1.25rem; color:#fff; line-height:1;">PRO INVEST RADAR AI</div><small style="color:#00f0ff; font-size:0.75rem; font-weight:700;">EUR 2026 • .BG</small></div>
             </a>
             
+            <!-- ХЕНДЪР КОНТАКТИ: ЕЛЕГАНТНИ И ЧИСТИ -->
             <div class="header-contacts-group">
                 <a href="viber://chat?number=%2B359879495767" class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
                 <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
@@ -560,7 +567,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ С ВГРАДЕН МИКРОФОН ЗА ГЛАСОВО ВЪВЕЖДАНЕ -->
+    <!-- ПЛАВАЩ AI ЧАТБОТ С НЕПРЕКЪСНАТ ГЛАСОВ РЕЖИМ (ГОВОРИ И ОТГОВАРЯ НА ГЛАС) -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -571,11 +578,16 @@ FULL_HTML = """
             <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник, обучен в детайли върху нашата платформа, пазарни тенденции, ЧСИ процедури и законодателство. Можете да ми пишете или да използвате микрофона за гласов разговор. С какво мога да Ви помогна днес?</div>
+            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник. Натиснете бутона по-долу за включване на непрекъснат гласов режим и можем да разговаряме свободно на живо.</div>
         </div>
+        
+        <div class="voice-mode-bar">
+            <button class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ Гласов режим: ИЗКЛ</button>
+            <span class="text-secondary small" id="voiceStatusText" style="font-size:11px;">Натиснете за старт</span>
+        </div>
+
         <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
-            <button class="btn-mic" id="micBtn" onclick="toggleVoiceInput()" title="Гласово въвеждане">🎙️</button>
-            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте експертен въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Или напишете въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Изпрати</button>
         </div>
     </div>
@@ -661,7 +673,12 @@ FULL_HTML = """
         </div>
         <div class="offcanvas-body d-flex flex-column justify-content-between p-3">
             <div>
-                <div class="offcanvas-menu-section">📡 Оперативни модули</div>
+                <div class="offcanvas-menu-section">📞 Бързи контакти</div>
+                <a href="viber://chat?number=%2B359879495767" class="nav-link-custom"><span class="icon">🟣</span> Viber Консулт</a>
+                <a href="https://t.me/stroyradar_support" target="_blank" class="nav-link-custom"><span class="icon">✈️</span> Telegram Канал</a>
+                <a href="tel:+359879495767" class="nav-link-custom"><span class="icon">📞</span> 0879 495 767</a>
+                
+                <div class="offcanvas-menu-section mt-4">📡 Оперативни модули</div>
                 <a href="#audit-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🔍</span> БУЛСТАТ / ЕИК Проверка</a>
                 <a href="#pricing-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">💳</span> Тарифни планове &amp; Абонаменти</a>
                 <a href="#map-section" class="nav-link-custom" data-bs-dismiss="offcanvas"><span class="icon">🗺️</span> ГИС Сателитна Карта</a>
@@ -1000,83 +1017,97 @@ FULL_HTML = """
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
         }
 
-        /* ГЛАСОВО ВЪВЕЖДАНЕ С МИКРОФОН В ЧАТА */
-        let recognition = null;
-        let isRecording = false;
-        function toggleVoiceInput() {
-            const micBtn = document.getElementById('micBtn');
-            const chatInput = document.getElementById('chatInput');
-            
+        /* ИСТИНСКИ НЕПРЕКЪСНАТ ГЛАСОВ РЕЖИМ (GEMINI STYLE) СЪС SYNTHESIS (ГОВОРИ НА ГЛАС) */
+        let continuousRecognition = null;
+        let isContinuousVoiceActive = false;
+
+        function toggleContinuousVoice() {
+            const btn = document.getElementById('voiceToggleBtn');
+            const statusText = document.getElementById('voiceStatusText');
+
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Вашият браузър не поддържа гласово разпознаване на реч. Моля използвайте Google Chrome.');
+                alert('Вашият браузър не поддържа гласово разпознаване. Моля използвайте Google Chrome.');
                 return;
             }
 
-            if (isRecording) {
-                if (recognition) recognition.stop();
+            if (isContinuousVoiceActive) {
+                if (continuousRecognition) continuousRecognition.stop();
+                isContinuousVoiceActive = false;
+                btn.classList.remove('active');
+                btn.innerText = '🎙️ Гласов режим: ИЗКЛ';
+                statusText.innerText = 'Спрян';
                 return;
             }
 
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'bg-BG';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+            continuousRecognition = new SpeechRecognition();
+            continuousRecognition.lang = 'bg-BG';
+            continuousRecognition.continuous = true;
+            continuousRecognition.interimResults = false;
 
-            recognition.onstart = function() {
-                isRecording = true;
-                micBtn.classList.add('recording');
-                chatInput.placeholder = 'Слушам Ви... Говорете...';
+            continuousRecognition.onstart = function() {
+                isContinuousVoiceActive = true;
+                btn.classList.add('active');
+                btn.innerText = '🎙️ Слушам Ви (Говорете)...';
+                statusText.innerText = 'Активен разговор';
             };
 
-            recognition.onresult = function(event) {
-                const speechToText = event.results[0][0].transcript;
-                chatInput.value = speechToText;
+            continuousRecognition.onresult = function(event) {
+                const speechResult = event.results[event.results.length - 1][0].transcript.trim();
+                if (speechResult) {
+                    processVoiceInput(speechResult);
+                }
             };
 
-            recognition.onerror = function(event) {
-                console.error('Грешка при гласово разпознаване:', event.error);
-                stopMicState();
+            continuousRecognition.onerror = function(event) {
+                console.error('Грешка в гласовия поток:', event.error);
             };
 
-            recognition.onend = function() {
-                stopMicState();
+            continuousRecognition.onend = function() {
+                if (isContinuousVoiceActive) {
+                    try { continuousRecognition.start(); } catch(e){}
+                }
             };
 
-            recognition.start();
+            continuousRecognition.start();
         }
 
-        function stopMicState() {
-            isRecording = false;
-            const micBtn = document.getElementById('micBtn');
-            const chatInput = document.getElementById('chatInput');
-            if (micBtn) micBtn.classList.remove('recording');
-            if (chatInput) chatInput.placeholder = 'Задайте експертен въпрос...';
+        function processVoiceInput(text) {
+            var msgs = document.getElementById('chatMsgs');
+            msgs.innerHTML += `<div class="msg-user">${text}</div>`;
+            msgs.scrollTop = msgs.scrollHeight;
+
+            // Експертен отговор с хуманен подход
+            var reply = "Разбирам Ви напълно. Като експертен съветник на PRO INVEST RADAR .BG, мога да Ви насоча относно актуалните ЧСИ търгове, местните данъци по ЗМДТ (3%) или детайли за конкретен актив.";
+            var t = text.toLowerCase();
+            if(t.includes("такс") || t.includes("чси") || t.includes("цена")) {
+                reply = "При публична продан от ЧСИ дължите 3% местен данък към общината, 1.5% такса по т. 26 от ТЗЧСИ и 0.1% за вписване. Калкулаторът на сайта изчислява всичко моментално.";
+            } else if(t.includes("булстат") || t.includes("еик") || t.includes("запор")) {
+                reply = "Използвайте нашия ЕИК скенер горе в страницата. Системата проверява за възбрани и запори по чл. 512 от ГПК в реално време.";
+            } else if(t.includes("здрав") || t.includes("кой си") || t.includes("здравйте")) {
+                reply = "Здравейте! Аз съм Вашият личен инвестиционен асистент. Тук съм, за да Ви помогна да направите най-сигурните и печеливши сделки с имоти в България.";
+            }
+
+            msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
+            msgs.scrollTop = msgs.scrollHeight;
+
+            // Ботът проговаря отговора на глас на български (Text-to-Speech)
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                var utterance = new SpeechSynthesisUtterance(reply);
+                utterance.lang = 'bg-BG';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            }
         }
 
         function sendChatMessage() {
             var input = document.getElementById('chatInput');
             var text = input.value.trim();
             if(!text) return;
-
-            var msgs = document.getElementById('chatMsgs');
-            msgs.innerHTML += `<div class="msg-user">${text}</div>`;
             input.value = '';
-            msgs.scrollTop = msgs.scrollHeight;
-
-            setTimeout(function() {
-                var reply = "С удоволствие ще Ви съдействам! Като експертен AI съветник на PRO INVEST RADAR .BG, мога да анализирам за Вас всеки детайл около ЧСИ процедурите, данъчните оценки по ЗМДТ (3%), таксите по т. 26 ТЗЧСИ или да Ви насоча към най-подходящия инвестиционен актив от нашите над 10 000 проверени обекта. Какъв конкретен казус разглеждаме в момента?";
-                var t = text.toLowerCase();
-                if(t.includes("такс") || t.includes("чси") || t.includes("цена")) {
-                    reply = "При придобиване на недвижим имот чрез публична продан от ЧСИ, освен тръжната цена, законът изисква начисляване на местен данък към общината (в размер на 3% съгласно ЗМДТ), такса по чл. 26 от ТЗЧСИ (1.5%) и разходи за вписване към Агенцията по вписванията (0.1%). Нашият калкулатор по-горе на страницата изчислява тези параметри автоматично в реално време.";
-                } else if(t.includes("булстат") || t.includes("еик") || t.includes("запор")) {
-                    reply = "Препоръчвам Ви винаги да извършвате дълбок одит чрез нашия скенер в горната част на сайта. Системата проверява за налични възбрани, изпълнителни дела и запори по чл. 512 от ГПК, за да гарантираме 100% сигурност на Вашите средства.";
-                } else if(t.includes("абонамент") || t.includes("план")) {
-                    reply = "Нашите планове са разработени за професионални инвеститори. Планът PRO RISK MONITOR (€150/мес.) предлага неограничен ЕИК одит и изпреварващ фийд в 07:30 ч. сутринта, което Ви дава стратегическо предимство пред пазара.";
-                }
-                msgs.innerHTML += `<div class="msg-ai">${reply}</div>`;
-                msgs.scrollTop = msgs.scrollHeight;
-            }, 600);
+            processVoiceInput(text);
         }
     </script>
 </body>
