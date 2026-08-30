@@ -82,7 +82,7 @@ FULL_HTML = """
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
-            --bg: #162447; /* По-светъл, модерен и приятен за очите тъмно-син нюанс */
+            --bg: #162447;
             --card-bg: #1f315c;
             --border: #334e85;
             --accent-cyan: #00f0ff;
@@ -176,12 +176,16 @@ FULL_HTML = """
         .btn-page { background: var(--card-bg); border: 1px solid var(--border); color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
+        /* ПЛАВАЩ AI ЧАТБОТ */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background: #1f315c; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
         .msg-ai { background: #2c4375; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
-        
+        .voice-mode-bar { background: #17274f; border-top: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-voice-toggle { background: #2c4375; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+        .btn-voice-toggle.active { background: #10b981; color: #fff; border-color: #10b981; }
+
         .site-footer { background: #132242; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #cbd5e1; box-sizing: border-box; }
         .impressum-box { background: #17274f; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
         .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; background: #101c38; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -341,8 +345,8 @@ FULL_HTML = """
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ С ВСИЧКИ ГЛАВНИ ОБЩИНИ И ГРАДОВЕ -->
-        <div class="card-dark mb-3" style="background:#132242;">
+        <!-- ФИЛТРИ С ВСИЧКИ ГЛАВНИ ОБЩИНИ -->
+        <div class="card-dark mb-3" style="background:#17274f;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
                     <label class="small text-secondary mb-1">Град / Община:</label>
@@ -365,6 +369,8 @@ FULL_HTML = """
                         <option value="Габрово">Габрово</option>
                         <option value="Добрич">Добрич</option>
                         <option value="Шумен">Шумен</option>
+                        <option value="Несебър">Несебър</option>
+                        <option value="Банско">Банско</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -424,6 +430,44 @@ FULL_HTML = """
         </div>
     </footer>
 
+    <!-- ПЛАВАЩ AI ЧАТБОТ -->
+    <button type="button" class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
+    <div class="chatbot-box" id="chatbotBox">
+        <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#17274f;">
+            <strong class="text-white small">AI Инвестиционен Асистент</strong>
+            <button type="button" class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
+        </div>
+        <div class="chat-messages" id="chatMsgs">
+            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник. Как мога да Ви помогна с имотите или проверките днес?</div>
+        </div>
+        <div class="voice-mode-bar">
+            <button type="button" class="btn-voice-toggle" id="voiceToggleBtn" onclick="toggleContinuousVoice()">🎙️ Гласов режим: ИЗКЛ</button>
+            <span class="text-secondary small" id="voiceStatusText">Готов</span>
+        </div>
+        <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#17274f;">
+            <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+            <button type="button" class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Прати</button>
+        </div>
+    </div>
+
+    <!-- МОБАЙЛ МЕНЮ -->
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" style="background-color: #17274f !important; width: 320px;">
+        <div class="offcanvas-header border-bottom border-secondary pb-3">
+            <h6 class="offcanvas-title fw-bold text-white" id="mobileMenuLabel">PRO INVEST RADAR</h6>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3">
+            <div class="mb-3 fw-bold text-info" style="font-size:12px; text-transform:uppercase;">Бързи контакти</div>
+            <a href="viber://chat?number=%2B359879495767" class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
+            <a href="https://t.me/stroyradar_support" target="_blank" class="d-block mb-4 text-light text-decoration-none">✈️ Telegram Канал</a>
+            <hr class="border-secondary">
+            <a href="#audit-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🔍 БУЛСТАТ / ЕИК Одит</a>
+            <a href="#pricing-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">💳 Абонаменти</a>
+            <a href="javascript:void(0)" class="d-block mb-2 text-light text-decoration-none" onclick="showDailyBulletin();" data-bs-dismiss="offcanvas">📄 Дневен Бюлетин (07:30 ч.)</a>
+            <a href="#map-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🗺️ ГИС Карта</a>
+        </div>
+    </div>
+
     <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -437,7 +481,7 @@ FULL_HTML = """
                     <div id="benefitsListContainer"></div>
 
                     <div class="bank-details-box mt-4" style="background:#17274f; padding:15px; border-radius:12px; border:1px solid var(--border);">
-                        <div class="small text-secondary mb-1">Директен банков превод (IBAN - готов за копиране):</div>
+                        <div class="small text-secondary mb-1">Директен банков превод (IBAN - готов за копиране в модала):</div>
                         <div class="iban-badge mb-2">
                             <span id="modalIbanText">BG80UNCR70001524896321</span>
                             <button type="button" class="btn btn-sm btn-info fw-bold py-1 px-2" style="font-size:11px;" onclick="copyModalIban()">📋 Copy</button>
@@ -451,7 +495,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОДАЛ ДНЕВЕН БЮЛЕТИН (07:30 Ч.) -->
+    <!-- МОДАЛ ДНЕВЕН БЮЛЕТИН -->
     <div class="modal fade" id="bulletinModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content" style="background:#1f315c; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -480,24 +524,6 @@ FULL_HTML = """
                     <a href="/export-pdf" target="_blank" class="btn btn-outline-warning w-100 fw-bold py-2">📥 Изтегли целия бюлетин в PDF формат</a>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- МОБАЙЛ МЕНЮ -->
-    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="mobileMenu" aria-labelledby="mobileMenuLabel" style="background-color: #17274f !important; width: 320px;">
-        <div class="offcanvas-header border-bottom border-secondary pb-3">
-            <h6 class="offcanvas-title fw-bold text-white" id="mobileMenuLabel">PRO INVEST RADAR</h6>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body p-3">
-            <div class="mb-3 fw-bold text-info" style="font-size:12px; text-transform:uppercase;">Бързи контакти</div>
-            <a href="viber://chat?number=%2B359879495767" class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
-            <a href="https://t.me/stroyradar_support" target="_blank" class="d-block mb-4 text-light text-decoration-none">✈️ Telegram Канал</a>
-            <hr class="border-secondary">
-            <a href="#audit-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🔍 БУЛСТАТ / ЕИК Одит</a>
-            <a href="#pricing-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">💳 Абонаменти</a>
-            <a href="javascript:void(0)" class="d-block mb-2 text-light text-decoration-none" onclick="showDailyBulletin();" data-bs-dismiss="offcanvas">📄 Дневен Бюлетин (07:30 ч.)</a>
-            <a href="#map-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🗺️ ГИС Карта</a>
         </div>
     </div>
 
@@ -706,6 +732,11 @@ FULL_HTML = """
                     document.getElementById('resCompBalance').innerText = comp.balance;
                     document.getElementById('downloadAuditPdfBtn').href = '/export-audit-pdf?eik=' + encodeURIComponent(eik);
                 });
+        }
+
+        function toggleChatbot() {
+            var box = document.getElementById('chatbotBox');
+            box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
         }
     </script>
 </body>
