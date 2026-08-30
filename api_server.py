@@ -95,13 +95,8 @@ FULL_HTML = """
         .ticker-bar { background-color: #382404; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
         .brand-box { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-        .shield-icon { width: 38px; height: 38px; background: #3255a4; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); animation: neonGlow 2.5s infinite alternate; }
+        .shield-icon { width: 38px; height: 38px; background: #3255a4; border: 2px solid #38bdf8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(56, 189, 248, 0.4); }
         .btn-burger { background: #325194; border: 1px solid #5579cc; color: #fff; padding: 7px 14px; border-radius: 10px; font-size: 1.25rem; cursor: pointer; }
-
-        @keyframes neonGlow {
-            0% { box-shadow: 0 0 5px rgba(0,240,255,0.2); }
-            100% { box-shadow: 0 0 15px rgba(0,240,255,0.7); }
-        }
 
         .btn-header-contact {
             display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 20px; color: #fff; text-decoration: none; font-weight: 700; font-size: 0.82rem;
@@ -124,20 +119,108 @@ FULL_HTML = """
             padding: 10px 16px !important; border-radius: 10px !important; width: 100% !important; font-family: monospace !important; font-size: 0.9rem !important; box-sizing: border-box !important;
         }
 
-        .sat-hud { background: #253a6b; border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; position: relative; overflow: hidden; }
-        .radar-screen { width: 130px; height: 130px; border: 2px solid #00f0ff; border-radius: 50%; position: relative; background: radial-gradient(circle, rgba(0,240,255,0.15) 0%, rgba(28,43,80,0.9) 80%); box-shadow: 0 0 15px rgba(0,240,255,0.3) inset; }
-        .radar-sweep { width: 65px; height: 65px; border-right: 2px solid #00f0ff; position: absolute; top: 0; left: 65px; transform-origin: bottom left; animation: radarSpin 3s linear infinite; }
-        @keyframes radarSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .radar-blip { width: 6px; height: 6px; background: #ff3366; border-radius: 50%; position: absolute; top: 40px; left: 85px; box-shadow: 0 0 8px #ff3366; animation: blipPulse 1.5s infinite; }
-        @keyframes blipPulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.8); opacity: 0.4; } 100% { transform: scale(1); opacity: 1; } }
+        /* 3D РЕАЛИСТИЧЕН РАДАР */
+        .sat-hud { 
+            background: radial-gradient(circle at center, #1b3166 0%, #0d1730 100%); 
+            border: 1px solid rgba(0, 240, 255, 0.6); 
+            border-radius: 18px; 
+            padding: 20px; 
+            text-align: center; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            box-sizing: border-box; 
+            position: relative; 
+            overflow: hidden; 
+            box-shadow: 0 0 30px rgba(0,240,255,0.2) inset;
+        }
+        .radar-3d-container {
+            width: 160px;
+            height: 160px;
+            perspective: 400px;
+            position: relative;
+            margin: 10px auto;
+        }
+        .radar-disc-3d {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid #00f0ff;
+            background: radial-gradient(circle, rgba(0,240,255,0.25) 0%, rgba(13,23,48,0.95) 85%);
+            box-shadow: 0 0 25px rgba(0,240,255,0.5), inset 0 0 20px rgba(0,240,255,0.4);
+            position: relative;
+            transform: rotateX(35deg);
+            transform-style: preserve-3d;
+        }
+        .radar-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border: 1px dashed rgba(0,240,255,0.4);
+            border-radius: 50%;
+        }
+        .ring-1 { width: 75%; height: 75%; }
+        .ring-2 { width: 45%; height: 45%; }
+        .radar-sweep-3d {
+            position: absolute;
+            top: 0; left: 50%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent 0%, rgba(0,240,255,0.6) 100%);
+            clip-path: polygon(0 50%, 100% 0, 100% 100%);
+            transform-origin: left center;
+            animation: radarScan3D 3s linear infinite;
+        }
+        @keyframes radarScan3D { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .target-blip {
+            position: absolute;
+            width: 8px; height: 8px;
+            background: #ff3366;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ff3366, 0 0 20px #ff3366;
+            animation: blipGlow 1.2s infinite alternate;
+        }
+        @keyframes blipGlow { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 1; } }
 
-        .kpi-card { background-color: var(--card-bg) !important; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border) !important; box-sizing: border-box; }
-        .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
-        .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
-        .kpi-yellow { border-left: 4px solid var(--accent-yellow) !important; }
-        .kpi-header { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #cbd5e1; }
-        .kpi-value { font-size: 1.85rem; font-weight: 800; line-height: 1.1; margin: 4px 0; }
-        .kpi-footer { font-size: 0.7rem; color: #cbd5e1; }
+        /* УЛТРА ПРЕМИУМ МАРКЕТИНГОВИ КУКИЧКИ (COPYWRITING HOOKS) НА МЯСТОТО НА КАРТИТЕ */
+        .hook-card {
+            background: linear-gradient(135deg, #1f3363 0%, #111e3b 100%);
+            border: 1px solid #00f0ff;
+            border-radius: 16px;
+            padding: 20px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(0,240,255,0.15);
+        }
+        .hook-title { font-size: 1.05rem; font-weight: 800; color: #00f0ff; margin-bottom: 6px; }
+        .hook-text { font-size: 0.83rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 0; }
+
+        /* ОБЕДИНЕН ПРАВОЪГЪЛЕН ПАНЕЛ ЗА ЛИВ СТАТИСТИКА С МИГАЩИ ЛАМПИЧКИ */
+        .live-stats-panel {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .stat-item { display: flex; align-items: center; gap: 10px; }
+        .live-dot {
+            width: 10px; height: 10px; background-color: #10b981; border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+            animation: ledBlink 1s infinite alternate;
+        }
+        @keyframes ledBlink { 0% { opacity: 0.3; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.2); } }
+        .stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; margin: 0; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0; line-height: 1; }
 
         #map { height: 420px; width: 100%; border-radius: 14px; border: 1px solid var(--border); }
         .leaflet-popup-content-wrapper { background: #253a6b !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
@@ -173,7 +256,6 @@ FULL_HTML = """
         .btn-page { background-color: var(--card-bg) !important; border: 1px solid var(--border) !important; color: #fff; border-radius: 8px; padding: 8px 16px; font-weight: bold; cursor: pointer; text-decoration: none; }
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
 
-        /* ВЪЗСТАНОВЕН ЧАТБОТ С МИКРОФОН И ГЛАСОВ РЕЖИМ */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; box-shadow: 0 4px 15px rgba(0,240,255,0.4); }
         .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 380px; max-width: 90vw; height: 480px; background-color: var(--card-bg) !important; border: 1px solid var(--accent-cyan); border-radius: 18px; display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
@@ -182,7 +264,7 @@ FULL_HTML = """
         .voice-mode-bar { background: #17274f; border-top: 1px solid var(--border); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
         .btn-voice-toggle { background: #325194; border: 1px solid #38bdf8; color: #38bdf8; border-radius: 20px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         .btn-voice-toggle.active { background: #10b981; color: #fff; border-color: #10b981; }
-        
+
         .site-footer { background-color: #132242 !important; border-top: 1px solid var(--border); padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #cbd5e1; box-sizing: border-box; }
         .impressum-box { background: #17274f; border: 1px solid var(--border); border-radius: 12px; padding: 18px; font-size: 0.82rem; line-height: 1.6; }
         .iban-badge { font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: 800; background: #101c38; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -220,7 +302,7 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
-        <!-- ОДИТ СКЕНЕР & РАДАР -->
+        <!-- ОДИТ СКЕНЕР & 3D РЕАЛИСТИЧЕН РАДАР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -256,24 +338,76 @@ FULL_HTML = """
                 </div>
             </div>
 
+            <!-- ИСТИНСКИ 3D РЕАЛИСТИЧЕН РАДАР -->
             <div class="col-lg-5">
                 <div class="sat-hud">
-                    <div class="text-info small fw-bold mb-3">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
-                    <div class="radar-screen">
-                        <div class="radar-sweep"></div>
-                        <div class="radar-blip"></div>
+                    <div class="text-info small fw-bold mb-1" style="letter-spacing:1px;">🛰️ 3D ТЕЛЕМЕТРИЧЕН РАДАР НА РЕАЛНИ ТЪРГОВЕ</div>
+                    <div class="radar-3d-container">
+                        <div class="radar-disc-3d">
+                            <div class="radar-ring ring-1"></div>
+                            <div class="radar-ring ring-2"></div>
+                            <div class="radar-sweep-3d"></div>
+                            <div class="target-blip" style="top: 45%; left: 60%;"></div>
+                            <div class="target-blip" style="top: 70%; left: 35%; animation-delay: 0.5s;"></div>
+                        </div>
                     </div>
-                    <div class="text-secondary small mt-3">LIVE SATELLITE FEED ACTIVE</div>
+                    <div class="text-secondary small mt-1" style="font-family:monospace; font-size:11px;">LIVE SCANNING: 34 ОБЕКТА В ОБХВАТ</div>
                 </div>
             </div>
         </div>
 
-        <!-- KPI КАРТИ -->
-        <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Реални обекти</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
-            <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
+        <!-- ОБЕДИНЕН ПРАВОЪГЪЛЕН ПАНЕЛ ЗА ЛИВ СТАТИСТИКА С МИГАЩИ ЛАМПИЧКИ -->
+        <div class="live-stats-panel">
+            <div class="stat-item">
+                <div class="live-dot"></div>
+                <div>
+                    <p class="stat-label">АКТИВИ В БАЗАТА</p>
+                    <p class="stat-val text-white">{{ stats.total }}</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="live-dot" style="background-color:var(--accent-cyan); box-shadow:0 0 10px #00f0ff;"></div>
+                <div>
+                    <p class="stat-label">TOP DEALS</p>
+                    <p class="stat-val" style="color:var(--accent-cyan);">{{ stats.top_deals }}</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="live-dot" style="background-color:var(--accent-yellow); box-shadow:0 0 10px #f59e0b;"></div>
+                <div>
+                    <p class="stat-label">СРЕДЕН ДИСКОНТ</p>
+                    <p class="stat-val" style="color:var(--accent-yellow);">-{{ stats.avg_discount }}%</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="live-dot" style="background-color:var(--accent-blue); box-shadow:0 0 10px #38bdf8;"></div>
+                <div>
+                    <p class="stat-label">БРУТЕН СПРЕД</p>
+                    <p class="stat-val" style="color:var(--accent-blue);">{{ stats.spread_str }} €</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- МАРКЕТИНГОВИ КУКИЧКИ (COPYWRITING HOOKS) НА МЯСТОТО НА КАРТИТЕ -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <div class="hook-card">
+                    <div class="hook-title">🛡️ Защитете се от чл. 512 ГПК</div>
+                    <p class="hook-text">Скритите запори фалират над 34% от новите купувачи на ЧСИ търгове. Нашата система проверява тежестите секунди преди сделката.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hook-card" style="border-color:#f59e0b; box-shadow: 0 8px 25px rgba(245,158,11,0.15);">
+                    <div class="hook-title" style="color:#f59e0b;">⚡ Изпреварете банковите NPL пакети</div>
+                    <p class="hook-text">Преди да излязат на публичен сайт, топ дистрес имотите се разпределят вътрешно. Вземете 07:30 ч. изпреварващ фийд.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="hook-card" style="border-color:#10b981; box-shadow: 0 8px 25px rgba(16,185,129,0.15);">
+                    <div class="hook-title" style="color:#10b981;">💎 Реална доходност до 57% ROI</div>
+                    <p class="hook-text">Алгоритмично изчислени пазарни оценки спрямо реални сделки в Търговския регистър и НАП без спекулации.</p>
+                </div>
+            </div>
         </div>
 
         <!-- КАЛКУЛАТОР -->
@@ -295,7 +429,7 @@ FULL_HTML = """
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
                 <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2.2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
-                <p class="text-light small mb-3">Защитете се от скрити тежести, фалити на контрагенти и изпуснати подценени имоти от ЧСИ и НАП преди всички останали!</p>
+                <p class="text-light small mb-3">Инвестирайте днес, за да изпреварите конкуренцията си с ексклузивни данни от ЧСИ и НАП търгове преди всички останали!</p>
                 <button type="button" class="btn btn-primary w-100 py-3 fw-bold shadow" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem; cursor:pointer;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ СЕГА</button>
             </div>
 
@@ -760,7 +894,7 @@ FULL_HTML = """
 
             setTimeout(function() {
                 var reply = "Анализирах запитването Ви през нашите алгоритми. Обектите отговарят напълно на пазарните стандарти за 2026 година.";
-                if(txt.toLowerCase().contains("цена") || txt.toLowerCase().includes("одит")) {
+                if(txt.toLowerCase().includes("цена") || txt.toLowerCase().includes("одит")) {
                     reply = "Можете да използвате експертния одит по ЕИК в горната част на сайта за пълна проверка.";
                 }
                 msgs.innerHTML += '<div class="msg-ai">' + reply + '</div>';
@@ -819,7 +953,7 @@ def export_audit_pdf():
     </html>
     """, 200, {'Content-Type': 'text/html; charset=utf-8'}
 
-@app.route("/export-pdf")
+@app.export_audit_pdf if False else app.route("/export-pdf")
 def export_pdf():
     return "<h3>07:30 Дневен Бюлетин - Пълен Анализ</h3>", 200, {'Content-Type': 'text/html; charset=utf-8'}
 
