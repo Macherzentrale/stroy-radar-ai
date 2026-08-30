@@ -103,8 +103,9 @@ FULL_HTML = """
             --accent-yellow: #f59e0b;
             --accent-blue: #38bdf8;
         }
-        body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding-bottom: 0; }
-        .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; }
+        /* СТРОГ ФИКС НА ХОРИЗОНТАЛНОТО БЯГАНЕ НА ЕКРАНА */
+        html, body { background-color: var(--bg); color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; overflow-x: hidden; width: 100%; max-width: 100vw; }
+        .container-custom { max-width: 1320px; margin: 0 auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
 
         @keyframes neonGlow {
             0%, 100% { background-color: #1e1202; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); border-color: #f59e0b; }
@@ -117,7 +118,7 @@ FULL_HTML = """
             60% { transform: rotate(-15deg) scale(1.35); }
             80% { transform: rotate(15deg) scale(1.35); }
         }
-        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; }
+        .ticker-bar { animation: neonGlow 2s infinite ease-in-out; border-bottom: 2px solid #f59e0b; padding: 10px 18px; font-size: 0.85rem; text-align: center; font-weight: bold; width: 100%; box-sizing: border-box; }
         .bell-animated { display: inline-block; animation: bellShake 1.8s infinite; margin-right: 6px; }
 
         .navbar-custom { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
@@ -145,18 +146,18 @@ FULL_HTML = """
         .contact-tg { background: #229ED9; }
         .contact-phone { background: #10b981; }
 
-        .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; }
-        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; }
+        .card-dark { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 20px; margin-bottom: 20px; box-sizing: border-box; }
+        .custom-input, .custom-select { background: #131f36 !important; border: 1px solid #00f0ff !important; color: #ffffff !important; padding: 11px 16px; border-radius: 10px; width: 100%; font-family: monospace; box-sizing: border-box; }
         .custom-input:focus, .custom-select:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(0,240,255,0.4); }
         .custom-select option { background: #131f36; color: #fff; }
 
-        .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); }
+        .sat-hud { background: radial-gradient(circle at center, #1e293b 0%, #0d1527 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 0 25px rgba(0, 240, 255, 0.12); box-sizing: border-box; }
         @keyframes radarRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes satOrbitAnim { 0% { transform: rotate(0deg) translateX(48px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(48px) rotate(-360deg); } }
         .radar-sweep { transform-origin: 75px 75px; animation: radarRotate 4s linear infinite; }
         .sat-orbit { transform-origin: 75px 75px; animation: satOrbitAnim 7s linear infinite; }
 
-        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); }
+        .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); box-sizing: border-box; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
         .kpi-blue   { border-left: 4px solid var(--accent-blue) !important; }
         .kpi-yellow { border-left: 4px solid var(--accent-yellow) !important; }
@@ -168,14 +169,14 @@ FULL_HTML = """
         .leaflet-popup-content-wrapper { background: #0d1527 !important; color: #fff !important; border: 1px solid #38bdf8 !important; border-radius: 12px; }
         .leaflet-popup-tip { background: #0d1527 !important; }
 
-        .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s, transform 0.2s; }
+        .listing-card { background: #0b1120; border: 1px solid var(--border); border-left: 4px solid var(--accent-cyan); border-radius: 14px; padding: 18px; margin-bottom: 16px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s, transform 0.2s; box-sizing: border-box; }
         .listing-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .listing-title { font-size: 1.15rem; font-weight: 800; color: #ffffff; margin-bottom: 8px; }
         .listing-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; font-size: 0.85rem; color: #94a3b8; }
         .listing-price-box { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
         .masked-badge { background: #162033; color: #38bdf8; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-size: 0.82rem; border: 1px dashed #0284c7; display: inline-block; font-weight: bold; }
 
-        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; }
+        .plan-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease; cursor: pointer; box-sizing: border-box; }
         .plan-box:hover { border-color: #38bdf8; transform: translateY(-2px); }
         .plan-popular { border: 2px solid var(--accent-cyan) !important; box-shadow: 0 0 25px rgba(0, 240, 255, 0.2); }
         .btn-plan { background: #1e293b; border: 1px solid #334155; color: #fff; font-weight: 700; padding: 10px 22px; border-radius: 10px; font-size: 0.9rem; }
@@ -203,22 +204,26 @@ FULL_HTML = """
         .btn-page.active { background: var(--accent-cyan); color: #040810; border-color: var(--accent-cyan); }
         .btn-page:hover:not(.active) { background: #1e293b; color: var(--accent-cyan); }
 
-        .security-banner { background: linear-gradient(145deg, #091224 0%, #060b17 100%); border: 1px solid #1d335a; border-radius: 20px; padding: 24px; margin-top: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0, 240, 255, 0.08); position: relative; overflow: hidden; }
+        .security-banner { background: linear-gradient(145deg, #091224 0%, #060b17 100%); border: 1px solid #1d335a; border-radius: 20px; padding: 24px; margin-top: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0, 240, 255, 0.08); position: relative; overflow: hidden; box-sizing: border-box; }
         .security-banner::before { content: ""; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(to bottom, #00f0ff, #3b82f6); }
-        .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; }
+        .pillar-card { background: #080e1c; border: 1px solid #162644; border-radius: 14px; padding: 16px; height: 100%; box-sizing: border-box; }
         .pillar-icon { font-size: 1.8rem; margin-bottom: 8px; display: inline-block; }
 
+        /* СТИЛ НА ЧАТБОТА И ВГРАДЕНИЯ МИКРОФОН */
         .chatbot-btn { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #00f0ff, #0284c7); color: #040810; font-weight: 800; padding: 10px 18px; border-radius: 25px; box-shadow: 0 4px 20px rgba(0, 240, 255, 0.4); cursor: pointer; z-index: 100; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.88rem; }
-        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 360px; max-width: 90vw; height: 440px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; }
+        .chatbot-box { position: fixed; bottom: 75px; right: 20px; width: 360px; max-width: 90vw; height: 460px; background: #0d1527; border: 1px solid var(--accent-cyan); border-radius: 18px; box-shadow: 0 10px 35px rgba(0,0,0,0.8); display: none; flex-direction: column; z-index: 101; overflow: hidden; box-sizing: border-box; }
         .chat-messages { flex: 1; padding: 14px; overflow-y: auto; font-size: 0.85rem; }
         .msg-ai { background: #162035; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; border-left: 3px solid var(--accent-cyan); color: #f1f5f9; }
         .msg-user { background: #0284c7; color: #fff; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; margin-left: 20%; font-weight: 500; }
+        .btn-mic { background: #1e293b; border: 1px solid #00f0ff; color: #00f0ff; border-radius: 8px; padding: 6px 12px; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+        .btn-mic.recording { background: #ef4444; color: #fff; border-color: #ef4444; animation: pulseMic 1.2s infinite; }
+        @keyframes pulseMic { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
 
         .offcanvas-menu-section { font-size: 0.72rem; font-weight: 800; color: #64748b; letter-spacing: 1px; text-transform: uppercase; margin: 16px 0 8px 0; }
         .nav-link-custom { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #090e1a; border: 1px solid #162032; border-radius: 10px; color: #cbd5e1; text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
         .nav-link-custom:hover { background: #131d31; color: var(--accent-cyan); border-color: var(--accent-cyan); }
 
-        .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; }
+        .site-footer { background: #040810; border-top: 1px solid #131c31; padding: 40px 0 30px 0; margin-top: 50px; font-size: 0.85rem; color: #94a3b8; box-sizing: border-box; }
         .footer-heading { font-size: 0.8rem; font-weight: 800; color: #f1f5f9; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
         .footer-link { color: #94a3b8; text-decoration: none; display: block; margin-bottom: 8px; }
         .footer-link:hover { color: var(--accent-cyan); }
@@ -555,7 +560,7 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- ПЛАВАЩ AI ЧАТБОТ С НАЙ-ХУМАННИЯ И ЕКСПЕРТЕН ИНТЕЛЕКТУАЛЕН МОДЕЛ -->
+    <!-- ПЛАВАЩ AI ЧАТБОТ С ВГРАДЕН МИКРОФОН ЗА ГЛАСОВО ВЪВЕЖДАНЕ -->
     <button class="chatbot-btn" onclick="toggleChatbot()">🤖 AI Radar Advisor</button>
     <div class="chatbot-box" id="chatbotBox">
         <div class="p-3 border-bottom border-secondary d-flex justify-content-between align-items-center" style="background:#09101f;">
@@ -566,9 +571,10 @@ FULL_HTML = """
             <button class="btn-close btn-close-white btn-sm" onclick="toggleChatbot()"></button>
         </div>
         <div class="chat-messages" id="chatMsgs">
-            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник, обучен в детайли върху нашата платформа, пазарни тенденции, ЧСИ процедури и законодателство. С какво мога да Ви помогна днес?</div>
+            <div class="msg-ai">Здравейте! Аз съм Вашият личен експертен съветник, обучен в детайли върху нашата платформа, пазарни тенденции, ЧСИ процедури и законодателство. Можете да ми пишете или да използвате микрофона за гласов разговор. С какво мога да Ви помогна днес?</div>
         </div>
-        <div class="p-2 border-top border-secondary d-flex gap-2" style="background:#09101f;">
+        <div class="p-2 border-top border-secondary d-flex gap-2 align-items-center" style="background:#09101f;">
+            <button class="btn-mic" id="micBtn" onclick="toggleVoiceInput()" title="Гласово въвеждане">🎙️</button>
             <input type="text" id="chatInput" class="custom-input py-1 text-white" placeholder="Задайте експертен въпрос..." onkeypress="if(event.key==='Enter') sendChatMessage()">
             <button class="btn btn-info btn-sm fw-bold px-3" onclick="sendChatMessage()">Изпрати</button>
         </div>
@@ -992,6 +998,60 @@ FULL_HTML = """
         function toggleChatbot() {
             var box = document.getElementById('chatbotBox');
             box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        /* ГЛАСОВО ВЪВЕЖДАНЕ С МИКРОФОН В ЧАТА */
+        let recognition = null;
+        let isRecording = false;
+        function toggleVoiceInput() {
+            const micBtn = document.getElementById('micBtn');
+            const chatInput = document.getElementById('chatInput');
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Вашият браузър не поддържа гласово разпознаване на реч. Моля използвайте Google Chrome.');
+                return;
+            }
+
+            if (isRecording) {
+                if (recognition) recognition.stop();
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'bg-BG';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = function() {
+                isRecording = true;
+                micBtn.classList.add('recording');
+                chatInput.placeholder = 'Слушам Ви... Говорете...';
+            };
+
+            recognition.onresult = function(event) {
+                const speechToText = event.results[0][0].transcript;
+                chatInput.value = speechToText;
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Грешка при гласово разпознаване:', event.error);
+                stopMicState();
+            };
+
+            recognition.onend = function() {
+                stopMicState();
+            };
+
+            recognition.start();
+        }
+
+        function stopMicState() {
+            isRecording = false;
+            const micBtn = document.getElementById('micBtn');
+            const chatInput = document.getElementById('chatInput');
+            if (micBtn) micBtn.classList.remove('recording');
+            if (chatInput) chatInput.placeholder = 'Задайте експертен въпрос...';
         }
 
         function sendChatMessage() {
