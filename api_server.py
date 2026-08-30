@@ -46,7 +46,7 @@ def init_db():
             ('Производствен цех & база', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 310000, 720000, 56.9, 88)
         ]
         records = []
-        for i in range(5420): # Над 5000 реални обекта в националната база
+        for i in range(5420):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -290,8 +290,8 @@ FULL_HTML = """
             </a>
             
             <div class="desktop-nav-contacts">
-                <a href="viber://chat?number=%2B359879495767&text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D বিষয়টি...%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D・・・。" class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
-                <a href="https://t.me/stroyradar_support?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D0%BF%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B8%D1%8F%20%D1%84%D0%B8%D0%B9%D0%B4%20%D0%B8%20%D1%81%D0%BF%D1%80%D0%B0%D0%B2%D0%BA%D0%B8%D1%82%D0%B5%20%D0%BF%D0%BE%20%D0%95%D0%98%D0%9A." target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
+                <a href="viber://chat?number=%2B359879495767&text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд%20и%20справките%20по%20ЕИК." class="btn-header-contact contact-viber">🟣 Viber Консулт</a>
+                <a href="https://t.me/stroyradar_support?text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд%20и%20справките%20по%20ЕИК." target="_blank" class="btn-header-contact contact-tg">✈️ Telegram Канал</a>
             </div>
 
             <div class="d-flex align-items-center gap-2">
@@ -301,8 +301,8 @@ FULL_HTML = """
         </div>
 
         <div class="mobile-contact-bar">
-            <a href="viber://chat?number=%2B359879495767&text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D0%BF%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B8%D1%8F%20%D1%84%D0%B8%D0%B9%D0%B4." class="btn-header-contact contact-viber">🟣 Viber</a>
-            <a href="https://t.me/stroyradar_support?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D0%BF%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B8%D1%8F%20%D1%84%D0%B8%D0%B9%D0%B4." target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
+            <a href="viber://chat?number=%2B359879495767&text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд." class="btn-header-contact contact-viber">🟣 Viber</a>
+            <a href="https://t.me/stroyradar_support?text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд." target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
         <!-- ОДИТ СКЕНЕР & 3D РАДАР -->
@@ -363,7 +363,7 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ОБЕДИНЕН ПРАВОЪГЪЛЕН ПАНЕЛ ЗА ЛИВ СТАТИСТИКА (НАД 5000 ОБЕКТА) -->
+        <!-- ОБЕДИНЕН ПРАВОЪГЪЛЕН ПАНЕЛ ЗА ЛИВ СТАТИСТИКА -->
         <div class="live-stats-panel">
             <div class="stat-item">
                 <div class="live-dot"></div>
@@ -602,8 +602,8 @@ FULL_HTML = """
         </div>
         <div class="offcanvas-body p-3">
             <div class="mb-3 fw-bold text-info" style="font-size:12px; text-transform:uppercase;">Бързи контакти</div>
-            <a href="viber://chat?number=%2B359879495767&text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D0%BF%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B8%D1%8F%20%D1%84%D0%B8%D0%B9%D0%B4." class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
-            <a href="https://t.me/stroyradar_support?text=%D0%97%D0%B4%D1%80%D0%B0%D0%B2%D0%B5%D0%B9%D1%82%D0%B5!%20%D0%98%D0%BD%D1%82%D0%B5%D1%80%D0%B5%D1%81%D1%83%D0%B2%D0%B0%D0%BC%20%D1%81%D0%B5%20%D0%BE%D1%82%20%D0%BA%D0%BE%D1%80%D0%BF%D0%BE%D1%80%D0%B0%D1%82%D0%B8%D0%B2%D0%BD%D0%B8%D1%8F%20%D1%84%D0%B8%D0%B9%D0%B4." target="_blank" class="d-block mb-4 text-light text-decoration-none">✈️ Telegram Канал</a>
+            <a href="viber://chat?number=%2B359879495767&text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд." class="d-block mb-2 text-light text-decoration-none">🟣 Viber Консулт</a>
+            <a href="https://t.me/stroyradar_support?text=Здравейте!%20Интересувам%20се%20от%20корпоративния%20фийд." target="_blank" class="d-block mb-4 text-light text-decoration-none">✈️ Telegram Канал</a>
             <hr class="border-secondary">
             <a href="#audit-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">🔍 БУЛСТАТ / ЕИК Одит</a>
             <a href="#pricing-section" class="d-block mb-2 text-light text-decoration-none" data-bs-dismiss="offcanvas">💳 Абонаменти</a>
@@ -639,7 +639,7 @@ FULL_HTML = """
         </div>
     </div>
 
-    <!-- МОДАЛ ЕЖЕДНЕВЕН НАЦИОНАЛЕН БЮЛЕТИН (МНОЖЕСТВО ОБЕКТИ ЗА ДЕНЯ) -->
+    <!-- МОДАЛ ЕЖЕДНЕВЕН НАЦИОНАЛЕН БЮЛЕТИН (БОГАТ ПРЕГЛЕД НА МНОЖЕСТВО ОБЕКТИ ЗА ДЕНЯ) -->
     <div class="modal fade" id="bulletinModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content" style="background:#253a6b; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -668,7 +668,7 @@ FULL_HTML = """
                         <div class="small text-secondary">Статус: Влязло в сила разрешение за строеж.</div>
                     </div>
 
-                    <div class="p-3 rounded mb-3" style="background:#17274f; border:1px solid var(--border);">
+                    <div class="p-3 rounded mb-2" style="background:#17274f; border:1px solid var(--border);">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <strong class="text-warning">3. Търговски комплекс Варна (бул. Владислав Варненчик)</strong>
                             <span class="badge bg-warning text-dark">NPL Дистрес</span>
@@ -677,15 +677,32 @@ FULL_HTML = """
                         <div class="small text-secondary">Статус: Ексклузивен достъп за Pro абонати.</div>
                     </div>
 
+                    <div class="p-3 rounded mb-2" style="background:#17274f; border:1px solid var(--border);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-warning">4. Производствен цех и база Бургас (Западна зона)</strong>
+                            <span class="badge bg-danger">НАП Публична продан</span>
+                        </div>
+                        <p class="small text-light mb-1">Индустриален имот с площ 3,800 кв.м. Данъчна тръжна цена: €310,000 (Пазарна оценка: €720,000).</p>
+                        <div class="small text-secondary">Статус: Активен публичен търг на НАП Бургас.</div>
+                    </div>
+
+                    <div class="p-3 rounded mb-3" style="background:#17274f; border:1px solid var(--border);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-warning">5. Бизнес сграда Стара Загора (ул. Цар Симеон Велики)</strong>
+                            <span class="badge bg-info">ЗУТ Проект</span>
+                        </div>
+                        <p class="small text-light mb-1">Модерна офис сграда и подземен паркинг (3,100 кв.м РЗП). Цена: €680,000 (Пазарна оценка: €1,300,000).</p>
+                        <div class="small text-secondary">Статус: Одобрен проект и изрядни документи.</div>
+                    </div>
+
                     <a href="/export-pdf" target="_blank" class="btn btn-outline-warning w-100 fw-bold py-2">📥 Изтегли пълния национален бюлетин в PDF формат</a>
                 </div>
             </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
         var map = L.map('map').setView([42.6977, 25.2], 7);
         
         var streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -709,7 +726,6 @@ FULL_HTML = """
         var filteredProjects = allProjects.slice();
         var currentPage = 1, pageSize = 6;
 
-        // Показваме първите 100 маркера за максимална бързина и стабилност на картата
         allProjects.slice(0, 100).forEach(function(item) {
             L.marker([item[13], item[14]]).addTo(map).bindPopup(item[1] + " (" + item[3] + ")");
         });
@@ -1003,7 +1019,7 @@ FULL_HTML = """
                 speakText(aiReply);
             }, 500);
         }
-    </script>
+        </script>
 </body>
 </html>
 """
@@ -1021,7 +1037,6 @@ def home():
 @app.route("/api/audit-eik")
 def api_audit_eik():
     eik = request.args.get("eik", "103169469").strip()
-    # Пълен детайлен национален резолвер с история и пълни данни
     registry_db = {
         "103169469": {
             "name": "ПРОФЕСИОНАЛНИ ИНВЕСТИЦИОННИ СТРОЕЖИ АД",
