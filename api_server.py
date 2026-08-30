@@ -217,7 +217,7 @@ FULL_HTML = """
             <a href="tel:+359879495767" class="btn-header-contact contact-phone">📞 0879 495 767</a>
         </div>
 
-        <!-- ОДИТ СКЕНЕР (ИЗЧЕПАТЕЛНО ДОСИЕ) -->
+        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -289,8 +289,53 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- КАРТА -->
-        <div class="card-dark">
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ (РАЗМЕНЕНИ НА МЯСТОТО НА КАРТАТА) -->
+        <div id="pricing-section" class="mt-4 mb-4">
+            <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
+                <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">СТАРТОВ АБОНАМЕНТЕН ДОСТЪП:</div>
+                <h2 class="fw-bold mb-3" style="color:#00f0ff; font-size:2.2rem; font-family:monospace;">€2.00 / ден (€60/мес.)</h2>
+                <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#0284c7; border:none; border-radius:12px; font-size:1.05rem;" onclick="showPlanFeatures('starter')">ВИЖ ПРИДОБИВКИТЕ &amp; АКТИВИРАЙ</button>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('starter')">
+                        <div class="w-100 mb-3">
+                            <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
+                            <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">Седмичен PDF бюлетин + отключване на ЕИК/адреси</div>
+                        </div>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('starter')">Виж придобивките</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="plan-box plan-popular flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('pro')">
+                        <div class="w-100 mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-bold" style="color:#00f0ff;">PRO RISK MONITOR</span>
+                                <span class="badge bg-info text-dark" style="font-size:9px; font-weight:800;">POPULAR</span>
+                            </div>
+                            <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">07:30 ч. ежедневен фийд + неограничен ЕИК одит</div>
+                        </div>
+                        <button type="button" class="btn-plan btn-plan-pro w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('pro')">ВЗЕМИ PRO</button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('enterprise')">
+                        <div class="w-100 mb-3">
+                            <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
+                            <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/ месец</span></div>
+                            <div class="text-secondary small mt-1">REST JSON API ключ + пълна M2M интеграция без маскиране</div>
+                        </div>
+                        <button type="button" class="btn-plan w-100 mt-auto" onclick="event.stopPropagation(); showPlanFeatures('enterprise')">API Ключ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- КАРТА (ПРЕМЕСТЕНА НАДОЛУ) -->
+        <div class="card-dark" id="map-section">
             <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
             <div id="map"></div>
         </div>
@@ -322,41 +367,16 @@ FULL_HTML = """
             </div>
         </div>
 
-        <div class="row g-3" id="dealsContainer"></div>
-        <div class="pagination-box" id="paginationControls"></div>
-
-        <!-- АБОНАМЕНТИ -->
-        <div id="pricing-section" class="mt-4 mb-4">
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('starter')">
-                        <div class="w-100 mb-3">
-                            <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
-                            <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/мес</span></div>
-                        </div>
-                        <button class="btn-plan w-100 mt-auto">Виж придобивките</button>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="plan-box plan-popular flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('pro')">
-                        <div class="w-100 mb-3">
-                            <div class="small fw-bold" style="color:#00f0ff;">PRO RISK MONITOR</div>
-                            <div class="fw-bold text-white fs-3">€150 <span class="fs-6 text-secondary">/мес</span></div>
-                        </div>
-                        <button class="btn-plan btn-plan-pro w-100 mt-auto">ВЗЕМИ PRO</button>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="plan-box flex-column align-items-start h-100 mb-0" onclick="showPlanFeatures('enterprise')">
-                        <div class="w-100 mb-3">
-                            <div class="small fw-bold text-secondary">ENTERPRISE M2M</div>
-                            <div class="fw-bold text-white fs-3">€290 <span class="fs-6 text-secondary">/мес</span></div>
-                        </div>
-                        <button class="btn-plan w-100 mt-auto">API Ключ</button>
-                    </div>
-                </div>
+        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ (ОРИГИНАЛЕН ДИЗАЙН) -->
+        <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
+            <div>
+                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
+                <small class="text-secondary">Показват се по 6 обекта на страница (локация, инвеститор и ЕИК са със звездички)</small>
             </div>
         </div>
+
+        <div class="row g-3" id="dealsContainer"></div>
+        <div class="pagination-box" id="paginationControls"></div>
     </div>
 
     <footer class="site-footer">
@@ -446,6 +466,10 @@ FULL_HTML = """
             var pageItems = filteredProjects.slice(start, start + pageSize);
 
             pageItems.forEach(function(p) {
+                var maskedLoc = p[3].split(',')[0] + ", кв. ***, ул. *** 🔒";
+                var maskedInv = (p[4] || "Инвестор").substring(0, 4) + " ******* 🔒";
+                var maskedEik = (p[5] || "100000000").substring(0, 3) + "****** 🔒";
+
                 var col = document.createElement('div');
                 col.className = 'col-md-6';
                 col.innerHTML = `
@@ -453,23 +477,90 @@ FULL_HTML = """
                         <div>
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="badge bg-secondary">${p[2]}</span>
-                                <span class="badge bg-success">Score: ${p[10]}</span>
+                                <span class="badge bg-success">Score: ${p[10]}/100</span>
                             </div>
                             <div class="listing-title">${p[1]}</div>
                             <div class="listing-meta">
-                                <div>📍 <span class="masked-badge">${p[3].split(',')[0]}, кв. *** 🔒</span></div>
-                                <div>🏢 <span class="text-white">${p[11]}</span></div>
+                                <div>📍 <strong>Локация:</strong><br><span class="masked-badge">${maskedLoc}</span></div>
+                                <div>🏢 <strong>РЗП / Площ:</strong><br><span class="text-white">${p[11]}</span></div>
+                                <div>💼 <strong>Инвеститор:</strong><br><span class="masked-badge">${maskedInv}</span></div>
+                                <div>📋 <strong>ЕИК:</strong><br><span class="masked-badge">${maskedEik}</span></div>
                             </div>
                             <div class="listing-price-box">
-                                <strong class="text-warning">€${p[7].toLocaleString()}</strong>
-                                <span class="text-light">€${p[8].toLocaleString()}</span>
+                                <div>
+                                    <div class="small text-secondary">ТЪРЖНА ЦЕНА:</div>
+                                    <strong class="text-warning fs-5">€${p[7].toLocaleString()}</strong>
+                                </div>
+                                <div class="text-end">
+                                    <div class="small text-secondary">ПАЗАРНА ОЦЕНКА:</div>
+                                    <strong class="text-light fs-6">€${p[8].toLocaleString()}</strong>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
                 container.appendChild(col);
             });
+            renderPaginationControls();
         }
+
+        function renderPaginationControls() {
+            var totalPages = Math.ceil(filteredProjects.length / pageSize);
+            var controls = document.getElementById('paginationControls');
+            controls.innerHTML = '';
+            if(totalPages <= 1) return;
+
+            var prevBtn = document.createElement('button');
+            prevBtn.className = 'btn-page';
+            prevBtn.innerText = '« Предишна';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = function() { if(currentPage > 1) { currentPage--; renderPaginatedDeals(); scrollToDeals(); } };
+            controls.appendChild(prevBtn);
+
+            for(var i = 1; i <= Math.min(5, totalPages); i++) {
+                var pBtn = document.createElement('button');
+                pBtn.className = 'btn-page' + (i === currentPage ? ' active' : '');
+                pBtn.innerText = i;
+                (function(page) {
+                    pBtn.onclick = function() { currentPage = page; renderPaginatedDeals(); scrollToDeals(); };
+                })(i);
+                controls.appendChild(pBtn);
+            }
+
+            var nextBtn = document.createElement('button');
+            nextBtn.className = 'btn-page';
+            nextBtn.innerText = 'Следваща »';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = function() { if(currentPage < totalPages) { currentPage++; renderPaginatedDeals(); scrollToDeals(); }; };
+            controls.appendChild(nextBtn);
+        }
+
+        function scrollToDeals() {
+            document.getElementById('deals-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function applyAdvancedFilters() {
+            var q = document.getElementById('dealSearchInput').value.toLowerCase().trim();
+            var city = document.getElementById('filterCity').value;
+            var cat = document.getElementById('filterCategory').value;
+
+            filteredProjects = allProjects.filter(function(p) {
+                var matchQ = !q || p[1].toLowerCase().includes(q) || p[3].toLowerCase().includes(q);
+                var matchCity = city === 'all' || p[3].includes(city);
+                var matchCat = cat === 'all' || p[2] === cat;
+                return matchQ && matchCity && matchCat;
+            });
+            currentPage = 1;
+            renderPaginatedDeals();
+        }
+
+        function resetFilters() {
+            document.getElementById('filterCity').value = 'all';
+            document.getElementById('filterCategory').value = 'all';
+            document.getElementById('dealSearchInput').value = '';
+            applyAdvancedFilters();
+        }
+
         renderPaginatedDeals();
 
         var plansData = {
@@ -530,7 +621,6 @@ FULL_HTML = """
             var plan = plansData[planKey];
             document.getElementById('featTitle').innerText = plan.name;
             document.getElementById('featBadge').innerText = plan.badge;
-            document.getElementById('featAmountDisplay').innerText = '€' + plan.amount + '.00';
             
             var container = document.getElementById('benefitsListContainer');
             container.innerHTML = '';
