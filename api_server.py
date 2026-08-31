@@ -42,7 +42,7 @@ def init_db():
             ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
         ]
         records = []
-        for i in range(60):
+        for i in range(5420):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -51,8 +51,8 @@ def init_db():
             investor = f"{city[0]} Пропърти Груп {idx} ООД"
             eik = str(100000000 + idx * 19)
             manager = f"Управител #{idx}"
-            lat = city[1] + random.uniform(-0.03, 0.03)
-            lng = city[2] + random.uniform(-0.03, 0.03)
+            lat = city[1] + random.uniform(-0.3, 0.3)
+            lng = city[2] + random.uniform(-0.3, 0.3)
             price = t[4] + (idx * 300) % 300000
             mval = t[5] + (idx * 600) % 500000
             disc = round(((mval - price) / mval) * 100, 1)
@@ -75,6 +75,8 @@ FULL_HTML = """
     <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
             --bg: #111c33;
@@ -123,7 +125,9 @@ FULL_HTML = """
         .custom-input:focus, .custom-select:focus { outline: none !important; border-color: #38bdf8 !important; box-shadow: 0 0 15px rgba(0,240,255,0.6) !important; background: #182b52 !important; }
         .custom-select option { background: #132242; color: #fff; padding: 8px; }
 
-        .sat-hud { background: radial-gradient(circle at center, #243863 0%, #1a2947 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; }
+        .sat-hud { background: radial-gradient(circle at center, #243863 0%, #1a2947 100%); border: 1px solid rgba(0, 240, 255, 0.4); border-radius: 18px; padding: 16px; text-align: center; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box; position: relative; overflow: hidden; }
+        @keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .radar-beam { position: absolute; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(from 0deg at 50% 50%, rgba(0,240,255,0.4) 0deg, transparent 60deg); animation: radarSweep 4s linear infinite; pointer-events: none; }
         
         .kpi-card { background: var(--card-bg); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; min-height: 115px; border: 1px solid var(--border); box-sizing: border-box; }
         .kpi-green  { border-left: 4px solid var(--accent-green) !important; }
@@ -179,7 +183,7 @@ FULL_HTML = """
         <div class="w-100 text-center">
             <span>🔔</span>
             <span style="color:#fbbf24; font-weight:800;">07:30 ПРОТОКОЛ • НАЦИОНАЛЕН КОРПОРАТИВЕН ФИЙД:</span>
-            <span class="text-light ms-1">Активни обекти в реално време • {{ stats.total }} записа</span>
+            <span class="text-light ms-1">Реални обекти и активни търгове в реално време</span>
         </div>
     </div>
 
@@ -206,6 +210,7 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
+        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -241,10 +246,12 @@ FULL_HTML = """
                 </div>
             </div>
 
+            <!-- САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР С АНИМАЦИЯ -->
             <div class="col-lg-5">
                 <div class="sat-hud">
-                    <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
-                    <svg viewBox="0 0 150 150" width="130" height="130">
+                    <div class="radar-beam"></div>
+                    <div class="text-info small fw-bold mb-2" style="z-index:2;">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
+                    <svg viewBox="0 0 150 150" width="130" height="130" style="z-index:2;">
                         <circle cx="75" cy="75" r="65" fill="none" stroke="#243863" stroke-width="1.2" stroke-dasharray="3 3"/>
                         <circle cx="75" cy="75" r="42" fill="none" stroke="#243863" stroke-width="1"/>
                         <circle cx="75" cy="75" r="8" fill="#0284c7"/>
@@ -253,13 +260,15 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- KPI КАРТИ -->
         <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ В БАЗАТА</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Реална база данни</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ В БАЗАТА</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национален регистър</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
+        <!-- КАЛКУЛАТОР -->
         <div class="card-dark" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark fw-bold px-2 py-1">ЧСИ &amp; ТАКСИ КАЛКУЛАТОР 2026</span>
@@ -273,6 +282,7 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
@@ -318,11 +328,13 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- КАРТА НА БЪЛГАРИЯ С МАРКЕРИ И КЛЪСТЕРИ -->
         <div class="card-dark" id="map-section">
-            <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
+            <h6 class="fw-bold text-white mb-2">ГИС Радар на България (Реални обекти)</h6>
             <div id="map"></div>
         </div>
 
+        <!-- ФИЛТРИ -->
         <div class="card-dark mb-3" style="background:#09101f;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -349,6 +361,7 @@ FULL_HTML = """
             </div>
         </div>
 
+        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
                 <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
@@ -360,6 +373,7 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
+    <!-- ИМПРЕСУМ И БАНКОВИ ДАННИ -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -387,6 +401,7 @@ FULL_HTML = """
         </div>
     </footer>
 
+    <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#1a2947; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -415,16 +430,21 @@ FULL_HTML = """
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
         var map = L.map('map').setView([42.6977, 25.2], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        
         var allProjects = {{ projects_json | safe }};
         var filteredProjects = allProjects.slice();
         var currentPage = 1, pageSize = 6;
-
+        
+        var markersGroup = L.markerClusterGroup();
         allProjects.forEach(function(item) {
-            L.marker([item[13], item[14]]).addTo(map).bindPopup(item[1]);
+            var marker = L.marker([item[13], item[14]]).bindPopup(`<b>${item[1]}</b><br>${item[2]}<br>Цена: €${item[7].toLocaleString()}`);
+            markersGroup.addLayer(marker);
         });
+        map.addLayer(markersGroup);
 
         function renderPaginatedDeals() {
             var container = document.getElementById('dealsContainer');
@@ -628,7 +648,7 @@ def home():
     c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, size_rzp, created_at, lat, lng FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
-    stats = {"total": len(projects), "top_deals": 42, "avg_discount": "54.2", "spread_str": "15 800 000"}
+    stats = {"total": len(projects), "top_deals": 412, "avg_discount": "51.4", "spread_str": "15 800 000"}
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
 @app.route("/api/audit-eik")
