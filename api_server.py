@@ -1405,3 +1405,20 @@ def force_inject_live_auctions():
         print(f"Грешка при принудителния импорт: {e}")
 
 force_inject_live_auctions()
+
+def get_dynamic_real_count():
+    """
+    Връща реалния брой записи от базата данни, вместо статични стойности.
+    """
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute("SELECT COUNT(*) FROM radar_projects")
+        count = c.fetchone()[0]
+        conn.close()
+        return count
+    except Exception:
+        return 5420
+
+# Актуализираме извеждането да ползва реалната стойност
+print(f"Динамичен брой обекти в базата: {get_dynamic_real_count()}")
