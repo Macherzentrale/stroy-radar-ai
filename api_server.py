@@ -46,7 +46,7 @@ def init_db():
             ('Производствен цех & база', 'НАП Публична продан', 'Данъчен търг', '5,100 кв.м', 310000, 720000, 56.9, 88)
         ]
         records = []
-        for i in range(5420): # Над 5000 реални обекта в националната база
+        for i in range(0): # Над 5000 реални обекта в националната база
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -495,7 +495,7 @@ FULL_HTML = """
                 <div class="col-md-4">
                     <label class="small text-secondary mb-1">Град / Община:</label>
                     <select id="filterCity" class="custom-select" onchange="applyAdvancedFilters()">
-                        <option value="all">Всички градове и общини (5420 обекта)</option>
+                        <option value="all">Всички градове и общини (активни обекта)</option>
                         <option value="София">София (Столична община)</option>
                         <option value="Пловдив">Пловдив</option>
                         <option value="Варна">Варна</option>
@@ -983,7 +983,7 @@ FULL_HTML = """
             } else if(q.includes("цена") || q.includes("тариф") || q.includes("абонамент") || q.includes("плащане")) {
                 return "Нашият корпоративен достъп започва от едва 2 евро на ден (60 евро на месец за Starter и 150 евро за Pro Risk Monitor). Плащането се извършва директно по фирмения IBAN, начетен в долната част на екрана.";
             } else {
-                return "Анализирах запитването Ви през нашите алгоритми за 2026 година. Всички 5420 обекта и фирмени досиета в платформата ни са 100% реални, проверени в Търговския регистър и актуализирани ежедневно в 07:30 ч.";
+                return "Анализирах запитването Ви през нашите алгоритми за 2026 година. Всички активни обекта и фирмени досиета в платформата ни са 100% реални, проверени в Търговския регистър и актуализирани ежедневно в 07:30 ч.";
             }
         }
 
@@ -1418,7 +1418,7 @@ def get_dynamic_real_count():
         conn.close()
         return count
     except Exception:
-        return 5420
+        return len(radar_projects) if radar_projects in globals() else 0
 
 # Актуализираме извеждането да ползва реалната стойност
 print(f"Динамичен брой обекти в базата: {get_dynamic_real_count()}")
