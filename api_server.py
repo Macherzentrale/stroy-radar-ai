@@ -2,11 +2,7 @@ import os
 import json
 import sqlite3
 import random
-import threading
-import time
-import urllib.request
-import xml.etree.ElementTree as ET
-from flask import Flask, render_template_string, jsonify, Response, request
+from flask import Flask, render_template_string, jsonify, request
 
 app = Flask(__name__)
 DB_PATH = "stroy_radar_intel.db"
@@ -35,86 +31,38 @@ def init_db():
     
     c.execute("SELECT count(*) FROM radar_projects")
     if c.fetchone()[0] < 50:
-        seed_initial_data(c)
+        c.execute("DELETE FROM radar_projects")
+        cities = [
+            ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
+            ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345)
+        ]
+        types = [
+            ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
+            ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан', '8,200 кв.м', 620000, 1450000, 57.2, 89),
+            ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
+        ]
+        records = []
+        for i in range(60):
+            city = cities[i % len(cities)]
+            t = types[i % len(types)]
+            idx = i + 1
+            title = f'{t[0]} "{city[0]} Национален обект #{idx}"'
+            location = f"{city[0]}, Район Централен кв. {idx % 5 + 1}"
+            investor = f"{city[0]} Пропърти Груп {idx} ООД"
+            eik = str(100000000 + idx * 19)
+            manager = f"Управител #{idx}"
+            lat = city[1] + random.uniform(-0.03, 0.03)
+            lng = city[2] + random.uniform(-0.03, 0.03)
+            price = t[4] + (idx * 300) % 300000
+            mval = t[5] + (idx * 600) % 500000
+            disc = round(((mval - price) / mval) * 100, 1)
+            score = min(99, max(75, int(t[7] + (idx % 5) - 2)))
+            records.append((title, t[1], location, investor, eik, manager, price, mval, disc, score, t[2], t[3], "2026-08-30", lat, lng))
+        c.executemany('''INSERT INTO radar_projects 
+            (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
     conn.commit()
     conn.close()
-
-def seed_initial_data(c):
-    c.execute("DELETE FROM radar_projects")
-    cities = [
-        ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
-        ("Бургас", 42.5048, 27.4626), ("Русе", 43.8563, 25.9700), ("Стара Загора", 42.4258, 25.6345)
-    ]
-    types = [
-        ('Жилищна сграда & апартаменти', 'Разрешително ЗУТ', 'Одобрен проект', '3,400 кв.м', 850000, 1600000, 46.8, 92),
-        ('Логистичен склад & терминал', 'ЧСИ Търг', 'Публична продан', '8,200 кв.м', 620000, 1450000, 57.2, 89),
-        ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
-    ]
-    records = []
-    for i in range(60):
-        city = cities[i % len(cities)]
-        t = types[i % len(types)]
-        idx = i + 1
-        title = f'{t[0]} "{city[0]} Национален обект #{idx}"'
-        location = f"{city[0]}, Район Централен кв. {idx % 5 + 1}"
-        investor = f"{city[0]} Пропърти Груп {idx} ООД"
-        eik = str(100000000 + idx * 19)
-        manager = f"Управител #{idx}"
-        lat = city[1] + random.uniform(-0.03, 0.03)
-        lng = city[2] + random.uniform(-0.03, 0.03)
-        price = t[4] + (idx * 300) % 300000
-        mval = t[5] + (idx * 600) % 500000
-        disc = round(((mval - price) / mval) * 100, 1)
-        score = min(99, max(75, int(t[7] + (idx % 5) - 2)))
-        records.append((title, t[1], location, investor, eik, manager, price, mval, disc, score, t[2], t[3], "2026-08-30", lat, lng))
-    c.executemany('''INSERT INTO radar_projects 
-        (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', records)
-
-# LIVE SYNC WORKER: Автоматично обновяване и добавяне на нови търгове от реални източници
-def fetch_live_auctions_background():
-    while True:
-        try:
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-            
-            # Пример за лайв интеграция с публични RSS / източници на държавни бюлетини
-            sources = [
-                "https://dv.parliament.bg/DVWeb/rss/rss_dv.xml", # Държавен вестник
-            ]
-            
-            for src in sources:
-                try:
-                    req = urllib.request.Request(src, headers={'User-Agent': 'Mozilla/5.0'})
-                    with urllib.request.urlopen(req, timeout=10) as response:
-                        xml_data = response.read()
-                        root = ET.fromstring(xml_data)
-                        for item in root.findall('.//item'):
-                            title = item.find('title').text if item.find('title') is not None else "Нов обект по търг"
-                            if any(kw in title.lower() for kw in ["имот", "сграда", "земя", "продажба", "търг", "чси"]):
-                                # Проверяваме дали вече съществува
-                                c.execute("SELECT id FROM radar_projects WHERE title = ?", (title,))
-                                if not c.fetchone():
-                                    city_choices = [("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147)]
-                                    chosen_city = random.choice(city_choices)
-                                    price = random.randint(150000, 950000)
-                                    mval = int(price * random.uniform(1.4, 2.1))
-                                    disc = round(((mval - price) / mval) * 100, 1)
-                                    c.execute('''INSERT INTO radar_projects 
-                                        (title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, status, size_rzp, created_at, lat, lng)
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                                        (title, "ЧСИ Търг", f"{chosen_city[0]}, Централен район", "Лицензиран ЧСИ / НАП", str(random.randint(200000000, 299999900)), "Частен съдебен изпълнител", price, mval, disc, 90, "Активен публичен търг", "2,500 кв.м", "2026-08-31", chosen_city[1] + random.uniform(-0.02, 0.02), chosen_city[2] + random.uniform(-0.02, 0.02)))
-            conn.commit()
-            conn.close()
-        except Exception as e:
-            print("Live sync background error:", e)
-        
-        # Рефреш на всеки 6 часа
-        time.sleep(21600)
-
-# Стартиране на фоновия лайв синхронизатор в отделна нишка
-sync_thread = threading.Thread(target=fetch_live_auctions_background, daemon=True)
-sync_thread.start()
 
 init_db()
 
@@ -127,8 +75,6 @@ FULL_HTML = """
     <title>PRO INVEST RADAR AI .BG – EUR 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <style>
         :root {
             --bg: #111c33;
@@ -233,7 +179,7 @@ FULL_HTML = """
         <div class="w-100 text-center">
             <span>🔔</span>
             <span style="color:#fbbf24; font-weight:800;">07:30 ПРОТОКОЛ • НАЦИОНАЛЕН КОРПОРАТИВЕН ФИЙД:</span>
-            <span class="text-light ms-1">Активни обекти в реално време (Live Sync) • {{ stats.total }} записа</span>
+            <span class="text-light ms-1">Активни обекти в реално време • {{ stats.total }} записа</span>
         </div>
     </div>
 
@@ -260,7 +206,6 @@ FULL_HTML = """
             <a href="https://t.me/stroyradar_support" target="_blank" class="btn-header-contact contact-tg">✈️ Telegram</a>
         </div>
 
-        <!-- ОДИТ СКЕНЕР -->
         <div class="row g-3 mb-3" id="audit-section">
             <div class="col-lg-7">
                 <div class="card-dark h-100 mb-0">
@@ -298,7 +243,7 @@ FULL_HTML = """
 
             <div class="col-lg-5">
                 <div class="sat-hud">
-                    <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР (LIVE)</div>
+                    <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
                     <svg viewBox="0 0 150 150" width="130" height="130">
                         <circle cx="75" cy="75" r="65" fill="none" stroke="#243863" stroke-width="1.2" stroke-dasharray="3 3"/>
                         <circle cx="75" cy="75" r="42" fill="none" stroke="#243863" stroke-width="1"/>
@@ -308,15 +253,13 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- KPI КАРТИ -->
         <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национален регистър</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ В БАЗАТА</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Реална база данни</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
         </div>
 
-        <!-- КАЛКУЛАТОР -->
         <div class="card-dark" style="border-left: 4px solid var(--accent-yellow);">
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="badge bg-warning text-dark fw-bold px-2 py-1">ЧСИ &amp; ТАКСИ КАЛКУЛАТОР 2026</span>
@@ -330,7 +273,6 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ТАРИФНИ ПЛАНОВЕ & АБОНАМЕНТИ -->
         <div id="pricing-section" class="mt-4 mb-4">
             <div class="card-dark mb-3" style="border:1px solid #0284c7; text-align:center;">
                 <div class="text-secondary small mb-1" style="letter-spacing:1px; text-transform:uppercase;">🔥 ЕКСКЛУЗИВЕН КОРПОРАТИВЕН ДОСТЪП:</div>
@@ -345,7 +287,7 @@ FULL_HTML = """
                         <div class="w-100 mb-3">
                             <div class="small fw-bold text-secondary">STARTER EXECUTIVE</div>
                             <div class="fw-bold text-white fs-3">€60 <span class="fs-6 text-secondary">/ месец</span></div>
-                            <div class="text-secondary small mt-1">Отключете първите си 10 000+ сделки и защитете капитала си срещу скрити рискове.</div>
+                            <div class="text-secondary small mt-1">Отключете първите си сделки и защитете капитала си срещу скрити рискове.</div>
                         </div>
                         <button type="button" class="btn-plan w-100 mt-auto" onclick="showPlanFeatures('starter');">Виж придобивките</button>
                     </div>
@@ -376,13 +318,11 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- КАРТА -->
         <div class="card-dark" id="map-section">
-            <h6 class="fw-bold text-white mb-2">ГИС Радар на България (Live Sync)</h6>
+            <h6 class="fw-bold text-white mb-2">ГИС Радар на България</h6>
             <div id="map"></div>
         </div>
 
-        <!-- ФИЛТРИ -->
         <div class="card-dark mb-3" style="background:#09101f;">
             <div class="row g-2 align-items-center">
                 <div class="col-md-4">
@@ -409,10 +349,9 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- ОБЯВИ СЪС ЗВЕЗДИЧКИ -->
         <div class="d-flex justify-content-between align-items-center mb-3 mt-4 flex-wrap gap-2" id="deals-section">
             <div>
-                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки (Live Обновяване)</h5>
+                <h5 class="fw-bold text-white mb-0">📋 Публични Обяви &amp; Сделки</h5>
                 <small class="text-secondary">Показват се по 6 обекта на страница (локация, инвеститор и ЕИК са защитени)</small>
             </div>
         </div>
@@ -421,7 +360,6 @@ FULL_HTML = """
         <div class="pagination-box" id="paginationControls"></div>
     </div>
 
-    <!-- ИМПРЕСУМ И БАНКОВИ ДАННИ -->
     <footer class="site-footer">
         <div class="container-custom">
             <div class="row g-4 mb-4">
@@ -449,7 +387,6 @@ FULL_HTML = """
         </div>
     </footer>
 
-    <!-- МОДАЛ ПРИДОБИВКИ -->
     <div class="modal fade" id="featuresModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="background:#1a2947; border:1px solid var(--border); color:#fff; border-radius:18px;">
@@ -714,7 +651,7 @@ def export_audit_pdf():
 
 @app.route("/export-pdf")
 def export_pdf():
-    return "<h3>07:30 Дневен Бюлетин (Live Sync)</h3>", 200, {'Content-Type': 'text/html; charset=utf-8'}
+    return "<h3>07:30 Дневен Бюлетин</h3>", 200, {'Content-Type': 'text/html; charset=utf-8'}
 
 @app.route("/api/deals")
 def api_deals():
