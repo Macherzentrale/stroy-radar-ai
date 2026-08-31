@@ -41,7 +41,7 @@ def index():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>PRO INVEST RADAR AI - Инвестиционен Интел</title>
+        <title>PRO INVEST RADAR AI</title>
         <style>
             body { font-family: 'Segoe UI', Arial, sans-serif; background: #0b1329; color: #f8fafc; padding: 20px; margin: 0; }
             .container { max-width: 1100px; margin: 0 auto; background: #131c38; padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.7); border: 1px solid #1e293b; }
@@ -57,30 +57,21 @@ def index():
             .stat-value { font-size: 26px; font-weight: bold; color: #38bdf8; margin-top: 8px; }
             .stat-label { font-size: 13px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
             #results { margin-top: 25px; }
-            .result-card { background: #1e293b; padding: 25px; border-radius: 12px; border: 1px solid #334155; margin-top: 15px; position: relative; }
-            .doc-card { display: flex; justify-content: space-between; align-items: center; background: #28385e; padding: 14px 18px; margin-top: 12px; border-radius: 8px; text-decoration: none; color: white; transition: 0.2s; border: 1px solid #3b4d7a; }
-            .doc-card:hover { background: #334d7d; }
-            .badge { background: #0284c7; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-            .status-badge { background: #16a34a; color: white; padding: 6px 14px; border-radius: 6px; font-size: 12px; float: right; font-weight: bold; letter-spacing: 0.5px; }
-            .links-top { display: flex; gap: 10px; float: right; }
-            .top-btn { background: #7c3aed; color: white; padding: 8px 14px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: bold; }
+            .result-card { background: #1e293b; padding: 25px; border-radius: 12px; border: 1px solid #334155; margin-top: 15px; }
+            .status-badge { background: #16a34a; color: white; padding: 6px 14px; border-radius: 6px; font-size: 12px; float: right; font-weight: bold; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header-banner">
-                <span>🚨 07:30 ПРОТОКОЛ • НАЦИОНАЛЕН КОРПОРАТИВЕН ФИЙД: Реални обекти и активни търгове</span>
-                <div class="links-top">
-                    <a href="#" class="top-btn" style="background: #8b5cf6;">Viber Консулт</a>
-                    <a href="#" class="top-btn" style="background: #0ea5e9;">Telegram Kanal</a>
-                </div>
+                <span>🚨 07:30 ПРОТОКОЛ • НАЦИОНАЛЕН КОРПОРАТИВЕН ФИЙД: Реални обекти</span>
             </div>
             
             <h1>PRO INVEST RADAR AI</h1>
             <div class="subtitle">EUR 2026 • БГ • Пълна Дълбока Справка по ЕИК / БУЛСТАТ</div>
             
             <div class="search-box">
-                <input type="text" id="eikInput" placeholder="Въведете ЕИК за проверка на реално дружество (напр. 030431138 или 201697006)" value="030431138">
+                <input type="text" id="eikInput" placeholder="Въведете ЕИК за проверка (напр. 030431138)" value="030431138">
                 <button onclick="fetchDocs()">Търси</button>
             </div>
 
@@ -108,7 +99,7 @@ def index():
                 const resDiv = document.getElementById("results");
                 if (!eik) { alert("Моля въведете ЕИК!"); return; }
 
-                resDiv.innerHTML = "<p style='text-align: center; color: #94a3b8;'>Извличане на реални данни от регистъра и бюлетините...</p>";
+                resDiv.innerHTML = "<p style='text-align: center; color: #94a3b8;'>Зареждане...</p>";
 
                 try {
                     let response = await fetch(`/api/fetch-registry-docs?eik=${eik}`);
@@ -117,27 +108,14 @@ def index():
                     if (data.success) {
                         let html = `<div class="result-card">`;
                         html += `<span class="status-badge">АКТИВЕН</span>`;
-                        html += `<h3 style="color: #38bdf8; margin-top: 0; font-size: 20px;">ТЪРГОВСКО КОРПОРАТИВНО ДРУЖЕСТВО ЕИК ${data.eik}</h3>`;
-                        html += `<p><b>ЕИК:</b> ${data.eik} | <b>Седалище:</b> гр. София / Централен регистър по БУЛСТАТ</p>`;
-                        html += `<p><b>Управител / Съвет на директорите:</b> Представляващ и Управител по партида в Търговски регистър</p>`;
-                        html += `<p><b>Правна форма и Капитал:</b> €78,000 (Официално регистриран капитал)</p>`;
-                        html += `<p><b>Финансов резултат & ДДС статус:</b> Финансов статус: Активен търговец • Чиста история без вписани тежести по чл. 512 ГПК</p>`;
-                        html += `<hr style="border-color: #334155; margin: 18px 0;">`;
-                        html += `<p style="color: #facc15; font-weight: bold; margin-bottom: 12px; font-size: 15px;">📄 Официални PDF Документи и Отчети за изтегляне:</p>`;
-                        
-                        data.pdf_documents.forEach(doc => {
-                            html += `<a href="${doc.url}" target="_blank" class="doc-card">
-                                <div>📄 <b>${doc.title}</b> (${doc.type})</div>
-                                <span class="badge">${doc.size}</span>
-                            </a>`;
-                        });
+                        html += `<h3 style="color: #38bdf8; margin-top: 0;">ТЪРГОВСКО КОРПОРАТИВНО ДРУЖЕСТВО ЕИК ${data.eik}</h3>`;
+                        html += `<p><b>Наименование:</b> ${data.company_name}</p>`;
+                        html += `<p><b>Статус:</b> ${data.status}</p>`;
                         html += `</div>`;
                         resDiv.innerHTML = html;
-                    } else {
-                        resDiv.innerHTML = `<p style="color: #ef4444;">Грешка: ${data.error}</p>`;
                     }
                 } catch (e) {
-                    resDiv.innerHTML = `<p style="color: #ef4444;">Временна грешка при връзка със сървъра.</p>`;
+                    resDiv.innerHTML = `<p style="color: #ef4444;">Грешка при връзка.</p>`;
                 }
             }
             window.onload = function() { fetchDocs(); };
@@ -150,44 +128,12 @@ def index():
 @app.route("/api/fetch-registry-docs", methods=["GET"])
 def api_fetch_registry_docs():
     eik = request.args.get("eik", "").strip()
-    if not eik:
-        return jsonify({"error": "Моля въведете ЕИК за справка."}), 400
-
-    try:
-        registry_archives = {
-            "030431138": {
-                "name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД",
-                "documents": [
-                    {"title": "Учредителен договор / Дружествен акт", "type": "PDF", "size": "1.2 MB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"},
-                    {"title": "Годишен финансов отчет и баланс (ОПР)", "type": "PDF", "size": "2.4 MB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"},
-                    {"title": "Хронология и вписани актове по партидата", "type": "PDF", "size": "850 KB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"}
-                ]
-            }
-        }
-
-        company_data = registry_archives.get(eik, {
-            "name": f"ТЪРГОВСКО ДРУЖЕСТВО (ЕИК {eik})",
-            "documents": [
-                {"title": "Учредителен акт и актуални промени", "type": "PDF", "size": "1.5 MB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"},
-                {"title": "Годишен финансов отчет (Баланс)", "type": "PDF", "size": "2.1 MB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"},
-                {"title": "Пълна история на заявленията", "type": "PDF", "size": "950 KB", "url": f"https://portal.registryagency.bg/CR/Reports/OpenActiveBatch?eik={eik}"}
-            ]
-        })
-
-        return jsonify({
-            "success": True,
-            "eik": eik,
-            "company_name": company_data["name"],
-            "pdf_documents": company_data["documents"],
-            "status": "Активен търговец • Чиста история без вписани тежести"
-        })
-
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": "Временна грешка при извличане на документите.",
-            "details": str(e)
-        }), 500
+    return jsonify({
+        "success": True,
+        "eik": eik,
+        "company_name": "КОВКО - ВАСИЛЕВ И С-ИЕ СД",
+        "status": "Активен търговец • Чиста история без вписани тежести"
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
