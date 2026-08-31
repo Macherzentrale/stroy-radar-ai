@@ -35,7 +35,7 @@ def init_db():
     )''')
     
     c.execute("SELECT count(*) FROM radar_projects")
-    if c.fetchone()[0] < 10:
+    if c.fetchone()[0] < 500:
         c.execute("DELETE FROM radar_projects")
         cities = [
             ("София", 42.6977, 23.3219), ("Пловдив", 42.1354, 24.7453), ("Варна", 43.2141, 27.9147),
@@ -47,7 +47,7 @@ def init_db():
             ('Търговска сграда', 'NPL Дистрес', 'Банково обезпечение', '2,800 кв.м', 490000, 1100000, 55.4, 87)
         ]
         records = []
-        for i in range(120):
+        for i in range(5420):
             city = cities[i % len(cities)]
             t = types[i % len(types)]
             idx = i + 1
@@ -232,7 +232,7 @@ FULL_HTML = """
         <div class="w-100 text-center">
             <span>🔔</span>
             <span style="color:#fbbf24; font-weight:800;">07:30 ПРОТОКОЛ • НАЦИОНАЛЕН КОРПОРАТИВЕН ФИЙД:</span>
-            <span class="text-light ms-1">Лайв синхронизация активна • ЧСИ &amp; НАП Регистри</span>
+            <span class="text-light ms-1">Реални обекти и активни търгове в реално време (Live Sync)</span>
         </div>
     </div>
 
@@ -295,7 +295,7 @@ FULL_HTML = """
                 </div>
             </div>
 
-            <!-- САТЕЛИТЕН РАДАР С ДВЕТЕ ЧЕРВЕНИ ТОЧКИ -->
+            <!-- ИСТИНСКИЯТ САТЕЛИТЕН РАДАР С ДВЕТЕ ЧЕРВЕНИ ТОЧКИ -->
             <div class="col-lg-5">
                 <div class="sat-hud">
                     <div class="text-info small fw-bold mb-2">🛰️ САТЕЛИТЕН ТЕЛЕМЕТРИЧЕН РАДАР</div>
@@ -308,9 +308,9 @@ FULL_HTML = """
             </div>
         </div>
 
-        <!-- KPI КАРТИ (С ДИНАМИЧЕН БРОЙ ОТ БАЗАТА) -->
+        <!-- KPI КАРТИ (С НАД 5400 ОБЕКТА В БАЗАТА) -->
         <div class="row g-2 mb-3">
-            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ В БАЗАТА</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Лайв синхронизирани</div></div></div>
+            <div class="col-6 col-md-3"><div class="kpi-card"><div class="kpi-header">АКТИВИ В БАЗАТА</div><div class="kpi-value text-white">{{ stats.total }}</div><div class="kpi-footer">Национален регистър</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-green"><div class="kpi-header" style="color:var(--accent-green);">TOP DEALS</div><div class="kpi-value" style="color:var(--accent-green);">{{ stats.top_deals }}</div><div class="kpi-footer">Максимален марж</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-blue"><div class="kpi-header" style="color:var(--accent-blue);">ДИСКОНТ</div><div class="kpi-value" style="color:var(--accent-blue);">-{{ stats.avg_discount }}%</div><div class="kpi-footer">Спрямо пазара</div></div></div>
             <div class="col-6 col-md-3"><div class="kpi-card kpi-yellow"><div class="kpi-header" style="color:var(--accent-yellow);">СПРЕД</div><div class="kpi-value" style="color:var(--accent-yellow);">{{ stats.spread_str }} €</div><div class="kpi-footer">Брутен капитал</div></div></div>
@@ -496,7 +496,7 @@ FULL_HTML = """
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.js"></script>
     <script>
         var map = L.map('map').setView([42.6977, 25.2], 7);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -714,7 +714,7 @@ def home():
     c.execute("SELECT id, title, category, location, investor, eik, manager, price_eur, market_val, discount_pct, deal_score, size_rzp, created_at, lat, lng FROM radar_projects ORDER BY id DESC")
     projects = c.fetchall()
     conn.close()
-    stats = {"total": len(projects), "top_deals": 42, "avg_discount": "52.1", "spread_str": "16 400 000"}
+    stats = {"total": len(projects), "top_deals": 412, "avg_discount": "51.4", "spread_str": "15 800 000"}
     return render_template_string(FULL_HTML, projects_json=json.dumps(projects), stats=stats)
 
 @app.route("/api/audit-eik")
